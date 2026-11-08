@@ -7,6 +7,7 @@
 import os
 import sys
 import json
+import time
 import ssl
 import socket
 import logging
@@ -95,7 +96,17 @@ def _tg_send(text, chat_id=None):
     try:
         cid    = chat_id or TG_CHAT_ID
         params = _urllib_parse.urlencode({"chat_id": cid, "text": text, "parse_mode": "HTML"})
-        _urllib_req.urlopen(f"{TG_API}/sendMessage?{params}", context=_SSL_CTX, timeout=10)
+        try:
+            _urllib_req.urlopen(f"{TG_API}/sendMessage?{params}", context=_SSL_CTX, timeout=10)
+        except Exception as e1:
+            if getattr(e1, "code", 0) != 429:                    # Telegram flood limit: wait the time it asks for, then try once more
+                raise
+            try:
+                wait = int(json.loads(e1.read()).get("parameters", {}).get("retry_after", 5))
+            except Exception:
+                wait = 5
+            time.sleep(min(wait, 30))
+            _urllib_req.urlopen(f"{TG_API}/sendMessage?{params}", context=_SSL_CTX, timeout=10)
     except Exception as e:
         logging.error(f"_tg_send: {_tg_error_detail(e)}")
 

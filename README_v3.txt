@@ -275,3 +275,7 @@ v3.0.42
 
 v3.0.43
 - Fixed the Telegram /restart loop: the command is now marked as read before restarting, and commands sent while NAB was closed are ignored at start.
+
+v3.0.44
+- Category search moved to Ctrl + numpad plus. Ctrl+K is the command bar again.
+- Telegram sends wait and retry when Telegram's flood limit (429) is hit.

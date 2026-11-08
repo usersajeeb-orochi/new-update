@@ -1,4 +1,4 @@
-// Category search (Ctrl+K): type 1-3 letters, Tab / arrows move, Enter picks, Alt+Enter adds to a batch and keeps going.
+// Category search (Ctrl + numpad plus): type 1-3 letters, Tab / arrows move, Enter picks, Alt+Enter adds to a batch and keeps going.
 (function () {
   "use strict";
   let box = null;
@@ -32,7 +32,7 @@
       '<div style="padding:10px 12px;border-bottom:1px solid var(--line,#292d43)"><input id="csI" autocomplete="off" spellcheck="false" placeholder="Type 1-3 letters of a category" style="width:100%;background:transparent;border:0;outline:0;color:inherit;font-size:15px"></div>' +
       '<div id="csB" style="display:none;gap:6px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--line,#292d43)"></div>' +
       '<div id="csL" style="max-height:44vh;overflow:auto;padding:4px"></div>' +
-      '<div style="padding:7px 12px;color:var(--dim,#8f93ac);font-size:11px;border-top:1px solid var(--line,#292d43)">Tab / arrows: move &nbsp; Enter: select &nbsp; Alt+Enter: add and pick another &nbsp; Esc: close</div></div>';
+      '<div style="padding:7px 12px;color:var(--dim,#8f93ac);font-size:11px;border-top:1px solid var(--line,#292d43)">Ctrl + numpad plus opens this. Tab / arrows: move &nbsp; Enter: select &nbsp; Alt+Enter: add and pick another &nbsp; Esc: close</div></div>';
     document.body.appendChild(box);
     const inp = box.querySelector("#csI"), list = box.querySelector("#csL"), bw = box.querySelector("#csB");
     let items = [], idx = 0; const batch = [];
@@ -63,7 +63,7 @@
   }
   function install(getCats, getArmed, onPick, canOpen) {
     window.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "k") {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.code === "NumpadAdd") {
         if (canOpen && !canOpen()) return;
         e.preventDefault(); e.stopImmediatePropagation(); open(getCats(), getArmed(), onPick);
       }
