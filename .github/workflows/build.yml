@@ -22,6 +22,13 @@ jobs:
           "ver=" + $m.Matches[0].Groups[1].Value | Out-File -Append $env:GITHUB_OUTPUT
       - name: Install requirements
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Write the Google key from the repository secret
+        shell: pwsh
+        env:
+          GDRIVE_KEY_JSON: ${{ secrets.GDRIVE_KEY_JSON }}
+        run: |
+          if (-not $env:GDRIVE_KEY_JSON) { throw "Repository secret GDRIVE_KEY_JSON is missing" }
+          [IO.File]::WriteAllText("nab_gdrive_creds.json", $env:GDRIVE_KEY_JSON)
       - name: Build (BUILD.bat)
         shell: cmd
         run: BUILD.bat < nul

@@ -227,13 +227,18 @@ class Tool:
                                 if "closed" not in str(e1).lower():
                                     raise
                                 logging.info("WhatsApp browser was closed during the send - reopening and retrying once")
+                                try:
+                                    if ctx: ctx.close()
+                                except Exception:
+                                    pass
                                 ctx = page = None
+                                time.sleep(2)
                                 self._set("starting", "Browser closed - reopening…")
                                 ctx, page = self._open(p, want_visible)
                                 visible = want_visible
                                 self._send(page, *data)
                     except Exception as e:
-                        self._fail(kind, data, str(e)[:160], page)
+                        self._fail(kind, data, ("The WhatsApp window closed while sending. Leave it open until the file is sent, then send again." if "closed" in str(e).lower() else str(e)[:160]), page)
                         if "closed" in str(e).lower():
                             ctx = page = None
         finally:
@@ -253,7 +258,7 @@ class Tool:
         for ch in ("chrome", "msedge", None):
             try:
                 kw = dict(user_data_dir=prof, headless=not visible, viewport={"width": 1280, "height": 860},
-                          args=["--disable-blink-features=AutomationControlled", "--no-sandbox"], ignore_default_args=["--enable-automation"],
+                          args=["--disable-blink-features=AutomationControlled"], ignore_default_args=["--enable-automation"],
                           user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
                 if ch:
                     kw["channel"] = ch
