@@ -293,6 +293,13 @@ class TelegramAuth:
         TelegramAuth._app_ref  = app
         last_update_id         = TelegramAuth._last_update_id  # carry over from auth
         last_heartbeat_time    = 0
+        try:                                       # drop commands sent while NAB was closed (an old /restart must not run again)
+            _old = _tg_get_updates(offset=-1, timeout=0).get("result", [])
+            if _old:
+                last_update_id = _old[-1]["update_id"] + 1
+                _tg_get_updates(offset=last_update_id, timeout=0)
+        except Exception as _e:
+            logging.error(f"flush old updates: {_e}")
 
         def _handle_local_command(text, msg):
             """Handle commands coming from the LOCAL NAB bot (auth/control only)."""
@@ -331,6 +338,10 @@ class TelegramAuth:
             # ── RESTART ──
             elif tl in ["/restart", f"/restart {PC_NAME.lower()}"]:
                 _tg_send(f"🔄 Restarting NAB on <b>{PC_NAME}</b>...")
+                try:                                   # mark /restart as read, or the new copy reads it again and restarts for ever
+                    _tg_get_updates(offset=last_update_id, timeout=0)
+                except Exception:
+                    pass
                 app.after(0, app.save_settings)
                 time.sleep(1)
                 os.execv(sys.executable, [sys.executable] + sys.argv)

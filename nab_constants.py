@@ -71,7 +71,7 @@ try:
 except ImportError:
     HAS_WIN32 = False
 
-APP_VERSION = "3.0.42"
+APP_VERSION = "3.0.43"
 LOGO_FOLDER_NAME = "Logos"
 BG_FILE_NAME = "canvas_bg.png"
 BG_OPACITY = 0.4

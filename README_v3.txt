@@ -272,3 +272,6 @@ v3.0.42
 - Ctrl+K (app and overlay): category search. Tab/arrows move, Enter selects, Alt+Enter adds to a batch and lets you pick another.
 - New intro: glass shatters, arc reactor spins, lightning pulls the real UI panels into place, sparks on landing.
 - WhatsApp: reopens and retries once if the browser closes during a send; normal browser identity.
+
+v3.0.43
+- Fixed the Telegram /restart loop: the command is now marked as read before restarting, and commands sent while NAB was closed are ignored at start.
