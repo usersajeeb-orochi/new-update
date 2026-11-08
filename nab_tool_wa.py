@@ -221,7 +221,17 @@ class Tool:
                             if not self.cfg.get("show_window"):                  # carry on hidden: the saved profile keeps you linked
                                 ctx.close(); ctx = page = None
                         else:
-                            self._send(page, *data)
+                            try:
+                                self._send(page, *data)
+                            except Exception as e1:
+                                if "closed" not in str(e1).lower():
+                                    raise
+                                logging.info("WhatsApp browser was closed during the send - reopening and retrying once")
+                                ctx = page = None
+                                self._set("starting", "Browser closed - reopening…")
+                                ctx, page = self._open(p, want_visible)
+                                visible = want_visible
+                                self._send(page, *data)
                     except Exception as e:
                         self._fail(kind, data, str(e)[:160], page)
                         if "closed" in str(e).lower():
@@ -243,7 +253,8 @@ class Tool:
         for ch in ("chrome", "msedge", None):
             try:
                 kw = dict(user_data_dir=prof, headless=not visible, viewport={"width": 1280, "height": 860},
-                          args=["--disable-blink-features=AutomationControlled", "--no-sandbox"])
+                          args=["--disable-blink-features=AutomationControlled", "--no-sandbox"], ignore_default_args=["--enable-automation"],
+                          user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
                 if ch:
                     kw["channel"] = ch
                 ctx = p.chromium.launch_persistent_context(**kw)

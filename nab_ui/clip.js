@@ -472,7 +472,7 @@
   function focusMeta(k) { const el = F[k || "page"]; if (el.focusFirst) el.focusFirst(); else { el.focus(); el.select(); } }
   function metaEnter(k) { if (k === "cols") autoWidth(); const i = FORDER.indexOf(k); S.touched[k] = true; const r = C.fieldCheck(k, F[k].value); updateDock(); if (r !== "ok") { toast(r || ("Enter the " + (k === "cols" ? "position" : k)), "warn", 2200); return; } if (i < 2) { const nk = FORDER[i + 1]; if (nk === "size" && F.size.a.value) { F.size.b.focus(); F.size.b.select(); } else focusMeta(nk); } else doSave(); }
   function metaEsc() { disarm(); if (document.activeElement) document.activeElement.blur(); stage.focus(); }
-  function prefillMeta() { const m = (S.st && S.st.meta) || {}; if (!F.page.value && m.page) F.page.value = m.page; if (!F.size.value && m.size) F.size.value = m.size; }
+  function prefillMeta() { const m = (S.st && S.st.meta) || {}; if (!F.page.value && m.page) F.page.value = C.normField("page", m.page); if (!F.size.value && m.size) F.size.value = m.size; }
   function updateDock() {
     const names = S.armed.map(p => p.split("/").join(" › "));
     { const dk = S.armed.join("|"); if (S._dockK !== dk) { S._dockK = dk; const dc = $("#dockCat"); dc.classList.remove("pulse"); void dc.offsetWidth; dc.classList.add("pulse"); } }
@@ -526,7 +526,7 @@
   F.page.addEventListener("input", () => { S.pageTyped = true; F.page.classList.remove("hint"); });
   on("page_hint", (ev) => {
     if (document.activeElement === F.page || !ev.page) return;
-    if (!F.page.value || F.page.value === S.hintPage || !S.pageTyped) { F.page.value = ev.page; S.hintPage = ev.page; S.pageTyped = false; F.page.classList.add("hint"); F.page.title = "Page read from the ePaper tab — type to change"; updateDock(); refreshMetaSoon(); sendDraft(); }
+    if (!F.page.value || F.page.value === S.hintPage || !S.pageTyped) { F.page.value = C.normField("page", ev.page); S.hintPage = F.page.value; S.pageTyped = false; F.page.classList.add("hint"); F.page.title = "Page read from the ePaper tab — type to change"; updateDock(); refreshMetaSoon(); sendDraft(); }
   });
   // ── invert selection / straighten / clean-up memory / copy last saved ──
   function invertSel() {
@@ -693,4 +693,5 @@
     const b = document.createElement("button"); b.className = "tb"; b.id = "panelBtn"; b.textContent = "☰"; b.title = "Panels";
     b.onclick = () => { $("#rightPanel").classList.toggle("open"); $("#leftPanel").classList.toggle("open"); }; $("#toolbar").insertBefore(b, $("#toolbar").firstChild);
   }
+  CATSEARCH.install(() => (S.st && S.st.categories) || {}, () => S.armed, (ps) => arm(ps, true), () => !window.MAIN || MAIN.view === "clip");
 })();

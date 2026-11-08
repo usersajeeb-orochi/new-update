@@ -185,10 +185,22 @@
   on("update", (ev) => {
     const s = $("#dlStrip");
     if (ev.stage === "downloading") { s.classList.remove("hidden"); s.textContent = "⬇  Downloading update v" + (ev.version || "") + " in background…  " + (ev.pct || 0) + "%"; }
-    else if (ev.stage === "ready") {
-      s.classList.add("hidden"); const g = $("#gate"); g.classList.remove("hidden"); document.body.classList.add("locked");
-      g.innerHTML = '<div class="card"><div class="big">✅</div><h2>' + t("update_ready") + '</h2><p>New version <b style="color:#22c55e">v' + esc(ev.version) + '</b></p><p>The update has been downloaded and is ready to install.<br>You cannot use NAB until it is applied.</p><p id="uMsg"></p><button class="btn pri" id="uGo" style="width:100%;height:46px;font-size:15px">🔄 ' + t("restart_update") + '</button></div>';
-      $("#uGo").onclick = async () => { $("#uGo").disabled = true; const r = await api("apply_update"); $("#uMsg").textContent = r.ok ? "Launching updater… NAB will restart in a moment." : (r.error || "Failed"); if (!r.ok) $("#uGo").disabled = false; };
+    else if (ev.stage === "ready" || ev.stage === "applying" || ev.stage === "apply_error") {
+      s.classList.add("hidden"); const g = $("#gate"); document.body.classList.add("locked");
+      if (!$("#uGo") && !$("#uBar")) {
+        g.classList.remove("hidden");
+        g.innerHTML = '<div class="card upd"><div class="updring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="r1"/><circle cx="50" cy="50" r="32" class="r2"/><circle cx="50" cy="50" r="6" class="r3"/></svg></div><h2 id="uT">' + t("update_ready") + '</h2><p>New version <b style="color:#22c55e">v' + esc(ev.version) + '</b></p><p id="uD">The update has been downloaded and is ready to install.<br>You cannot use NAB until it is applied.</p><div class="ubar hidden" id="uBarW"><i id="uBar"></i></div><p id="uMsg"></p><button class="btn pri" id="uGo" style="width:100%;height:46px;font-size:15px">' + t("restart_update") + '</button></div>';
+        $("#uGo").onclick = async () => { $("#uGo").disabled = true; $("#uMsg").textContent = "Starting…"; const r = await api("apply_update"); if (!r.ok) { $("#uMsg").textContent = r.error || "Failed"; $("#uGo").disabled = false; } };
+      }
+      if (ev.stage === "applying") {
+        const go = $("#uGo"); if (go) go.classList.add("hidden");
+        $("#uBarW").classList.remove("hidden"); $("#uT").textContent = "Updating NAB"; $("#uD").textContent = "Please wait. NAB restarts by itself when this finishes.";
+        const bar = $("#uBar"); if (bar) bar.style.width = (ev.pct || 0) + "%"; $("#uMsg").textContent = (ev.msg || "") + "  " + (ev.pct || 0) + "%";
+        document.querySelector(".upd").classList.add("busy");
+      } else if (ev.stage === "apply_error") {
+        const go = $("#uGo"); if (go) { go.classList.remove("hidden"); go.disabled = false; } $("#uBarW").classList.add("hidden");
+        document.querySelector(".upd").classList.remove("busy"); $("#uT").textContent = "Update failed"; $("#uMsg").textContent = ev.error || "Could not apply the update. Try again.";
+      }
     } else s.classList.add("hidden");
   });
 

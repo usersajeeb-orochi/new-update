@@ -99,7 +99,7 @@
     v = (v || "").trim();
     if (kind === "cols") { const d = v.replace(/[^0-9]/g, ""); if (/^[1-8][1-8]$/.test(d) && !/[-–—:.]/.test(v)) return d[0] + "-" + d[1]; return v.replace(/[\s,;–—:.]+/g, "-"); }
     if (kind === "size") return v.replace(/[\s*×Xx]+/g, "x").replace(/^x|x$/g, "");
-    if (kind === "page") return v.replace(/\s+/g, "").toUpperCase();
+    if (kind === "page") { v = v.replace(/\s+/g, "").toUpperCase(); return /^[0-9]$/.test(v) ? "0" + v : v; }
     return v;
   }
   function fieldCheck(kind, v) {   // -> "" (empty) | "ok" | error message

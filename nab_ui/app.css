@@ -302,3 +302,20 @@ body:not(.locked) .app{animation:appIn .35s ease-out}
 
 /* transparency chessboard: visible in light themes too */
 [data-mode=light] .stage{background:repeating-conic-gradient(#0000 0 25%,#0000001c 0 50%) 0 0/24px 24px}
+
+/* update screen */
+.upd .updring{width:84px;height:84px;margin:0 auto 10px}
+.upd .updring svg{width:100%;height:100%;overflow:visible}
+.upd .updring circle{fill:none;stroke:var(--acc,#5b8cff);transform-box:fill-box;transform-origin:center}
+.upd .updring .r1{stroke-width:3;stroke-dasharray:70 207;opacity:.9}
+.upd .updring .r2{stroke-width:3;stroke-dasharray:40 160;opacity:.6}
+.upd .updring .r3{fill:var(--acc,#5b8cff);stroke:none}
+.upd.busy .updring .r1{animation:updspin 1.6s linear infinite}
+.upd.busy .updring .r2{animation:updspin 2.4s linear infinite reverse}
+.upd.busy .updring .r3{animation:updpulse 1.2s ease-in-out infinite}
+.upd .ubar{height:8px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin:12px 0}
+.upd .ubar i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--acc,#5b8cff),#9b7bff);transition:width .25s ease;position:relative;overflow:hidden}
+.upd .ubar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-100%);animation:updshine 1.2s linear infinite}
+@keyframes updspin{to{transform:rotate(360deg)}}
+@keyframes updpulse{50%{transform:scale(1.6);opacity:.6}}
+@keyframes updshine{to{transform:translateX(100%)}}

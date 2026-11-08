@@ -985,10 +985,66 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
             updater = os.path.join(os.path.dirname(U._current_exe()), "nab_updater.exe")
             if U._is_frozen() and not os.path.exists(updater):
                 return {"ok": False, "error": "nab_updater.exe not found next to NAB.exe. Download it from GitHub Releases and try again."}
-            self.after(500, lambda: U._apply_update_and_restart(U._current_exe(), self._update["path"]))
+            if getattr(self, "_applying", False):
+                return {"ok": True}
+            self._applying = True
+            threading.Thread(target=self._apply_worker, args=(updater,), daemon=True, name="NAB-Apply").start()
             return {"ok": True}
         except Exception as e:
             return {"ok": False, "error": str(e)}
+
+    def _apply_worker(self, updater):
+        """Unpack (with progress), start the helper, then really quit so the helper can swap the files."""
+        import nab_update as U, zipfile, shutil, tempfile, subprocess
+        ver = self._update.get("version", "")
+
+        def emit(pct, msg, **k):
+            self.hub.emit("update", sticky=True, stage="applying", version=ver, pct=pct, msg=msg, **k)
+        try:
+            path = self._update["path"]
+            emit(2, "Checking the package")
+            if str(path).lower().endswith(".zip"):
+                out = os.path.join(os.path.dirname(path), "new")
+                shutil.rmtree(out, ignore_errors=True)
+                os.makedirs(out, exist_ok=True)
+                with zipfile.ZipFile(path) as z:
+                    infos = z.infolist()
+                    total = sum(i.file_size for i in infos) or 1
+                    done = 0
+                    last = -1
+                    for i in infos:
+                        z.extract(i, out)
+                        done += i.file_size
+                        pc = 5 + int(done * 80 / total)
+                        if pc != last:
+                            last = pc
+                            emit(pc, "Unpacking the new version")
+                root = out
+                if not os.path.exists(os.path.join(root, "NAB.exe")):
+                    subs = [x for x in os.listdir(out) if os.path.isdir(os.path.join(out, x))]
+                    if len(subs) == 1 and os.path.exists(os.path.join(out, subs[0], "NAB.exe")):
+                        root = os.path.join(out, subs[0])
+                if not os.path.exists(os.path.join(root, "NAB.exe")) or not os.path.isdir(os.path.join(root, "_internal")):
+                    raise ValueError("update package is incomplete")
+                new_dir = root
+            else:
+                new_dir = path
+            emit(88, "Starting the installer")
+            app_dir = os.path.dirname(U._current_exe())
+            src = os.path.join(app_dir, "nab_updater.exe")
+            run = os.path.join(tempfile.gettempdir(), "NAB_updater_run.exe")
+            shutil.copy2(src, run)
+            subprocess.Popen([run, app_dir if os.path.isdir(new_dir) else U._current_exe(), new_dir, str(os.getpid())])
+            emit(96, "Restarting NAB")
+            time.sleep(1.5)
+            emit(100, "Restarting NAB")
+            time.sleep(0.8)
+            logging.info("update: quitting for the updater")
+            os._exit(0)                                              # sys.exit here only ends this thread
+        except Exception as e:
+            logging.error(f"apply update: {e}")
+            self._applying = False
+            self.hub.emit("update", sticky=True, stage="apply_error", version=ver, error=str(e)[:200])
 
     # ───────────────────────────── login / session ──────────────────────────
     def _session_init(self):

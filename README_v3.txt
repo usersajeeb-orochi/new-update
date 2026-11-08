@@ -264,3 +264,11 @@ v3.0.41
 - Start-up is light: no spinner, no continuous animation, ~3 s, fewer plates, only transform/opacity (gentle on weak GPUs). Launcher is a still dark screen.
 - NAB opens as a normal maximised window (never borderless full screen). F11 still toggles full screen.
 - Date button: new in-app calendar (the browser date picker did not open).
+
+v3.0.42
+- Update screen: animated progress while unpacking, and the app now really quits so the updater can finish (before, it could hang on "Launching updater").
+- Overlay: Ctrl+Z within 20 s undoes the last save and puts the metadata back for fixing.
+- Page field: a single digit becomes two (7 -> 07).
+- Ctrl+K (app and overlay): category search. Tab/arrows move, Enter selects, Alt+Enter adds to a batch and lets you pick another.
+- New intro: glass shatters, arc reactor spins, lightning pulls the real UI panels into place, sparks on landing.
+- WhatsApp: reopens and retries once if the browser closes during a send; normal browser identity.

@@ -68,8 +68,9 @@
     for (const k of ORD) { F[k].value = C.normField(k, F[k].value); F[k]._t = 1; const r = C.fieldCheck(k, F[k].value); if (r !== "ok") { paint(); $("#ovS").textContent = r || ("Enter the " + k); F[k].focus(); return; } }
     S.busy = true;
     try {
+      const snap = { cats: S.armed.slice(), page: F.page.value, cols: F.cols.value, size: F.size.value };
       const r = await api("save", { cats: S.armed, line: line() });
-      if (r.ok) { if (S.st && r.meta) S.st.last_meta = { page: r.meta.page, cols: r.meta.cols, size: r.meta.size }; typed = false; $("#ovS").textContent = "Saved ✓ " + S.armed.map(label).join(", "); F.cols.value = ""; F.cols._t = 0; S.armed = []; renderQ(); paint(); } else $("#ovS").textContent = r.error || "Not saved";
+      if (r.ok) { S.lastSave = Object.assign(snap, { at: Date.now() }); if (S.st && r.meta) S.st.last_meta = { page: r.meta.page, cols: r.meta.cols, size: r.meta.size }; typed = false; $("#ovS").textContent = "Saved ✓ " + S.armed.map(label).join(", "); F.cols.value = ""; F.cols._t = 0; S.armed = []; renderQ(); paint(); } else $("#ovS").textContent = r.error || "Not saved";
     } finally { S.busy = false; }
   }
   ORD.forEach((k, i) => {
@@ -93,13 +94,19 @@
   function save_() { return save(); }
   let hinted = "", typed = false;
   F.page.addEventListener("input", () => { typed = true; });
-  on("page_hint", (ev) => { if (document.activeElement === F.page || !ev.page) return; if (!F.page.value || F.page.value === hinted || !typed) { F.page.value = ev.page; hinted = ev.page; typed = false; paint(); draft(); } });
+  on("page_hint", (ev) => { if (document.activeElement === F.page || !ev.page) return; if (!F.page.value || F.page.value === hinted || !typed) { F.page.value = C.normField("page", ev.page); hinted = F.page.value; typed = false; paint(); draft(); } });
   on("missed_save", () => { const h = document.querySelector(".ov-h"); h.style.background = "#f59e0b"; $("#ovS").textContent = "Clip waiting - save it"; setTimeout(() => { h.style.background = ""; }, 6000); });
   on("saved", (ev) => { const f = ev.files || []; if (f.length) $("#ovS").textContent = "Saved " + Math.max.apply(null, f.map(x => x.kb || 0)) + " KB"; });
   const discard = async (all) => { const r = await api("discard", { all: !!all }); $("#ovS").textContent = r.ok ? (all ? "All clips deleted - Ctrl+Z to undo" : "Clip deleted - Ctrl+Z to undo") : (r.error || "No clip"); thumb(); };
   $("#ovDel").onclick = (e) => discard(e.shiftKey);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Delete" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); discard(e.shiftKey); return; }
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z" && S.lastSave && Date.now() - S.lastSave.at < 20000) {
+      e.preventDefault(); const ls = S.lastSave; S.lastSave = null;
+      api("undo_save").then(r => { if (!r.ok) { $("#ovS").textContent = r.error || "Can't undo"; return; }
+        S.armed = ls.cats; renderQ(); F.page.value = ls.page; F.cols.value = ls.cols; F.size.value = ls.size; ORD.forEach(k => F[k]._t = 1); paint(); push(); thumb(); $("#ovS").textContent = "Save undone - fix it and press Enter"; focusK("page"); });
+      return;
+    }
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z" && !(document.activeElement && document.activeElement.tagName === "INPUT")) { e.preventDefault(); api("layer", { cmd: "undo" }).then(thumb); return; }
     if (e.key === "Escape") { e.preventDefault(); disarm(); return; }
     if (e.altKey && !e.ctrlKey && /^[0-9]$/.test(e.key) && S.st && S.st.quick_saves[e.key]) { e.preventDefault(); armAdd(S.st.quick_saves[e.key]); return; }
@@ -127,4 +134,5 @@
   window.addEventListener("focus", () => thumb());
   setInterval(async () => { if (document.hidden || !S.st) return; try { const L = await api("layers"); if (L.rev !== S.rev) thumb(); } catch (e) {} }, 4000);
   connect(); load();
+  CATSEARCH.install(() => (S.st && S.st.categories) || {}, () => S.armed, (ps) => { S.armed = ps.slice(); renderQ(); prefill(); paint(); push(); F.page.focus(); F.page.select(); });
 })();
