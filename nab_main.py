@@ -592,6 +592,12 @@ def run_webview():
         _signal_launcher()
         threading.Thread(target=_boot_engine, args=(sh, ready), daemon=True, name="NAB-Boot").start()
         ready.wait()
+        if not sh.boot_error:                         # tells the updater that the new version really started
+            try:
+                with open(os.path.join(os.path.dirname(sys.executable), "update_ok.flag"), "w") as _f:
+                    _f.write(str(time.time()))
+            except Exception:
+                pass
         if sh.boot_error:
             try:
                 sh.main.load_html("<body style='background:#0b0d12;color:#f87171;font:15px Segoe UI;padding:40px'><h2>NAB could not start</h2><pre>%s</pre>"
@@ -712,11 +718,17 @@ def _setup_logging():
     try:
         import nab_engine_host
         from logging.handlers import RotatingFileHandler
-        try:
-            open(nab_engine_host.LOG_FILE, "w").close()   # temporary: starts empty every launch
+        try:                                          # keep the previous run's log so a crash can still be read
+            lf = nab_engine_host.LOG_FILE
+            if os.path.isfile(lf) and os.path.getsize(lf) > 0:
+                prev = lf.replace(".txt", ".prev.txt")
+                try:
+                    os.replace(lf, prev)
+                except Exception:
+                    pass
         except Exception:
             pass
-        h = RotatingFileHandler(nab_engine_host.LOG_FILE, maxBytes=200_000, backupCount=0, encoding="utf-8")
+        h = RotatingFileHandler(nab_engine_host.LOG_FILE, maxBytes=400_000, backupCount=1, encoding="utf-8")
         h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(threadName)s: %(message)s"))
         root = logging.getLogger()
         root.setLevel(logging.INFO)

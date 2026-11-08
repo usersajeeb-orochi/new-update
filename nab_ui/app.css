@@ -319,3 +319,30 @@ body:not(.locked) .app{animation:appIn .35s ease-out}
 @keyframes updspin{to{transform:rotate(360deg)}}
 @keyframes updpulse{50%{transform:scale(1.6);opacity:.6}}
 @keyframes updshine{to{transform:translateX(100%)}}
+
+/* ===== v3.0.45 polish layer: depth, focus, rhythm, motion (additive, no layout changes) ===== */
+:root{--sh1:0 1px 2px rgba(0,0,0,.28);--sh2:0 8px 24px rgba(0,0,0,.32);--ease:cubic-bezier(.2,.7,.2,1)}
+::selection{background:rgba(var(--accrgb,91,140,255),.35)}
+*{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--dim);background-clip:content-box;border:2px solid transparent}
+button,input,select,textarea{transition:background-color .15s var(--ease),border-color .15s var(--ease),box-shadow .15s var(--ease),transform .12s var(--ease),color .15s var(--ease)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:8px}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--accrgb,91,140,255),.22);outline:0}
+.btn{box-shadow:var(--sh1)}.btn:hover{filter:brightness(1.12)}.btn:active{transform:translateY(1px) scale(.985);filter:brightness(.95)}
+.btn.pri{box-shadow:0 6px 18px rgba(var(--accrgb,91,140,255),.35)}.btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.card{box-shadow:var(--sh1)}.card:hover{border-color:color-mix(in srgb,var(--acc) 35%,var(--line))}
+.card h4{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.s-body{width:100%}
+.s-body h2{font-size:26px;letter-spacing:-.01em;margin-bottom:6px}
+.s-body .kv{padding:6px 0}.s-body .row{gap:10px}
+.s-nav button{transition:background-color .15s,color .15s,transform .12s}.s-nav button:hover{transform:translateX(2px)}
+.s-nav button.on{box-shadow:inset 3px 0 0 var(--acc)}
+#rail .rb:hover,.rail button:hover{filter:brightness(1.2)}
+table{font-variant-numeric:tabular-nums}
+input[type=checkbox]{accent-color:var(--acc)}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 5px;font-size:11px}
+.chip{transition:background-color .15s,border-color .15s}.chip:hover{border-color:var(--acc)}
+.upd{box-shadow:var(--sh2)}
+.toast{box-shadow:var(--sh2);backdrop-filter:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

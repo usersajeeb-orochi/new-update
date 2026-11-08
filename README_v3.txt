@@ -279,3 +279,8 @@ v3.0.43
 v3.0.44
 - Category search moved to Ctrl + numpad plus. Ctrl+K is the command bar again.
 - Telegram sends wait and retry when Telegram's flood limit (429) is hit.
+
+v3.0.45
+- Updater safety net: if a new version never starts, the old files are put back (the update is still required; nothing lets a PC stay on an old version).
+- The previous run's log is kept (nab_log.prev.txt) so a crash can be read. Telegram: /health and /log.
+- Style polish: focus rings, depth, hover/press feedback, thin scrollbars, tidier settings headings. Reduced-motion respected.

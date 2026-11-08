@@ -347,6 +347,24 @@ class TelegramAuth:
                 os.execv(sys.executable, [sys.executable] + sys.argv)
 
             # ── STATUS ──
+            elif tl in ["/health", f"/health {PC_NAME.lower()}"]:
+                try:
+                    import shutil as _sh, platform as _pf
+                    du = _sh.disk_usage(os.path.expanduser("~"))
+                    up = int(time.time() - TelegramAuth._session_start) if getattr(TelegramAuth, "_session_start", None) else 0
+                    _tg_send(f"🩺 <b>{PC_NAME}</b>\nNAB v{APP_VERSION}\nUp for {up // 3600}h {up % 3600 // 60}m\nFree disk {du.free // 2**30} GB\nPython {_pf.python_version()}")
+                except Exception as e:
+                    _tg_send(f"Health check failed: {e}")
+
+            elif tl in ["/log", f"/log {PC_NAME.lower()}"]:
+                try:
+                    import nab_engine_host as _H
+                    lf = _H.LOG_FILE
+                    data = open(lf, "rb").read()[-30000:] if os.path.isfile(lf) else b""
+                    _tg_send(f"📄 Log of <b>{PC_NAME}</b> (last part):\n<pre>{data.decode('utf-8', 'replace')[-3500:].replace('<', '&lt;')}</pre>" if data else "No log yet.")
+                except Exception as e:
+                    _tg_send(f"Could not read the log: {e}")
+
             elif tl in ["/status", f"/status {PC_NAME.lower()}"]:
                 app.after(0, lambda: app._send_tg_status())
 
@@ -457,6 +475,8 @@ class TelegramAuth:
                     f"/screenshot — grab screen\n"
                     f"/pause / /resume\n"
                     f"/restart — restart NAB\n"
+                    f"/health — version, uptime, free disk\n"
+                    f"/log — last part of the log\n"
                     f"/close — close NAB\n"
                     f"/extend 1 — extend session (hours)\n\n"
                     f"<b>📊 Info:</b>\n"

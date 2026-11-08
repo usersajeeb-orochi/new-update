@@ -108,12 +108,36 @@ def main_folder(app_dir, new_dir, pid):
         if not wait_pid(pid, 40):
             log("WARNING: NAB did not exit in time, trying anyway")
     time.sleep(0.8)
+    flag = os.path.join(app_dir, "update_ok.flag")
+    rm(flag)
     ok = swap_folder(app_dir, new_dir)
     log("swap " + ("complete" if ok else "FAILED (old version kept)"))
     start_app(app_dir)
-    time.sleep(1.5)
     if ok:
-        rm(os.path.join(app_dir, "_old"))
+        # the new version must report that it started. If it never does, go back to the old files
+        # (this is only a safety net for a broken build; the update is still required).
+        end = time.time() + 75
+        while time.time() < end and not os.path.exists(flag):
+            time.sleep(1)
+        if os.path.exists(flag):
+            log("new version started fine")
+            rm(os.path.join(app_dir, "_old"))
+        else:
+            log("ERROR: new version did not start - restoring the old version")
+            old = os.path.join(app_dir, "_old")
+            try:
+                for _ in range(10):
+                    subprocess.call(["taskkill", "/F", "/IM", "NAB.exe"], creationflags=0x08000000)
+                    time.sleep(0.5)
+                for name in os.listdir(old):
+                    dst = os.path.join(app_dir, name)
+                    rm(dst)
+                    retry(lambda: os.replace(os.path.join(old, name), dst))
+                start_app(app_dir)
+                log("old version restored")
+            except Exception as e:
+                log("RESTORE FAILED: %r" % (e,))
+            return 1
     rm(os.path.join(app_dir, "_update"))
     return 0 if ok else 1
 
