@@ -1,0 +1,12 @@
+/* NAB 3.0.35 polish — loaded last. Opacity / transform only, so it stays fast on weak PCs. */
+*{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;border:2px solid transparent;background-clip:content-box}::-webkit-scrollbar-thumb:hover{background:var(--dim);background-clip:content-box;border:2px solid transparent}
+button{transition:background-color .15s,color .15s,border-color .15s,transform .1s,filter .15s}
+button:active:not(:disabled){transform:scale(.97)}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid color-mix(in srgb,var(--acc) 55%,transparent);outline-offset:1px}
+.rb{transition:background-color .15s,color .15s}.rb.active{box-shadow:inset 3px 0 0 var(--acc)}
+.card,.catbar,.panel{box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 28px -20px rgba(0,0,0,.6)}
+.save{background:var(--grad);box-shadow:0 8px 22px -10px var(--acc);transition:transform .12s,filter .15s}.save:hover{filter:brightness(1.08)}
+.mini.dis{margin-right:6px;color:var(--dim)}.mini.dis:hover{background:var(--bad);color:#fff}
+.view:not(.hidden){animation:viewin .22s ease both}@keyframes viewin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.toasts>*{box-shadow:0 14px 34px -14px rgba(0,0,0,.7)}

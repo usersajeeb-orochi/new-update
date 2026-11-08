@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "NAB Tab Reporter",
+  "version": "1.1",
+  "description": "Tells the NAB desktop app which URL the active tab is on (local only, 127.0.0.1).",
+  "permissions": ["tabs", "alarms"],
+  "background": { "service_worker": "background.js" }
+}

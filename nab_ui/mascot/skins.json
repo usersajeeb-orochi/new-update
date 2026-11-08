@@ -1,0 +1,780 @@
+{
+ "sajeeb": {
+  "name": "Sajeeb",
+  "ref": 556,
+  "slots": {
+   "walk": {
+    "f": "walk_4",
+    "bust": false,
+    "left": true
+   },
+   "run": {
+    "f": "run_3",
+    "bust": false,
+    "left": true
+   },
+   "jump": {
+    "f": "jump_1",
+    "frames": [
+     "jump_1",
+     "jump_2",
+     "jump_3",
+     "jump_4",
+     "jump_5",
+     "jump_6",
+     "jump_7"
+    ],
+    "fps": 8,
+    "anim": "phase",
+    "bust": false,
+    "left": false
+   },
+   "dance": {
+    "f": "dance_1",
+    "frames": [
+     "dance_1",
+     "dance_2",
+     "dance_3",
+     "dance_4",
+     "dance_5",
+     "dance_6",
+     "dance_7"
+    ],
+    "fps": 7,
+    "anim": "time",
+    "bust": false,
+    "left": false
+   },
+   "celebrate": {
+    "f": "celebrate_1",
+    "frames": [
+     "celebrate_1",
+     "celebrate_2",
+     "celebrate_3",
+     "celebrate_4"
+    ],
+    "fps": 6,
+    "anim": "time",
+    "bust": false,
+    "left": false
+   },
+   "wave": {
+    "f": "wave_1",
+    "frames": [
+     "wave_1",
+     "wave_2"
+    ],
+    "fps": 5,
+    "anim": "time",
+    "bust": false,
+    "left": false
+   },
+   "phone": {
+    "f": "phone_1",
+    "frames": [
+     "phone_1",
+     "phone_2"
+    ],
+    "fps": 1.2,
+    "anim": "time",
+    "bust": false,
+    "left": false
+   },
+   "sit": {
+    "f": "sit",
+    "bust": false,
+    "left": false
+   },
+   "point": {
+    "f": "point",
+    "bust": false,
+    "left": false
+   },
+   "lounge": {
+    "f": "lounge",
+    "bust": false,
+    "left": false
+   },
+   "sitbox": {
+    "f": "sitbox",
+    "bust": false,
+    "left": false
+   },
+   "back_view": {
+    "f": "back_view",
+    "bust": false,
+    "left": false
+   },
+   "paws": {
+    "f": "paws",
+    "bust": false,
+    "left": false
+   },
+   "laptop": {
+    "f": "laptop",
+    "bust": false,
+    "left": false
+   },
+   "umbrella": {
+    "f": "umbrella",
+    "bust": false,
+    "left": false
+   },
+   "wink": {
+    "f": "wink",
+    "bust": false,
+    "left": false
+   },
+   "happy": {
+    "f": "happy",
+    "bust": false,
+    "left": false
+   },
+   "react": {
+    "f": "react",
+    "bust": false,
+    "left": false
+   },
+   "surprised": {
+    "f": "surprised",
+    "bust": false,
+    "left": false
+   },
+   "panic": {
+    "f": "panic",
+    "bust": false,
+    "left": false
+   },
+   "tea": {
+    "f": "tea",
+    "bust": false,
+    "left": false
+   },
+   "heart_hug": {
+    "f": "heart_hug",
+    "bust": false,
+    "left": false
+   },
+   "tea2": {
+    "f": "tea2",
+    "bust": false,
+    "left": false
+   },
+   "angry": {
+    "f": "angry",
+    "bust": true,
+    "left": false
+   },
+   "sad": {
+    "f": "sad",
+    "bust": true,
+    "left": false
+   },
+   "love": {
+    "f": "love",
+    "bust": true,
+    "left": false
+   },
+   "shy": {
+    "f": "shy",
+    "bust": true,
+    "left": false
+   },
+   "thinking": {
+    "f": "thinking",
+    "bust": true,
+    "left": false
+   },
+   "peek": {
+    "f": "peek",
+    "bust": true,
+    "left": false
+   },
+   "closeup": {
+    "f": "closeup",
+    "bust": true,
+    "left": false
+   },
+   "sleep": {
+    "f": "sleep_1",
+    "frames": [
+     "sleep_1",
+     "sleep_2"
+    ],
+    "fps": 0.9,
+    "anim": "time",
+    "bust": false,
+    "left": false
+   }
+  },
+  "who": "sajeeb"
+ },
+ "blue": {
+  "name": "Riko Blue",
+  "ref": 902,
+  "slots": {
+   "sit": {
+    "f": "00_wink",
+    "bust": false,
+    "left": false
+   },
+   "walk": {
+    "f": "01_side_walk",
+    "bust": false,
+    "left": true
+   },
+   "run": {
+    "f": "02_walk",
+    "bust": false,
+    "left": false
+   },
+   "jump": {
+    "f": "03_jump",
+    "bust": false,
+    "left": false
+   },
+   "celebrate": {
+    "f": "04_celebrate",
+    "bust": false,
+    "left": false
+   },
+   "dance": {
+    "f": "05_wave",
+    "bust": false,
+    "left": false
+   },
+   "wave": {
+    "f": "05_wave",
+    "bust": false,
+    "left": false
+   },
+   "point": {
+    "f": "06_point",
+    "bust": false,
+    "left": false
+   },
+   "wink": {
+    "f": "00_wink",
+    "bust": false,
+    "left": false
+   },
+   "happy": {
+    "f": "07_happy",
+    "bust": false,
+    "left": false
+   },
+   "angry": {
+    "f": "08_angry",
+    "bust": false,
+    "left": false
+   },
+   "surprised": {
+    "f": "09_surprised",
+    "bust": false,
+    "left": false
+   },
+   "sad": {
+    "f": "10_sad",
+    "bust": false,
+    "left": false
+   },
+   "love": {
+    "f": "11_love",
+    "bust": false,
+    "left": false
+   },
+   "shy": {
+    "f": "11_love",
+    "bust": false,
+    "left": false
+   },
+   "thinking": {
+    "f": "12_thinking",
+    "bust": false,
+    "left": false
+   },
+   "laptop": {
+    "f": "13_laptop",
+    "bust": false,
+    "left": false
+   },
+   "tea": {
+    "f": "14_bubble_tea",
+    "bust": false,
+    "left": false
+   },
+   "react": {
+    "f": "15_react",
+    "bust": false,
+    "left": false
+   },
+   "heart_hug": {
+    "f": "16_heart_hug",
+    "bust": false,
+    "left": false
+   },
+   "sleep": {
+    "f": "17_sleep",
+    "bust": false,
+    "left": false
+   },
+   "lounge": {
+    "f": "17_sleep",
+    "bust": false,
+    "left": false
+   },
+   "back_view": {
+    "f": "18_back_view",
+    "bust": false,
+    "left": false
+   },
+   "peek": {
+    "f": "12_thinking",
+    "bust": false,
+    "left": false
+   },
+   "paws": {
+    "f": "15_react",
+    "bust": false,
+    "left": false
+   },
+   "panic": {
+    "f": "09_surprised",
+    "bust": false,
+    "left": false
+   },
+   "closeup": {
+    "f": "07_happy",
+    "bust": false,
+    "left": false
+   }
+  },
+  "who": "riko"
+ },
+ "snow": {
+  "name": "Snow",
+  "ref": 560,
+  "slots": {
+   "sit": {
+    "f": "00_A00",
+    "bust": false,
+    "left": false
+   },
+   "walk": {
+    "f": "01_A03",
+    "bust": false,
+    "left": false
+   },
+   "run": {
+    "f": "02_A15",
+    "bust": false,
+    "left": false
+   },
+   "jump": {
+    "f": "03_A01",
+    "bust": false,
+    "left": false
+   },
+   "celebrate": {
+    "f": "04_A12",
+    "bust": false,
+    "left": false
+   },
+   "dance": {
+    "f": "05_A16",
+    "bust": false,
+    "left": false
+   },
+   "wave": {
+    "f": "06_A19",
+    "bust": true,
+    "left": false
+   },
+   "point": {
+    "f": "07_A04",
+    "bust": false,
+    "left": false
+   },
+   "wink": {
+    "f": "07_A04",
+    "bust": false,
+    "left": false
+   },
+   "happy": {
+    "f": "08_A05",
+    "bust": false,
+    "left": false
+   },
+   "angry": {
+    "f": "09_A06",
+    "bust": false,
+    "left": false
+   },
+   "surprised": {
+    "f": "10_A07",
+    "bust": true,
+    "left": false
+   },
+   "sad": {
+    "f": "11_A09",
+    "bust": true,
+    "left": false
+   },
+   "love": {
+    "f": "12_A13",
+    "bust": false,
+    "left": false
+   },
+   "shy": {
+    "f": "12_A13",
+    "bust": false,
+    "left": false
+   },
+   "thinking": {
+    "f": "13_A14",
+    "bust": false,
+    "left": false
+   },
+   "laptop": {
+    "f": "14_A02",
+    "bust": false,
+    "left": false
+   },
+   "tea": {
+    "f": "15_A10",
+    "bust": false,
+    "left": false
+   },
+   "react": {
+    "f": "16_A11",
+    "bust": false,
+    "left": false
+   },
+   "heart_hug": {
+    "f": "04_A12",
+    "bust": false,
+    "left": false
+   },
+   "sleep": {
+    "f": "17_A08",
+    "bust": false,
+    "left": false
+   },
+   "lounge": {
+    "f": "17_A08",
+    "bust": false,
+    "left": false
+   },
+   "back_view": {
+    "f": "18_A17",
+    "bust": true,
+    "left": false
+   },
+   "peek": {
+    "f": "19_A18",
+    "bust": false,
+    "left": false
+   },
+   "paws": {
+    "f": "19_A18",
+    "bust": false,
+    "left": false
+   },
+   "panic": {
+    "f": "10_A07",
+    "bust": true,
+    "left": false
+   },
+   "closeup": {
+    "f": "06_A19",
+    "bust": true,
+    "left": false
+   }
+  },
+  "who": "riko"
+ },
+ "shadow": {
+  "name": "Shadow Cat",
+  "ref": 630,
+  "slots": {
+   "sit": {
+    "f": "00_B00",
+    "bust": true,
+    "left": false
+   },
+   "walk": {
+    "f": "01_B02",
+    "bust": false,
+    "left": false
+   },
+   "run": {
+    "f": "02_B14",
+    "bust": false,
+    "left": false
+   },
+   "jump": {
+    "f": "03_B04",
+    "bust": false,
+    "left": false
+   },
+   "celebrate": {
+    "f": "03_B04",
+    "bust": false,
+    "left": false
+   },
+   "dance": {
+    "f": "04_B12",
+    "bust": false,
+    "left": false
+   },
+   "wave": {
+    "f": "05_B01",
+    "bust": false,
+    "left": false
+   },
+   "point": {
+    "f": "05_B01",
+    "bust": false,
+    "left": false
+   },
+   "wink": {
+    "f": "05_B01",
+    "bust": false,
+    "left": false
+   },
+   "happy": {
+    "f": "06_B09",
+    "bust": true,
+    "left": false
+   },
+   "angry": {
+    "f": "07_B06",
+    "bust": true,
+    "left": false
+   },
+   "surprised": {
+    "f": "08_B07",
+    "bust": true,
+    "left": false
+   },
+   "sad": {
+    "f": "09_B08",
+    "bust": true,
+    "left": false
+   },
+   "love": {
+    "f": "10_B19",
+    "bust": true,
+    "left": false
+   },
+   "shy": {
+    "f": "06_B09",
+    "bust": true,
+    "left": false
+   },
+   "thinking": {
+    "f": "11_B18",
+    "bust": true,
+    "left": false
+   },
+   "laptop": {
+    "f": "12_B11",
+    "bust": false,
+    "left": false
+   },
+   "tea": {
+    "f": "13_B10",
+    "bust": false,
+    "left": false
+   },
+   "react": {
+    "f": "14_B03",
+    "bust": false,
+    "left": false
+   },
+   "heart_hug": {
+    "f": "10_B19",
+    "bust": true,
+    "left": false
+   },
+   "sleep": {
+    "f": "15_B05",
+    "bust": false,
+    "left": false
+   },
+   "lounge": {
+    "f": "16_B15",
+    "bust": false,
+    "left": false
+   },
+   "back_view": {
+    "f": "17_B17",
+    "bust": true,
+    "left": false
+   },
+   "peek": {
+    "f": "18_B13",
+    "bust": true,
+    "left": false
+   },
+   "paws": {
+    "f": "16_B15",
+    "bust": false,
+    "left": false
+   },
+   "panic": {
+    "f": "19_B16",
+    "bust": true,
+    "left": false
+   },
+   "closeup": {
+    "f": "11_B18",
+    "bust": true,
+    "left": false
+   }
+  },
+  "who": "riko"
+ },
+ "neon": {
+  "name": "Neon Cat",
+  "ref": 619,
+  "slots": {
+   "sit": {
+    "f": "00_C00",
+    "bust": false,
+    "left": false
+   },
+   "walk": {
+    "f": "01_C02",
+    "bust": false,
+    "left": false
+   },
+   "run": {
+    "f": "02_C11",
+    "bust": false,
+    "left": true
+   },
+   "jump": {
+    "f": "03_C03",
+    "bust": false,
+    "left": false
+   },
+   "celebrate": {
+    "f": "03_C03",
+    "bust": false,
+    "left": false
+   },
+   "dance": {
+    "f": "04_C10",
+    "bust": false,
+    "left": false
+   },
+   "wave": {
+    "f": "05_C17",
+    "bust": true,
+    "left": false
+   },
+   "point": {
+    "f": "06_C01",
+    "bust": false,
+    "left": false
+   },
+   "wink": {
+    "f": "06_C01",
+    "bust": false,
+    "left": false
+   },
+   "happy": {
+    "f": "07_C06",
+    "bust": false,
+    "left": false
+   },
+   "angry": {
+    "f": "08_C05",
+    "bust": true,
+    "left": false
+   },
+   "surprised": {
+    "f": "09_C07",
+    "bust": false,
+    "left": false
+   },
+   "sad": {
+    "f": "10_C08",
+    "bust": true,
+    "left": false
+   },
+   "love": {
+    "f": "11_C12",
+    "bust": true,
+    "left": false
+   },
+   "shy": {
+    "f": "12_C18",
+    "bust": true,
+    "left": false
+   },
+   "thinking": {
+    "f": "13_C14",
+    "bust": false,
+    "left": false
+   },
+   "laptop": {
+    "f": "14_C04",
+    "bust": false,
+    "left": false
+   },
+   "tea": {
+    "f": "15_C15",
+    "bust": false,
+    "left": false
+   },
+   "react": {
+    "f": "13_C14",
+    "bust": false,
+    "left": false
+   },
+   "heart_hug": {
+    "f": "11_C12",
+    "bust": true,
+    "left": false
+   },
+   "sleep": {
+    "f": "16_C09",
+    "bust": false,
+    "left": false
+   },
+   "lounge": {
+    "f": "17_C16",
+    "bust": false,
+    "left": false
+   },
+   "back_view": {
+    "f": "18_C19",
+    "bust": false,
+    "left": false
+   },
+   "peek": {
+    "f": "05_C17",
+    "bust": true,
+    "left": false
+   },
+   "paws": {
+    "f": "12_C18",
+    "bust": true,
+    "left": false
+   },
+   "panic": {
+    "f": "13_C14",
+    "bust": false,
+    "left": false
+   },
+   "closeup": {
+    "f": "05_C17",
+    "bust": true,
+    "left": false
+   }
+  },
+  "who": "riko"
+ }
+}

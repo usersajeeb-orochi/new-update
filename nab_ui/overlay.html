@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>NAB Overlay</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/s/app.css">
+<style>
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg)}
+.ov{position:relative;height:100%;display:flex;flex-direction:column;gap:6px;padding:8px;box-sizing:border-box;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.ov-h{display:flex;align-items:center;gap:8px;-webkit-app-region:drag;cursor:move}
+.ov-h img{height:22px;max-width:90px;object-fit:contain}.ov-h b{font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-h button{-webkit-app-region:no-drag;height:24px;width:24px;border-radius:999px;background:var(--surf2)}
+.ov-th{flex:1;min-height:70px;background:var(--surf);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.ov-th #ovDel{position:absolute;left:6px;top:6px;width:26px;height:26px;border-radius:999px;background:rgba(15,15,20,.72);color:#fff;display:none;align-items:center;justify-content:center;padding:0}.ov-th:hover #ovDel{display:flex}.ov-th #ovDel:hover{background:#dc2626}.ov-i{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px;color:var(--mut,#888)}.ov-i.hidden{display:none}.ov-i button{height:22px;padding:0 10px;border-radius:999px;background:var(--surf2);font-size:11px}.ov-th img{max-width:100%;max-height:100%;object-fit:contain}.ov-th .n{position:absolute;right:6px;top:6px;background:var(--acc);color:#fff;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700}
+.ov-cat{font-weight:800;font-size:15px;padding:6px 10px;border-radius:10px;background:var(--surf2);border-left:5px solid var(--cc,var(--acc));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-q{display:flex;flex-wrap:wrap;gap:4px}.ov-q button{height:24px;padding:0 8px;border-radius:999px;background:var(--surf2);font-size:11px;border:1px solid transparent}
+.ov-q button.on{background:var(--cc,var(--acc));color:#fff}.ov-q button.flash{outline:2px solid var(--acc)}
+.ov-m{display:flex;gap:6px}.ov-m{align-items:center}.ov-m #oPage{flex:1;width:0;height:34px;font-size:14px;padding:0 4px;min-width:0}.ov-m .mfi.dg{width:28px;height:34px;font-size:14px;padding:0;flex:none}.ov-m .pr{gap:2px}.ov-m #oS2{width:46px}.ov-m button{height:34px;padding:0 14px;border-radius:999px;background:var(--acc);color:#fff;font-weight:700}
+.em{color:var(--dim);font-size:12px;text-align:center;display:none}.em small{opacity:.7}
+.grip{position:absolute;right:2px;bottom:2px;width:16px;height:16px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 55%,var(--dim) 55%,var(--dim) 62%,transparent 62%,transparent 74%,var(--dim) 74%,var(--dim) 81%,transparent 81%);opacity:.7}
+.ov-s{font-size:11px;color:var(--dim);min-height:14px}
+</style><link rel="stylesheet" href="/s/polish.css"></head>
+<body>
+<div class="ov" id="ovRoot"><div class="grip" id="ovGrip" title="Resize"></div>
+  <div class="ov-h pywebview-drag-region"><img id="ovLogo" alt=""><b id="ovPaper">NAB</b><button id="ovSmall" title="Size: small / medium / large">⇲</button><button id="ovBack" title="Back to NAB">⤢</button><button id="ovClose" title="Hide the mini window (Shift+click: turn it off)">✕</button></div>
+  <div class="ov-th"><img id="ovImg" alt=""><span class="em" id="ovEmpty">Nothing clipped yet<br><small>Copy a clip in the browser</small></span><span class="n" id="ovN">0</span><button id="ovDel" title="Delete grabbed clip (Ctrl+Delete)">🗑</button></div>
+  <div class="ov-cat" id="ovCat">—</div>
+  <div class="ov-q" id="ovQ"></div>
+  <div class="ov-m"><input id="oPage" class="mfi" placeholder="Page" maxlength="6" autocomplete="off"><span class="mf" id="oColsW"><span class="pr"><input id="oC1" class="mfi dg" placeholder="1"><i>-</i><input id="oC2" class="mfi dg" placeholder="3"></span></span><span class="mf" id="oSizeW"><span class="pr"><input id="oS1" class="mfi dg" placeholder="4"><i>x</i><input id="oS2" class="mfi dg" placeholder="6"></span></span><button id="ovSave">Save</button></div>
+  <div class="ov-i hidden" id="ovInchRow"><span id="ovInch"></span><button id="ovInchUse">Use size</button></div>
+  <div class="ov-s" id="ovS"></div>
+</div>
+<script>window.NAB={token:"__NAB_TOKEN__",role:"overlay"};</script>
+<script src="/s/icons.js"></script>
+<script src="/s/i18n.js"></script>
+<script src="/s/common.js"></script>
+<script src="/s/overlay.js"></script>
+<script src="/s/mascot.js"></script>
+<script src="/s/mascot_plus.js"></script>
+<script src="/s/mascot_care.js"></script>
+<script src="/s/mascot_fun.js"></script>
+</body></html>

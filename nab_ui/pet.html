@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><title>NAB Pet</title>
+<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden;user-select:none}
+#p{position:absolute;left:0;bottom:0;height:100%;width:auto;max-width:100%;object-fit:contain;image-rendering:auto;pointer-events:auto}
+.f{transform:scaleX(-1)}
+#n{position:absolute;left:50%;bottom:0;transform:translateX(-50%);padding:1px 8px;border-radius:999px;background:#12141fd9;color:#fff;font:700 10px system-ui;pointer-events:none}</style></head><body><img id="p" alt=""><div id="n">Sajeeb</div>
+<script>window.NAB={token:"__NAB_TOKEN__",role:"pet"};</script>
+<script>
+(async()=>{
+ const sk=await (await fetch("/s/mascot/skins.json")).json();let skin="sajeeb",slots=sk.sajeeb.slots,cur="sit",flip=0,tick=0;
+ const img=document.getElementById("p"),nm=document.getElementById("n");
+ function show(slot,fl){cur=slot;flip=fl;draw()}
+ function draw(){const s=slots[cur]||slots.sit,n=s.frames?s.frames.length:0,f=n?s.frames[tick%n]:s.f;img.src="/s/mascot/"+skin+"/"+f+".webp";img.classList.toggle("f",!!flip!==!!s.left)}
+ setInterval(()=>{const s=slots[cur];if(s&&s.frames){tick++;draw()}},120);
+ window.petSkin=(id)=>{if(sk[id]){skin=id;slots=sk[id].slots;show("sit",0)}};
+ window.petName=(t)=>{nm.textContent=t||"Sajeeb"};
+ window.petSet=(slot,dirRight)=>show(slot,!dirRight);
+ img.onclick=()=>{show("happy",0);setTimeout(()=>show("sit",0),1500)};
+ show("sit",0);
+})();
+</script></body></html>

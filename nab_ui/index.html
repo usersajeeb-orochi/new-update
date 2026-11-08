@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>News Automation Pro</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/s/app.css">
+<link rel="stylesheet" href="/s/tool_tracker.css">
+<link rel="stylesheet" href="/s/tool_mail.css">
+<link rel="stylesheet" href="/s/tool_pdf.css">
+<link rel="stylesheet" href="/s/tool_search.css">
+<link rel="stylesheet" href="/s/tool_pr.css">
+<link rel="stylesheet" href="/s/polish.css">
+<style>
+#skel{position:fixed;inset:0;z-index:9999;background:#0b0d12;color:#8f93ac;font:14px 'Segoe UI',system-ui,sans-serif;transition:opacity .25s}
+#skel.off{opacity:0;pointer-events:none}
+#skel .top{height:54px;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #1f2336}
+#skel .dot{width:12px;height:12px;border-radius:50%;background:#6c6cf0}#skel .b{font-weight:700;color:#f3f4fa}
+#skel .sk{background:linear-gradient(90deg,#161a29 0%,#222740 50%,#161a29 100%);background-size:200% 100%;animation:skSh 1.3s linear infinite;border-radius:10px}
+@keyframes skSh{to{background-position:-200% 0}}
+#skel .wrap{display:flex;height:calc(100% - 55px)}#skel .rail{width:70px;border-right:1px solid #1f2336;display:flex;flex-direction:column;align-items:center;gap:20px;padding-top:20px}
+#skel .rail .sk{width:36px;height:36px;border-radius:12px}#skel .col{width:250px;border-right:1px solid #1f2336;padding:16px;display:flex;flex-direction:column;gap:12px}
+#skel .main{flex:1;padding:16px;display:flex;flex-direction:column;gap:14px}#skel .side{width:280px;border-left:1px solid #1f2336;padding:16px;display:flex;flex-direction:column;gap:12px}
+#skel .msg{position:fixed;left:0;right:0;bottom:34px;text-align:center}
+</style>
+</head>
+<body>
+<script>
+// start-up intro: a separate page in an iframe so it can never clash with the app's own styles; it covers the skeleton and fades out when the app is ready
+(function () {
+  var on = true; try { on = localStorage.getItem("nab_intro") !== "0" && !sessionStorage.getItem("nab_intro_done"); } catch (e) {}
+  var embedded = window.parent !== window;     // inside the start-up page of the NAB window: that page already plays the intro
+  window.INTRO = { on: on, ready: function () {
+    try { if (window.INTRO.f) window.INTRO.f.contentWindow.postMessage({ t: "intro-ready" }, "*"); } catch (e) {}
+    try { if (embedded) window.parent.postMessage({ t: "app-ready" }, "*"); } catch (e) {}
+    window.INTRO.isReady = true; } };
+  if (embedded) { document.addEventListener("keydown", function () { try { window.parent.postMessage({ t: "intro-skip" }, "*"); } catch (e) {} }, true); return; }
+  if (!on) return;
+  var snd = "1"; try { snd = localStorage.getItem("nab_intro_sound") === "0" ? "0" : "1"; } catch (e) {}
+  var f = document.createElement("iframe"); f.id = "introFrame"; f.setAttribute("allow", "autoplay"); f.setAttribute("tabindex", "-1"); f.src = "/s/intro.html?s=" + snd;
+  f.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;z-index:10000;background:#030a14;transition:opacity .45s";
+  window.INTRO.f = f; document.body.appendChild(f);
+  window.addEventListener("message", function (e) {
+    var d = e.data || {};
+    if (d.t === "intro-loaded" && window.INTRO.isReady) window.INTRO.ready();
+    if (d.t === "intro-done") { try { sessionStorage.setItem("nab_intro_done", "1"); } catch (x) {} f.style.opacity = "0"; setTimeout(function () { f.remove(); }, 480); }
+  });
+  document.addEventListener("keydown", function () { try { f.contentWindow.postMessage({ t: "intro-skip" }, "*"); } catch (e) {} }, true);
+  setTimeout(function () { f.remove(); }, 40000);
+})();
+</script>
+<div id="skel"><div class="top"><span class="dot"></span><span class="b">NAB</span><div class="sk" style="width:150px;height:28px;border-radius:999px"></div><div class="sk" style="width:130px;height:28px;border-radius:999px"></div></div>
+<div class="wrap"><div class="rail"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+<div class="col"><div class="sk" style="height:90px"></div><div class="sk" style="height:22px;width:60%"></div><div class="sk" style="height:34px"></div><div class="sk" style="height:34px"></div><div class="sk" style="height:34px"></div><div class="sk" style="height:34px"></div></div>
+<div class="main"><div class="sk" style="height:40px;width:55%"></div><div class="sk" style="flex:1"></div></div>
+<div class="side"><div class="sk" style="height:120px"></div><div class="sk" style="height:170px"></div><div class="sk" style="height:100px"></div></div></div>
+<div class="msg">Almost ready…</div></div>
+<div id="app" class="app">
+
+  <!-- ───────── top bar ───────── -->
+  <header class="top">
+    <div class="brand"><span class="logo-dot"></span><b>NAB</b></div>
+    <button id="paperBtn" class="chip paper" title="Newspaper (P)">
+      <img id="paperLogo" alt="" width="36" height="22"><span id="paperName">—</span><i class="car">▾</i>
+    </button>
+    <button id="dateBtn" class="chip" title="Date"><span id="dateTxt">—</span></button>
+    <input id="dateInput" type="date" class="hidden-input">
+    <div id="detectPill" class="pill hidden"></div>
+    <div class="grow"></div>
+    <button id="cmdBtn" class="chip ghost" title="Ctrl+K"><span data-i18n="commands">Commands</span> <kbd>Ctrl K</kbd></button>
+    <button id="recentBtn" class="icon-btn" title="Recent saves (Ctrl+H)">🕘</button>
+    <button id="lockBtn" class="icon-btn" title="Lock this tab to the paper (📍)">📍</button>
+    <button id="overlayBtn" class="icon-btn" title="Mini overlay">🗗</button>
+  </header>
+
+  <!-- ───────── nav rail ───────── -->
+  <nav class="rail" id="rail">
+    <button class="rb active" data-view="clip" title="Clip"><span>✂</span><small data-i18n="nav_clip">Clip</small></button>
+    <button class="rb" data-view="tracker" title="Tracker"><span>📰</span><small data-i18n="nav_tracker">Tracker</small></button>
+    <button class="rb" data-view="pdf" title="PDF Maker"><span>📄</span><small>PDF</small></button>
+    <button class="rb" data-view="mail" title="Send by mail"><span>📧</span><small>Mail</small></button>
+    <button class="rb" data-view="search" title="OCR search"><span>🔎</span><small data-i18n="nav_search">Search</small></button>
+    <button class="rb" data-view="shot" title="Screenshot Bot"><span>◫</span><small>Shots</small></button>
+    <button class="rb" data-view="hunt" title="News Hunter"><span>⌖</span><small>Hunter</small></button>
+    <button class="rb" data-view="pr" title="PR Value Calculator"><span>%</span><small>PR Value</small></button>
+    <button class="rb" data-view="subs" title="Subscriptions"><span>🧾</span><small data-i18n="nav_subs">Subs</small></button>
+    <div class="grow"></div>
+    <button class="rb" data-view="settings" title="Settings"><span>⚙</span><small data-i18n="nav_settings">Settings</small></button>
+  </nav>
+
+  <!-- ───────── Clip view ───────── -->
+  <main id="view-clip" class="view clip">
+    <aside class="left" id="leftPanel">
+      <div class="catbar" id="catBar">
+        <div class="cat-now" id="catNow"><small data-i18n="saving_to">Saving to</small><div id="catStack"></div></div>
+        <div class="qchips" id="qChips"></div>
+      </div>
+      <div class="cat-head"><b data-i18n="categories">Categories</b><button id="catEditBtn" class="mini" title="Edit categories">✎</button></div>
+      <div class="cat-tree" id="catTree"></div>
+    </aside>
+
+    <section class="stage-wrap">
+      <div class="toolbar" id="toolbar">
+        <button class="tb active" data-tool="marquee" title="Rectangle select (M)">▭</button>
+        <button class="tb" data-tool="ellipse" title="Ellipse select (Shift+M)">◯</button>
+        <button class="tb" data-tool="lasso" title="Free-hand select (L)">➰</button>
+        <button class="tb" data-tool="wand" title="Magic wand (W) — click a colour area. Shift = wider">🪄</button>
+        <button class="tb" id="invSelBtn" title="Invert selection (Ctrl+Shift+I)">⇋</button>
+        <button class="tb" data-tool="move" title="Move / resize layer · or the selection (V)">✥</button>
+        <button class="tb" data-tool="brush" title="Eraser brush (B)">🧽</button>
+        <button class="tb" data-tool="clone" title="Clone stamp (S) — Alt+click the spot to copy from, then paint over what to hide">⎘</button>
+        <button class="tb" data-tool="text" title="Text (T)">T</button>
+        <span class="sep"></span>
+        <button class="tb act" data-act="crop" title="Crop to selection (C)">⛶</button>
+        <button class="tb act" data-act="erase" title="Erase to white (E / Del)">▢</button>
+        <button class="tb act" data-act="highlight" title="Highlight (H)">🖍</button>
+        <button class="tb act" data-act="redact" title="Redact black (R)">■</button>
+        <span class="sep"></span>
+        <button class="tb" id="undoBtn" title="Undo (Ctrl+Z)">↶</button>
+        <button class="tb" id="redoBtn" title="Redo (Ctrl+Y)">↷</button>
+        <span class="sep"></span>
+        <button class="tb" id="fitBtn" title="Fit (Ctrl+0)">⤢</button>
+        <span id="zoomTxt" class="zoomtxt">100%</span>
+        <div class="grow"></div>
+        <button class="tb" id="openBtn" title="Open image file (Ctrl+O)">📂</button>
+        <button class="tb" id="savedBtn" title="Open a saved clip (Ctrl+Shift+O)">🕘</button>
+        <input type="file" id="fileIn" accept="image/*" multiple hidden>
+        <button class="tb wide" id="pasteBtn" title="Paste clip (Ctrl+V)"><span data-i18n="paste">Paste</span></button>
+      </div>
+
+      <div class="stage" id="stage" tabindex="0">
+        <div id="pageWrap" class="page-wrap"><img id="page" alt="" draggable="false"></div>
+        <canvas id="ov"></canvas>
+        <div id="empty" class="empty">
+          <div class="empty-ic">🗞</div>
+          <b data-i18n="empty_title">Copy a clip from the ePaper</b>
+          <span data-i18n="empty_sub">It appears here by itself — or press Ctrl+V</span>
+        </div>
+        <div id="suggest" class="suggest hidden"><button id="suggestBtn">✂ <span data-i18n="apply_crop">Apply suggested crop</span> <kbd>Enter</kbd></button><button id="suggestX" class="mini">✕</button></div>
+        <div id="learnCard" class="card-float hidden"></div>
+        <div id="textBox" class="textbox hidden"><input id="textInput" placeholder="Text…"></div>
+      </div>
+    </section>
+
+    <aside class="right" id="rightPanel">
+      <div class="panel">
+        <div class="panel-h"><b data-i18n="layers">Layers</b>
+          <span class="grow"></span>
+          <button class="mini" id="lyDup" title="Duplicate (Ctrl+J)">⧉</button>
+          <button class="mini" id="lyMerge" title="Merge down">⤓</button>
+          <button class="mini" id="lySide" title="Merge last two side by side">⇆</button>
+          <button class="mini" id="lyDel" title="Delete layer">🗑</button>
+        </div>
+        <div id="layers" class="layers"></div>
+      </div>
+      <div class="panel" id="sizePanel">
+        <div class="panel-h"><b>Canvas &amp; size</b><span class="grow"></span><button class="mini" id="matchBtn" title="Make all clips the same width">↔</button><button class="mini" id="restackBtn" title="Stack all clips top-to-bottom again">⇅</button></div>
+        <div class="row"><i>Canvas</i><b id="cvInfo">—</b><span id="cvFree" class="tag hidden">free</span></div>
+        <div class="row sz"><span>Layer</span><input id="lyW" type="number" min="8" max="20000"><i>×</i><input id="lyH" type="number" min="8" max="40000"><button class="mini" id="lyLock" title="Keep proportions" data-on="1">🔗</button><button class="mini" id="lyApply" title="Apply size">✓</button></div>
+        <div class="btn-grid"><button class="b" data-sc="0.5">50%</button><button class="b" data-sc="0.75">75%</button><button class="b" data-sc="1.25">125%</button><button class="b" data-sc="2">200%</button></div>
+        <div class="row sz"><span>Save width</span><select id="outW"><option value="0">Original</option><option value="1600">1600 px</option><option value="1200">1200 px</option><option value="1000">1000 px</option><option value="800">800 px</option><option value="600">600 px</option></select></div>
+        <div class="row"><button class="b" id="estBtn" style="flex:1">Check file size</button><span id="estOut" class="tag"></span></div>
+        <div class="row"><button class="b" id="calBtn" style="flex:1" title="Select a part of known width, then click">Calibrate inches</button><span id="inchOut" class="tag"></span><button class="mini hidden" id="inchUse" title="Use as Size">→</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><b data-i18n="adjust">Image</b></div>
+        <div class="btn-grid">
+          <button class="b" data-f="trim" title="Trim empty margins (Ctrl+T)">Trim</button>
+          <button class="b" data-f="clean" title="Remove frame lines (Ctrl+L)">Clean</button>
+          <button class="b" data-f="pad" title="Add white padding (Ctrl+E)">Pad</button>
+          <button class="b" data-f="sharpen">Sharpen</button>
+          <button class="b" data-f="upscale">Upscale 2×</button>
+          <button class="b" data-f="rotate">Rotate</button>
+          <button class="b" data-f="autocontrast">Auto contrast</button>
+          <button class="b" data-f="grayscale">B/W</button>
+          <button class="b" id="levelsBtn" title="Brightness / contrast / gamma">Levels</button>
+          <button class="b" data-f="deskew" title="Straighten a tilted scan (finds the tilt by itself)">Straighten</button>
+          <button class="b" id="cuSave" title="Remember the selected rectangle as 'always erase' for this paper (e.g. a fixed ad strip)">Remember area</button>
+          <button class="b" id="cuApply" title="Erase this paper's remembered areas (Ctrl+Shift+K)">Clean-up</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><b data-i18n="header_h">Header</b></div>
+        <label class="row"><input type="checkbox" id="optHeader"> <span data-i18n="show_header">Show Page / Pos / Date line</span></label>
+        <label class="row sl"><span data-i18n="logo_size">Logo size</span><input type="range" id="optLogo" min="0.1" max="1" step="0.01"></label>
+        <label class="row sl"><span data-i18n="text_size">Text size</span><input type="range" id="optText" min="0.4" max="2" step="0.01"></label>
+        <label class="row sl"><span data-i18n="quality">Quality</span><input type="range" id="optQuality" min="10" max="95" step="1"><i id="qVal"></i></label>
+        <label class="row"><input type="checkbox" id="optFit"> <span title="Finds the best quality that stays under your size limit">Smart size (auto quality)</span></label>
+        <label class="row"><input type="checkbox" id="optHD"> <span>HD (95)</span></label>
+        <label class="row"><input type="checkbox" id="optSnatch"> <span data-i18n="auto_snatch">Auto-grab copied images</span></label>
+        <label class="row"><input type="checkbox" id="optPolish"> <span data-i18n="auto_polish">Auto polish on paste</span></label>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ───────── Settings view ───────── -->
+  <main id="view-settings" class="view settings hidden"></main>
+  <main id="view-tracker" class="view tool hidden"></main>
+  <main id="view-pdf" class="view tool hidden"></main>
+  <main id="view-mail" class="view tool hidden"></main>
+  <main id="view-search" class="view tool hidden"></main>
+  <main id="view-subs" class="view tool hidden"></main>
+  <main id="view-shot" class="view tool hidden"></main>
+  <main id="view-hunt" class="view tool hidden"></main>
+  <main id="view-pr" class="view tool hidden"></main>
+
+  <!-- ───────── dock: category + one-line metadata ───────── -->
+  <footer class="dock" id="dock">
+    <div class="dock-cat" id="dockCat"><span class="dc-dot"></span><b id="dockCatName" data-i18n="pick_cat">Pick a category</b><span id="dockHint" class="dock-hint"></span></div>
+    <div class="meta-box" id="metaBox">
+      <label class="mf"><small>Page</small><input id="mPage" class="mfi" maxlength="6" autocomplete="off" spellcheck="false" placeholder="B1"></label>
+      <div class="mf" id="mColsW"><small>Position</small><span class="pr"><input id="mC1" class="mfi dg" placeholder="1"><i>-</i><input id="mC2" class="mfi dg" placeholder="3"></span></div>
+      <div class="mf" id="mSizeW"><small>Size (in)</small><span class="pr"><input id="mS1" class="mfi dg" placeholder="4"><i>x</i><input id="mS2" class="mfi dg" placeholder="6"></span></div>
+    <button id="repeatBtn" class="mini rep" title="Repeat last Page / Position / Size  (Ctrl+Enter saves with them)">↺</button>
+    </div>
+    <div class="header-prev" id="hdrPrev" title="Header that will be printed on the clip"></div>
+    <button id="discardBtn" class="mini dis" title="Delete the grabbed clip  (Ctrl+Delete, Ctrl+Shift+Delete = all)">🗑</button>
+    <button id="saveBtn" class="save"><span data-i18n="save">Save</span> <kbd>Enter</kbd></button>
+  </footer>
+
+  <!-- ───────── status bar ───────── -->
+  <div class="status" id="statusBar">
+    <span id="stStatus" class="st-main">READY</span>
+    <span class="dot-sep"></span><span id="stClips">0 clips</span>
+    <span class="dot-sep"></span><span id="stSaved">0 saved</span>
+    <span class="dot-sep"></span><span id="stSize" title="Last saved size"></span><span class="dot-sep"></span><button id="stUpload" class="linkish" title="Upload queue"></button>
+    <span class="grow"></span>
+    <span id="stExt" class="ext-dot off" title=""></span><button id="stSync" class="linkish"></button>
+    <span class="dot-sep"></span><span id="stVer"></span>
+  </div>
+
+  <div id="dlStrip" class="dl-strip hidden"></div>
+</div>
+
+<!-- popovers & overlays -->
+<div id="paperMenu" class="menu hidden"></div>
+<div id="toasts" class="toasts"></div>
+<div id="cmdk" class="cmdk hidden"><div class="cmdk-box"><input id="cmdkInput" placeholder="Type a command, category or newspaper…"><div id="cmdkList" class="cmdk-list"></div></div></div>
+<aside id="drawer" class="drawer hidden"><div class="drawer-h"><b data-i18n="recent">Recent saves</b><button id="drawerX" class="mini">✕</button></div><div id="drawerBody" class="drawer-body"></div></aside>
+<div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
+<div id="gate" class="gate hidden"></div>
+
+<script>window.NAB={token:"__NAB_TOKEN__",role:"main"};</script>
+<script src="/s/icons.js"></script>
+<script src="/s/i18n.js"></script>
+<script src="/s/common.js"></script>
+<script src="/s/clip.js"></script>
+<script src="/s/settings.js"></script>
+<script src="/s/tool_tracker.js"></script>
+<script src="/s/tool_mail.js"></script>
+<script src="/s/tool_pdf.js"></script>
+<script src="/s/tool_search.js"></script>
+<script src="/s/tool_shot.js"></script>
+<script src="/s/tool_hunt.js"></script>
+<script src="/s/tool_wa.js"></script>
+<script src="/s/tool_pr.js"></script>
+<script src="/s/extras.js"></script>
+<script src="/s/mascot.js"></script>
+<script src="/s/mascot_ai.js"></script>
+<script src="/s/mascot_plus.js"></script>
+<script src="/s/mascot_care.js"></script>
+<script src="/s/mascot_fun.js"></script>
+<script src="/s/main.js"></script>
+</body>
+</html>

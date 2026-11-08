@@ -1,0 +1,3110 @@
+{
+"multiplier": 3.5,
+"print": [
+{
+"name": "Daily Star",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 18000.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 10000.0
+},
+"5th Page": {
+"c": 8000.0,
+"b": 6500.0
+},
+"7th Page": {
+"c": 6000.0,
+"b": 4800.0
+},
+"Inner Page": {
+"c": 5500.0,
+"b": 5500.0
+},
+"2nd Page": {
+"c": 5500.0,
+"b": 5500.0
+},
+"Before Back Page": {
+"c": 5500.0,
+"b": 5500.0
+},
+"Business Front": {
+"c": 8000.0,
+"b": 8000.0
+},
+"Business Back": {
+"c": 6000.0
+},
+"Business Inner": {
+"c": 5500.0
+}
+}
+},
+{
+"name": "New Age",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 14000.0,
+"b": 14000.0
+},
+"Back Page": {
+"c": 10000.0,
+"b": 10000.0
+},
+"3rd Page": {
+"c": 7500.0,
+"b": 7500.0
+},
+"5th Page": {
+"c": 5000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 5000.0
+},
+"Sports Page": {
+"c": 6000.0
+},
+"2nd Page": {
+"c": 5000.0
+},
+"Business Front": {
+"c": 6000.0
+},
+"Business Back": {
+"c": 5000.0
+},
+"Business Inner": {
+"c": 5000.0
+}
+}
+},
+{
+"name": "TBS",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 12000.0,
+"b": 12000.0
+},
+"Back Page": {
+"c": 10000.0,
+"b": 10000.0
+},
+"3rd Page": {
+"c": 5000.0,
+"b": 5000.0
+},
+"5th Page": {
+"c": 5000.0,
+"b": 3000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 3000.0
+},
+"2nd Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"Before Back Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"Business Front": {
+"c": 5000.0,
+"b": 3000.0
+}
+}
+},
+{
+"name": "D.Observer",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 10000.0,
+"b": 7000.0
+},
+"Back Page": {
+"c": 8000.0,
+"b": 6000.0
+},
+"3rd Page": {
+"c": 5000.0,
+"b": 3500.0
+},
+"5th Page": {
+"c": 3000.0,
+"b": 2500.0
+},
+"Inner Page": {
+"c": 3000.0,
+"b": 2000.0
+},
+"Sports Page": {
+"c": 5000.0
+},
+"2nd Page": {
+"b": 2500.0
+},
+"Business Front": {
+"c": 5000.0
+},
+"Business Back": {
+"c": 3000.0
+}
+}
+},
+{
+"name": "Financial Express",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 12000.0,
+"b": 12000.0
+},
+"Back Page": {
+"c": 10000.0,
+"b": 10000.0
+},
+"3rd Page": {
+"c": 7000.0,
+"b": 7000.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 4000.0
+},
+"Business Front": {
+"c": 6000.0
+}
+}
+},
+{
+"name": "Times Of Bangladesh",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 10000.0
+},
+"Back Page": {
+"c": 8000.0
+},
+"3rd Page": {
+"c": 5000.0
+},
+"5th Page": {
+"c": 4000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 4000.0
+}
+}
+},
+{
+"name": "B. today",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 10000.0
+},
+"Back Page": {
+"c": 8000.0,
+"b": 5000.0
+},
+"3rd Page": {
+"c": 5000.0,
+"b": 3000.0
+},
+"Inner Page": {
+"b": 5000.0
+}
+}
+},
+{
+"name": "New Nation",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 9000.0
+},
+"Back Page": {
+"c": 7000.0
+},
+"3rd Page": {
+"c": 5000.0,
+"b": 3500.0
+},
+"Inner Page": {
+"b": 3000.0
+}
+}
+},
+{
+"name": "Daily Sun",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 9000.0
+},
+"Back Page": {
+"c": 8000.0
+},
+"3rd Page": {
+"c": 6000.0,
+"b": 4500.0
+},
+"5th Page": {
+"c": 4500.0,
+"b": 4500.0
+},
+"Inner Page": {
+"c": 3500.0,
+"b": 3500.0
+},
+"2nd Page": {
+"c": 3000.0,
+"b": 2200.0
+},
+"Business Front": {
+"c": 4000.0
+}
+}
+},
+{
+"name": "The Asian Age",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 10000.0
+},
+"Back Page": {
+"c": 8000.0
+},
+"3rd Page": {
+"c": 5000.0
+},
+"Inner Page": {
+"c": 3500.0,
+"b": 2500.0
+},
+"Business Front": {
+"c": 5000.0
+},
+"Business Back": {
+"c": 3000.0
+}
+}
+},
+{
+"name": "Dhaka Tribune",
+"group": "English Dailies",
+"rates": {
+"Front Page": {
+"c": 10000.0
+},
+"Back Page": {
+"c": 8000.0
+},
+"3rd Page": {
+"c": 6000.0
+},
+"5th Page": {
+"c": 5000.0,
+"b": 3000.0
+},
+"7th Page": {
+"c": 4000.0,
+"b": 2500.0
+},
+"Inner Page": {
+"c": 3000.0,
+"b": 3000.0
+},
+"Business Front": {
+"c": 3500.0
+}
+}
+},
+{
+"name": "Prothom Alo",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 30000.0
+},
+"Back Page": {
+"c": 22000.0
+},
+"3rd Page": {
+"c": 18000.0
+},
+"5th Page": {
+"c": 11000.0
+},
+"7th Page": {
+"c": 95000.0,
+"b": 8000.0
+},
+"Inner Page": {
+"c": 9500.0,
+"b": 6500.0
+},
+"Sports Page": {
+"c": 9500.0
+},
+"2nd Page": {
+"c": 12000.0
+},
+"Before Back Page": {
+"c": 11000.0
+},
+"Business Front": {
+"c": 9500.0
+}
+}
+},
+{
+"name": "Ittefaq",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 16000.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 10000.0
+},
+"5th Page": {
+"c": 8000.0,
+"b": 6000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 4000.0
+},
+"Sports Page": {
+"c": 6000.0,
+"b": 5000.0
+},
+"2nd Page": {
+"c": 8000.0,
+"b": 6000.0
+},
+"Before Back Page": {
+"c": 7000.0,
+"b": 5000.0
+},
+"Business Front": {
+"c": 5000.0
+}
+}
+},
+{
+"name": "Jugantar",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 17000.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 11000.0,
+"b": 8500.0
+},
+"5th Page": {
+"b": 6000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 5000.0
+},
+"Sports Page": {
+"c": 6500.0,
+"b": 5000.0
+},
+"2nd Page": {
+"c": 8000.0,
+"b": 6000.0
+},
+"Before Back Page": {
+"c": 6500.0,
+"b": 5000.0
+},
+"Business Front": {
+"c": 7500.0,
+"b": 5000.0
+}
+}
+},
+{
+"name": "Janakantha",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 16000.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 10000.0
+},
+"5th Page": {
+"c": 8000.0,
+"b": 6000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 4000.0
+},
+"Sports Page": {
+"c": 6000.0,
+"b": 5000.0
+},
+"2nd Page": {
+"c": 6000.0
+},
+"Before Back Page": {
+"b": 5000.0
+}
+}
+},
+{
+"name": "Inqilab",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 14000.0,
+"b": 12000.0
+},
+"Back Page": {
+"c": 12000.0,
+"b": 10000.0
+},
+"3rd Page": {
+"c": 8000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 3000.0
+},
+"Sports Page": {
+"c": 5000.0,
+"b": 4000.0
+},
+"2nd Page": {
+"b": 4000.0
+},
+"Before Back Page": {
+"b": 4000.0
+}
+}
+},
+{
+"name": "Amar Desh",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 14000.0,
+"b": 14000.0
+},
+"Back Page": {
+"c": 12000.0,
+"b": 12000.0
+},
+"3rd Page": {
+"c": 9000.0,
+"b": 7000.0
+},
+"5th Page": {
+"c": 7500.0,
+"b": 5500.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"Sports Page": {
+"c": 5000.0,
+"b": 4000.0
+}
+}
+},
+{
+"name": "Naya Diganta",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 16000.0
+},
+"Back Page": {
+"c": 13000.0,
+"b": 10000.0
+},
+"3rd Page": {
+"c": 10000.0,
+"b": 7500.0
+},
+"5th Page": {
+"c": 7000.0,
+"b": 5000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 4000.0
+},
+"Sports Page": {
+"c": 6000.0,
+"b": 5000.0
+},
+"2nd Page": {
+"b": 4500.0
+},
+"Before Back Page": {
+"c": 6000.0,
+"b": 4500.0
+},
+"Business Front": {
+"c": 5000.0,
+"b": 4000.0
+}
+}
+},
+{
+"name": "Protidiner Bangladesh",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 16000.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 10000.0,
+"b": 7500.0
+},
+"5th Page": {
+"c": 3000.0,
+"b": 3000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 4000.0
+},
+"Sports Page": {
+"c": 6500.0,
+"b": 5500.0
+},
+"2nd Page": {
+"c": 8000.0,
+"b": 6000.0
+},
+"Before Back Page": {
+"c": 7500.0,
+"b": 5500.0
+},
+"Business Front": {
+"c": 6500.0,
+"b": 5500.0
+}
+}
+},
+{
+"name": "Jaijaidin",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 12000.0
+},
+"Back Page": {
+"c": 9000.0,
+"b": 7000.0
+},
+"3rd Page": {
+"c": 7000.0,
+"b": 5000.0
+},
+"5th Page": {
+"c": 6000.0,
+"b": 3500.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"Sports Page": {
+"c": 5000.0,
+"b": 3500.0
+}
+}
+},
+{
+"name": "Samakal",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 16000.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 10000.0,
+"b": 7500.0
+},
+"5th Page": {
+"c": 7500.0,
+"b": 5000.0
+},
+"7th Page": {
+"c": 7000.0,
+"b": 4500.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 4000.0
+},
+"Sports Page": {
+"c": 6500.0,
+"b": 5500.0
+},
+"2nd Page": {
+"c": 8000.0,
+"b": 6000.0
+},
+"Before Back Page": {
+"c": 7500.0,
+"b": 5500.0
+},
+"Business Front": {
+"c": 6000.0,
+"b": 5000.0
+}
+}
+},
+{
+"name": "Kaler Kantha",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 18000.0
+},
+"Back Page": {
+"c": 15000.0
+},
+"3rd Page": {
+"c": 11000.0
+},
+"5th Page": {
+"c": 8000.0,
+"b": 6500.0
+},
+"7th Page": {
+"c": 6500.0
+},
+"Inner Page": {
+"c": 5500.0,
+"b": 4500.0
+},
+"Sports Page": {
+"c": 8500.0
+},
+"2nd Page": {
+"c": 8000.0,
+"b": 6500.0
+},
+"Business Front": {
+"c": 8000.0,
+"b": 6500.0
+}
+}
+},
+{
+"name": "Sangbad",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 10000.0,
+"b": 8000.0
+},
+"Back Page": {
+"c": 8000.0
+},
+"3rd Page": {
+"c": 5000.0,
+"b": 4000.0
+},
+"Inner Page": {
+"c": 3500.0
+},
+"Sports Page": {
+"c": 3500.0
+},
+"2nd Page": {
+"b": 3000.0
+},
+"Before Back Page": {
+"b": 3000.0
+}
+}
+},
+{
+"name": "Bhorer Kagoj",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 12000.0,
+"b": 11000.0
+},
+"Back Page": {
+"c": 11000.0,
+"b": 10000.0
+},
+"3rd Page": {
+"c": 7500.0,
+"b": 5000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 3200.0
+}
+}
+},
+{
+"name": "Manabjamin",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 14000.0
+},
+"Back Page": {
+"c": 12000.0
+},
+"3rd Page": {
+"c": 6000.0,
+"b": 3500.0
+},
+"Inner Page": {
+"c": 2500.0
+},
+"Sports Page": {
+"c": 4500.0
+}
+}
+},
+{
+"name": "Amader Shomoy",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 17000.0,
+"b": 6500.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 10000.0
+},
+"5th Page": {
+"c": 7500.0,
+"b": 6000.0
+},
+"7th Page": {
+"c": 6000.0,
+"b": 5000.0
+},
+"Inner Page": {
+"c": 5000.0,
+"b": 4000.0
+},
+"Sports Page": {
+"c": 7000.0
+},
+"2nd Page": {
+"b": 5000.0
+},
+"Before Back Page": {
+"c": 6000.0,
+"b": 5000.0
+}
+}
+},
+{
+"name": "Kalbela",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 17000.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 10000.0
+},
+"5th Page": {
+"c": 3000.0
+},
+"Inner Page": {
+"c": 5500.0
+},
+"Sports Page": {
+"c": 7000.0
+},
+"2nd Page": {
+"c": 6000.0,
+"b": 5000.0
+},
+"Business Front": {
+"c": 7500.0,
+"b": 6000.0
+}
+}
+},
+{
+"name": "Protidiner Sangbad",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 10000.0,
+"b": 10000.0
+},
+"Back Page": {
+"c": 8000.0,
+"b": 8000.0
+},
+"3rd Page": {
+"c": 3000.0,
+"b": 3000.0
+},
+"Inner Page": {
+"c": 3000.0,
+"b": 3000.0
+}
+}
+},
+{
+"name": "Khoborer Kagoj",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 16000.0,
+"b": 16000.0
+},
+"Back Page": {
+"c": 12000.0,
+"b": 12000.0
+},
+"3rd Page": {
+"c": 10000.0
+},
+"Inner Page": {
+"c": 6500.0,
+"b": 6500.0
+}
+}
+},
+{
+"name": "Somoyer Alo",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 12000.0
+},
+"Back Page": {
+"c": 9000.0,
+"b": 7000.0
+},
+"3rd Page": {
+"c": 7000.0,
+"b": 5000.0
+},
+"5th Page": {
+"c": 6000.0,
+"b": 3500.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"Sports Page": {
+"c": 5000.0,
+"b": 3500.0
+},
+"Business Front": {
+"c": 3500.0
+},
+"Business Back": {
+"c": 3000.0
+}
+}
+},
+{
+"name": "Desh Rupantor",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 14000.0
+},
+"Back Page": {
+"c": 12000.0
+},
+"3rd Page": {
+"c": 6000.0,
+"b": 5000.0
+},
+"5th Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"7th Page": {
+"b": 3000.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 4000.0
+}
+}
+},
+{
+"name": "Bonik Barta",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 15000.0
+},
+"Back Page": {
+"c": 12000.0
+},
+"3rd Page": {
+"c": 10000.0
+},
+"Inner Page": {
+"c": 6000.0,
+"b": 4000.0
+},
+"Business Front": {
+"c": 8000.0
+}
+}
+},
+{
+"name": "Bangladesh Protidin",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 22000.0
+},
+"Back Page": {
+"c": 18000.0
+},
+"3rd Page": {
+"c": 11000.0
+},
+"5th Page": {
+"c": 8500.0
+},
+"Inner Page": {
+"c": 7500.0,
+"b": 4600.0
+},
+"Sports Page": {
+"c": 9000.0
+},
+"2nd Page": {
+"c": 9000.0,
+"b": 7000.0
+},
+"Before Back Page": {
+"c": 8000.0,
+"b": 6000.0
+}
+}
+},
+{
+"name": "Manobkantho",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 14000.0
+},
+"Back Page": {
+"c": 12000.0,
+"b": 9000.0
+},
+"3rd Page": {
+"c": 8500.0,
+"b": 6000.0
+},
+"5th Page": {
+"c": 6500.0,
+"b": 4500.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"Sports Page": {
+"c": 5500.0,
+"b": 3500.0
+},
+"2nd Page": {
+"c": 6000.0,
+"b": 4000.0
+}
+}
+},
+{
+"name": "Alokito Bangladesh",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 12000.0
+},
+"Back Page": {
+"c": 10000.0
+},
+"3rd Page": {
+"c": 7500.0,
+"b": 6000.0
+},
+"5th Page": {
+"c": 5500.0,
+"b": 4000.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"Sports Page": {
+"c": 4000.0,
+"b": 3500.0
+},
+"2nd Page": {
+"b": 4000.0
+},
+"Before Back Page": {
+"b": 3500.0
+}
+}
+},
+{
+"name": "Share Biz",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 12000.0
+},
+"Back Page": {
+"c": 10000.0
+},
+"3rd Page": {
+"c": 8000.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 3000.0
+}
+}
+},
+{
+"name": "Ajker Patrika",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 17000.0
+},
+"Back Page": {
+"c": 14000.0
+},
+"3rd Page": {
+"c": 12000.0,
+"b": 4000.0
+},
+"5th Page": {
+"c": 10000.0
+},
+"7th Page": {
+"c": 4000.0
+},
+"Inner Page": {
+"c": 4000.0
+},
+"Sports Page": {
+"c": 8000.0
+},
+"2nd Page": {
+"c": 8000.0
+},
+"Business Front": {
+"c": 6000.0,
+"b": 3000.0
+}
+}
+},
+{
+"name": "Rupali Bangladesh",
+"group": "Bengali Dailies",
+"rates": {
+"Front Page": {
+"c": 12000.0,
+"b": 10000.0
+},
+"Back Page": {
+"c": 10000.0,
+"b": 8000.0
+},
+"3rd Page": {
+"c": 5000.0
+},
+"5th Page": {
+"c": 4000.0,
+"b": 3000.0
+},
+"Inner Page": {
+"c": 4000.0,
+"b": 3000.0
+}
+}
+},
+{
+"name": "Azadi",
+"group": "Regional Dailies",
+"rates": {
+"Front Page": {
+"c": 3500.0,
+"b": 3500.0
+},
+"Back Page": {
+"c": 3000.0,
+"b": 2500.0
+},
+"3rd Page": {
+"c": 2000.0,
+"b": 1100.0
+},
+"2nd Page": {
+"b": 1100.0
+}
+}
+},
+{
+"name": "Purbokone",
+"group": "Regional Dailies",
+"rates": {
+"Front Page": {
+"c": 3500.0,
+"b": 2800.0
+},
+"Back Page": {
+"c": 3000.0,
+"b": 2500.0
+},
+"3rd Page": {
+"c": 2000.0,
+"b": 1100.0
+},
+"Inner Page": {
+"c": 1200.0,
+"b": 600.0
+},
+"2nd Page": {
+"b": 1000.0
+}
+}
+},
+{
+"name": "Sylheter Dak",
+"group": "Regional Dailies",
+"rates": {
+"Front Page": {
+"c": 2100.0,
+"b": 1700.0
+},
+"Back Page": {
+"c": 1800.0,
+"b": 1400.0
+},
+"Inner Page": {
+"c": 1000.0,
+"b": 500.0
+}
+}
+},
+{
+"name": "Jalalbad",
+"group": "Regional Dailies",
+"rates": {
+"Inner Page": {
+"c": 1000.0,
+"b": 500.0
+}
+}
+},
+{
+"name": "Karotoa",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 4000.0,
+"b": 3200.0
+},
+"Back Page": {
+"c": 3000.0,
+"b": 2400.0
+},
+"3rd Page": {
+"c": 2500.0,
+"b": 2000.0
+},
+"Inner Page": {
+"c": 2000.0,
+"b": 1600.0
+}
+}
+},
+{
+"name": "Purbanchol",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 3600.0,
+"b": 2000.0
+},
+"Back Page": {
+"c": 3000.0,
+"b": 1600.0
+},
+"Inner Page": {
+"c": 900.0,
+"b": 600.0
+}
+}
+},
+{
+"name": "Janmobhumi",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 1875.0,
+"b": 1250.0
+},
+"Back Page": {
+"c": 1500.0,
+"b": 1000.0
+},
+"Inner Page": {
+"b": 500.0
+}
+}
+},
+{
+"name": "Jugar alo",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 1500.0,
+"b": 1000.0
+},
+"Back Page": {
+"c": 1200.0,
+"b": 800.0
+},
+"Inner Page": {
+"c": 800.0,
+"b": 400.0
+}
+}
+},
+{
+"name": "Sonali sangbad",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 2500.0,
+"b": 2500.0
+},
+"Back Page": {
+"c": 2000.0,
+"b": 2000.0
+},
+"3rd Page": {
+"b": 600.0
+},
+"Inner Page": {
+"c": 800.0,
+"b": 400.0
+}
+}
+},
+{
+"name": "Sorar desh",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 1500.0,
+"b": 1000.0
+},
+"Back Page": {
+"c": 1200.0,
+"b": 800.0
+},
+"Inner Page": {
+"b": 600.0
+}
+}
+},
+{
+"name": "loksamaj",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 1250.0,
+"b": 1000.0
+},
+"Back Page": {
+"c": 1000.0,
+"b": 800.0
+},
+"Inner Page": {
+"c": 800.0,
+"b": 400.0
+}
+}
+},
+{
+"name": "Dakhkhinanchol",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 1250.0,
+"b": 1000.0
+},
+"Back Page": {
+"c": 1000.0,
+"b": 800.0
+},
+"Inner Page": {
+"b": 400.0
+}
+}
+},
+{
+"name": "Ajker Barta",
+"group": "Syamol sylhet",
+"rates": {
+"Front Page": {
+"c": 1562.0,
+"b": 1250.0
+},
+"Back Page": {
+"c": 1250.0,
+"b": 1000.0
+},
+"Inner Page": {
+"b": 500.0
+}
+}
+}
+],
+"online": [
+{
+"name": "71sangbad.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "71vision.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Agrilife24.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Ajkalerkhobor.net",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Ajkerarthoniti.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Ajkerbazzar.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Ajker-cumilla.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Ajkerdesh.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Ajkerjamalpur.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Ajkerkhobor24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Ajkerpatrika.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Ajkerprottasha.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Ajkertangail.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Alochitobangladesh.com.bd",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Alokitobangladesh.com",
+"tier": 1,
+"rate": 0.18
+},
+{
+"name": "Alokitosangbad.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Amarbarta24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Amarnews.com.bd",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Amarsangbad.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Apandesh.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Arthosuchak.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Asianmirror.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Asiantvonline.com",
+"tier": 1,
+"rate": 0.07
+},
+{
+"name": "Awaaz.com.bd",
+"tier": 3,
+"rate": 0.05
+},
+{
+"name": "Azadi.org",
+"tier": 1,
+"rate": 0.13
+},
+{
+"name": "Aznewsbd.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Bahannonews.com",
+"tier": 2,
+"rate": 0.07
+},
+{
+"name": "Bahumatrik.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Banginews.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Bangladeshfirst.com",
+"tier": 2,
+"rate": 0.06
+},
+{
+"name": "Bangladeshkantha.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Bangladeshmoments.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Bangladeshpost.net",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Bangladeshtimes.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Banglainsider.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Banglakhaborbd.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Banglanews24.com",
+"tier": 3,
+"rate": 0.2
+},
+{
+"name": "Banglapratidin.net",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Banglapratidin24.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Banglaralo24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Banglatribune.com",
+"tier": 1,
+"rate": 0.12
+},
+{
+"name": "Banijjoprotidin.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Barishalcrimenews.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Barta24.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Bartakontho.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Bayanno.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Bbf.digital",
+"tier": 3,
+"rate": 0.15
+},
+{
+"name": "Bd24live.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Bd-bulletin.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Bdgazette24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Bd-journal.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Bdnews24.com",
+"tier": 1,
+"rate": 0.2
+},
+{
+"name": "bd-pratidin.com",
+"tier": 1,
+"rate": 0.26
+},
+{
+"name": "Bhorerkagoj.net",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Bhorersongbad.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Bijoybangla.news",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Biniyougbarta.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Biznewsdive.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Biztech24.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Bmirror.net",
+"tier": 2,
+"rate": 0.08
+},
+{
+"name": "Boishakhinews24.net",
+"tier": 2,
+"rate": 0.07
+},
+{
+"name": "Bongdunia.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Bongonewsbd24.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Bonikbarta.net",
+"tier": 1,
+"rate": 0.18
+},
+{
+"name": "Brandpractitioners.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Breakingnewsbd.net",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Bssnews.net",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Businesseyebd.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Businesspostbd.com",
+"tier": 1,
+"rate": 0.09
+},
+{
+"name": "Bvnews24.com",
+"tier": 1,
+"rate": 0.07
+},
+{
+"name": "Canvasmagazine.com.bd",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Cbarta24.net",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Chaardik.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Chalanbeelprobaho.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Channel24bd.tv",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Channelionline.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Chattogramdaily.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Chttimes24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Cnewsvoice.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Cniasia.news",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Cniasia.news",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Computerbichitra.com",
+"tier": 1,
+"rate": 0.09
+},
+{
+"name": "Computerjagat.com.bd",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Corporatenews.com.bd",
+"tier": 2,
+"rate": 0.15
+},
+{
+"name": "Corporatesangbad.com",
+"tier": 2,
+"rate": 0.15
+},
+{
+"name": "Cwn24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Daily-bangladesh.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Dailybangladesheralo.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dailybangladeshmirror.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Dailybengalgazette.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dailybhorerdak.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dailycampus.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Dailycountrytodaybd.com",
+"tier": 3,
+"rate": 0.09
+},
+{
+"name": "dailydarpan.news",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Dailydhakasangbad.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Dailyictnews.com",
+"tier": 2,
+"rate": 0.07
+},
+{
+"name": "Dailymessenger.net",
+"tier": 1,
+"rate": 0.08
+},
+{
+"name": "Dailyprothomsangbad.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dailysabujbangla.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Dailysharebazar.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dailysokalersomoy.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Daily-sun.com",
+"tier": 1,
+"rate": 0.12
+},
+{
+"name": "Dailysylhet.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dailytorunkantho.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Dainikamadershomoy.com",
+"tier": 1,
+"rate": 0.12
+},
+{
+"name": "Dainikbangla.com.bd",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Dainikbogura.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Dainikchalonbilerkotha.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Dainikeidin.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Dainikjamalpur.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Dainiksatkhira.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Dainikshomoyerkantho.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dainikshorobor.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dainikstatesmannews.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Dainiksylhet.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dakshinanchal24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Deeptonews.com",
+"tier": 1,
+"rate": 0.08
+},
+{
+"name": "Deltatimes24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Desh.tv",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Deshbanglapratidin.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Desherkantha.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Deshersangbad.com",
+"tier": 3,
+"rate": 0.05
+},
+{
+"name": "Deshrupantor.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Dhakabusines.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Dhakamail.com",
+"tier": 1,
+"rate": 0.07
+},
+{
+"name": "Dhakapost.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Dhakaprokash24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Dhakatimes24.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Dhakatribune.com",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Dhakavoice24.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Diamondnews24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Digibanglatech.news",
+"tier": 1,
+"rate": 0.09
+},
+{
+"name": "Digitalbarta.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Digitalkhobor.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Dmpnews.org",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Dokhinersomoy.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Durantbarta.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Durbin.news",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Ebarta24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "E-commercebarta.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Economicnews24.com",
+"tier": 2,
+"rate": 0.09
+},
+{
+"name": "Eimuhurte.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Eisamay.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Ekattor.tv",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Ekhon.tv",
+"tier": 1,
+"rate": 0.07
+},
+{
+"name": "Ekusheysangbad.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Ekushey-tv.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Faridpur-protidin.com",
+"tier": 3,
+"rate": 0.05
+},
+{
+"name": "Financialexpress.com.bd",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Ganaadhikar.news",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Gnewsbd24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Gramerkagoj.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Gramnagarbarta.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Greenwatchbd.com",
+"tier": 3,
+"rate": 0.09
+},
+{
+"name": "Gulfbangla.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Haorbarta24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Icetoday.net",
+"tier": 3,
+"rate": 0.12
+},
+{
+"name": "Ictworldnewsbd24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Inqilab.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Itpalacebd.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Ittefaq.com.bd",
+"tier": 1,
+"rate": 0.25
+},
+{
+"name": "Itvbd.com",
+"tier": 1,
+"rate": 0.08
+},
+{
+"name": "Jagonews24.com",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Jagrotojoypurhat.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Jaijaidinbd.com",
+"tier": 1,
+"rate": 0.25
+},
+{
+"name": "Jamuna.tv",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Jamunanewsbd.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Janakantha.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Janobani.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Jashoreralo.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Journalbd24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Jugantor.com",
+"tier": 1,
+"rate": 0.25
+},
+{
+"name": "Jugobarta.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Kalbela.com",
+"tier": 1,
+"rate": 0.09
+},
+{
+"name": "Kalerkantho.com",
+"tier": 1,
+"rate": 0.25
+},
+{
+"name": "Kalerkheya.net",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Khaborerkagoj.com",
+"tier": 1,
+"rate": 0.08
+},
+{
+"name": "Khoborprotidin24.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Khoborsangjog.com",
+"tier": 2,
+"rate": 0.08
+},
+{
+"name": "Kushtiarbarta.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Kushtiarkagoj.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Labanglatimes.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Latestbdnews.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Manobkantha.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Markedium.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Meherpurpratidin.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Mobiledokan.co",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Mtnews24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Muktinews24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Mymensingheralo.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Mzamin.com",
+"tier": 1,
+"rate": 0.09
+},
+{
+"name": "Nantvbd.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Natunsylhet24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Nayadiganta.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Netrokonajournal.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Newagebd.net",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "News24bd.tv",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "News71online.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Newsbangla24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Newsdhaka.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Newsg24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Newshour.media",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Newsnow24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Newszonebd.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Newturn24.com",
+"tier": 3,
+"rate": 0.05
+},
+{
+"name": "Notunshomoy.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Noyakhabor.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Observerbd.com",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Orthosongbad.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Ourislam24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Outlookbangla.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Padmatimes24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Parbattanews.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Pbd.news",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Peoplevoicebd.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Primenewsbd.net",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Priyo.com",
+"tier": 2,
+"rate": 0.15
+},
+{
+"name": "Priyochattogram.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Prnewswire.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Probashirdiganta.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Progatinews.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Projonmonews24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Promanbd.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Prothom.news",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Prothomalo.com",
+"tier": 1,
+"rate": 0.5
+},
+{
+"name": "Protidinerbangladesh.com",
+"tier": 1,
+"rate": 0.08
+},
+{
+"name": "Protidinerchitrobd.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Protidinersangbad.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Protidinshebok.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Provaterkagoj.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "ptheadline.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Purbashabd24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Radiotodaynews.com",
+"tier": 1,
+"rate": 0.07
+},
+{
+"name": "Rajshahipost.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Rajshahirsomoy.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Risingbd.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Risingcumilla.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Rtvonline.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Sabarbangla.com",
+"tier": 1,
+"rate": 0.07
+},
+{
+"name": "Samakal.com",
+"tier": 1,
+"rate": 0.25
+},
+{
+"name": "Sangbadbela.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Sangbadprotidin24.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Saradin.news",
+"tier": 2,
+"rate": 0.05
+},
+{
+"name": "Sarakhon.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Satv.tv",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Satyakantho.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Sebahotnews.org",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Shadhinalo.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Shampratikdeshkal.com",
+"tier": 3,
+"rate": 0.05
+},
+{
+"name": "Sharebazarnews.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Sharebiz.net",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Sharebusiness24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Sheershanews24.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Sherpurnews.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Shikshabarta.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Shiksharalo.net",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Shobujalo.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Shomoyeralo.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Shongbadprotikshon.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Skhobor.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Somoyerkonthosor.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Somoyjournal.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Somoynews.tv",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Sonalinews.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Songbadprokash.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Stocknewsbd.com",
+"tier": 3,
+"rate": 0.09
+},
+{
+"name": "Sunnews24x7.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Sunshine.com.bd",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Surjodigonto.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Sylhetdiary.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Sylheterbarta24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Sylhetinews.com",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Sylhetprothidin24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Sylhetview24.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Tbsnews.net",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Techandteen.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Techjano.com",
+"tier": 2,
+"rate": 0.1
+},
+{
+"name": "Techlinebd.info",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Techmailbd.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Techsangbad.com.bd",
+"tier": 1,
+"rate": 0.12
+},
+{
+"name": "Techshohor.com",
+"tier": 1,
+"rate": 0.09
+},
+{
+"name": "Techtimesbd.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Techvision24.com",
+"tier": 1,
+"rate": 0.06
+},
+{
+"name": "Techworldbd.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Techworldbd24.com",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Techzoom.tv",
+"tier": 1,
+"rate": 0.1
+},
+{
+"name": "Thebangladeshtoday.com",
+"tier": 3,
+"rate": 0.15
+},
+{
+"name": "Thebengalitimes.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Thebongtimes.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Thecampustoday.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "TheDailyStar.net",
+"tier": 1,
+"rate": 0.26
+},
+{
+"name": "Thedhakacrimenews.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Thedhakatimes.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Thenewnation.com",
+"tier": 1,
+"rate": 0.12
+},
+{
+"name": "Thenewstimesbd.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Thesangbad.net",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Theshuttletimes.com",
+"tier": 3,
+"rate": 0.08
+},
+{
+"name": "Thestatement24.com",
+"tier": 2,
+"rate": 0.07
+},
+{
+"name": "Timenewsbd.net",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Timetouchnews.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Torrongonews.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "U71news.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Ukbanglaonline.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Ukhiyanews.com",
+"tier": 3,
+"rate": 0.1
+},
+{
+"name": "Unb.com.bd",
+"tier": 1,
+"rate": 0.15
+},
+{
+"name": "Universal24news.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Vinnabarta.com",
+"tier": 3,
+"rate": 0.07
+},
+{
+"name": "Voice7news.tv",
+"tier": 3,
+"rate": 0.06
+},
+{
+"name": "Zoombangla.com",
+"tier": 1,
+"rate": 0.1
+}
+],
+"tv": [
+{
+"name": "ATN Bangla",
+"rate": 1200.0
+},
+{
+"name": "ATN News",
+"rate": 1042.0
+},
+{
+"name": "Bangla Vision",
+"rate": 800.0
+},
+{
+"name": "Boishakhi TV",
+"rate": 183.0
+},
+{
+"name": "BTV",
+"rate": 1500.0
+},
+{
+"name": "Channel 24",
+"rate": 1167.0
+},
+{
+"name": "Channel i",
+"rate": 1250.0
+},
+{
+"name": "Desh TV",
+"rate": 1167.0
+},
+{
+"name": "Ekattor TV",
+"rate": 600.0
+},
+{
+"name": "ETV",
+"rate": 933.0
+},
+{
+"name": "GTV",
+"rate": 1100.0
+},
+{
+"name": "Independent TV",
+"rate": 1100.0
+},
+{
+"name": "Maasranga TV",
+"rate": 1250.0
+},
+{
+"name": "Mohona TV",
+"rate": 595.0
+},
+{
+"name": "MY TV",
+"rate": 700.0
+},
+{
+"name": "NTV",
+"rate": 1100.0
+},
+{
+"name": "RTV",
+"rate": 1200.0
+},
+{
+"name": "SA TV",
+"rate": 1000.0
+},
+{
+"name": "Somoy TV",
+"rate": 1000.0
+},
+{
+"name": "Ananda TV",
+"rate": 500.0
+},
+{
+"name": "Asian TV",
+"rate": 500.0
+},
+{
+"name": "Bangla TV",
+"rate": 750.0
+},
+{
+"name": "Bijoy TV",
+"rate": 700.0
+},
+{
+"name": "Channel S",
+"rate": 200.0
+},
+{
+"name": "DBC",
+"rate": 1000.0
+},
+{
+"name": "Deepto TV",
+"rate": 500.0
+},
+{
+"name": "Global TV",
+"rate": 333.0
+},
+{
+"name": "Ekhon TV",
+"rate": 350.0
+},
+{
+"name": "Jamuna TV",
+"rate": 1000.0
+},
+{
+"name": "Nagorik TV",
+"rate": 500.0
+},
+{
+"name": "NEWS24",
+"rate": 983.0
+},
+{
+"name": "Nexus TV",
+"rate": 350.0
+},
+{
+"name": "Green TV",
+"rate": 167.0
+},
+{
+"name": "Channel 9",
+"rate": 750.0
+}
+]
+}

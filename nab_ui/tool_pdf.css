@@ -1,0 +1,8 @@
+.pdf .card{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.pdf h4{margin:0 0 8px}
+.pdf textarea{width:100%;background:var(--surf2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:13px/1.4 var(--font);outline:none;user-select:text;resize:vertical}
+.pdf .field input{width:100%}
+.pd-prog{height:8px;border-radius:99px;background:var(--surf2);overflow:hidden;margin:6px 0}
+.pd-prog div{height:100%;width:0;background:var(--acc);transition:width .25s}
+.pd-log{max-height:240px;overflow:auto;font-size:12px;display:flex;flex-direction:column;gap:3px;margin-top:8px}
+.pd-l.bad{color:var(--bad)}.pd-l.warn{color:var(--warn)}.pd-l.ok{color:var(--ok)}
