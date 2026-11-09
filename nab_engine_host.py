@@ -1090,6 +1090,45 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         t = (_dt.datetime.now() + _dt.timedelta(days=days - 1)).replace(hour=23, minute=59, second=0, microsecond=0)
         return t.timestamp()
 
+    # ---- batch: work through a folder of page images one after another ----
+    def batch_start(self, folder):
+        folder = (folder or "").strip().strip('"')
+        if not os.path.isdir(folder):
+            return {"ok": False, "error": "That folder was not found."}
+        exts = (".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff")
+        nat = lambda t: [int(x) if x.isdigit() else x.lower() for x in re.split(r"(\d+)", t)]
+        files = sorted([os.path.join(folder, n) for n in os.listdir(folder) if n.lower().endswith(exts)], key=lambda p: nat(os.path.basename(p)))
+        if not files:
+            return {"ok": False, "error": "No images in that folder."}
+        self._batch = {"files": files, "i": 0, "folder": folder}
+        return self.batch_next()
+
+    def batch_next(self):
+        b = getattr(self, "_batch", None)
+        if not b:
+            return {"ok": False, "error": "No batch is open."}
+        while b["i"] < len(b["files"]):
+            p = b["files"][b["i"]]
+            b["i"] += 1
+            try:
+                with Image.open(p) as im:
+                    im.load()
+                    img = im.convert("RGB")
+            except Exception as e:
+                logging.error(f"batch open {p}: {e}")
+                continue
+            self.add_images([img], os.path.basename(p))
+            left = len(b["files"]) - b["i"]
+            if not left:
+                self._batch = None
+            return {"ok": True, "name": os.path.basename(p), "n": b["i"], "total": len(b["files"]), "left": left}
+        self._batch = None
+        return {"ok": True, "done": True, "left": 0}
+
+    def batch_stop(self):
+        self._batch = None
+        return {"ok": True}
+
     # ---- accounts ----
     def acct_is_owner_pc(self):
         try:

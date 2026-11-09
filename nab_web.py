@@ -144,6 +144,15 @@ class Api:
     def login_precheck(self, a):
         return self.e.login_precheck()
 
+    def batch_start(self, a):
+        return self.e.batch_start(a.get("folder", ""))
+
+    def batch_next(self, a):
+        return self.e.batch_next()
+
+    def batch_stop(self, a):
+        return self.e.batch_stop()
+
     def selfcheck(self, a):
         import nab_health
         return nab_health.run_all(self.e)

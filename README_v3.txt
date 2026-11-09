@@ -291,3 +291,10 @@ v3.0.46 - Accounts, WhatsApp queue, self-check
  * Self-check (Settings > Self-check): clock, internet, update server, Drive, Telegram, WhatsApp, disk, tools, backups, accounts.
  * Backups now include accounts and WhatsApp settings (30 kept).
  * The Google key is no longer in the repository; the build writes it from the GDRIVE_KEY_JSON secret. Automatic tests run before every build.
+
+v3.0.47 - Stage 2: archive and search
+ * New clip archive (SQLite, Documents\nab_archive.db): every saved clip with paper, page, position, size, date, category and who saved it. Built from file names and folders, no OCR needed. Old OCR text is taken over automatically.
+ * Search screen: words plus filters (paper, category, page, saved by, date range), saved searches as one-click buttons, export to Excel or CSV (Documents\NAB Exports), copy results.
+ * Find duplicates: groups of look-alike clips with Open and Delete.
+ * Save-time warning: if a new clip looks like one already saved, a warning shows which one (nothing is blocked).
+ * Batch mode (Ctrl+K, Batch: open a folder of images): opens a folder of page images one by one, the next opens after each save.

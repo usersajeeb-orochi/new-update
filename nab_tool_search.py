@@ -9,6 +9,7 @@ import threading
 import concurrent.futures
 
 import nab_engine
+import nab_archive
 
 INDEX_FILE = os.path.join(nab_engine.DOC_DIR, "nab_ocr_index.json")
 EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff"}
@@ -64,6 +65,15 @@ class Tool:
         self.idx = self._load()
         if not self.idx["folders"]:
             self.idx["folders"] = [self.e.base_root]
+        self.arch = nab_archive.get()
+        self._scanning = False
+        try:                                    # first run after the update: take the old OCR text over, no re-reading
+            if self.arch.count() == 0 and self.idx["files"]:
+                self.arch.scan(self.idx["folders"], self.e.base_root)
+                n = self.arch.import_legacy_ocr(self.idx["files"])
+                logging.info(f"archive: imported OCR text for {n} clips")
+        except Exception as e:
+            logging.error(f"archive import: {e}")
 
     def _emit(self, **kw):
         self.e.hub.emit("tool", tool="search", **kw)
@@ -90,7 +100,8 @@ class Tool:
 
     def api_state(self, a):
         _t, err = _tess()
-        return {"ok": True, "folders": self.idx["folders"], "lang": self.idx["lang"], "count": len(self.idx["files"]), "running": self.running, "tess_error": err}
+        return {"ok": True, "folders": self.idx["folders"], "lang": self.idx["lang"], "count": self.arch.count(), "ocr_count": len(self.idx["files"]),
+                "running": self.running, "scanning": self._scanning, "tess_error": err, "fts": self.arch.fts}
 
     def api_folders(self, a):
         fs = [f.strip().strip('"') for f in (a.get("folders") or []) if f.strip()]
@@ -152,7 +163,10 @@ class Tool:
                     for f in d:
                         p, m, s = futs.pop(f)
                         try:
-                            self.idx["files"][p] = {"m": m, "s": s, "l": lang, "t": _norm(f.result())}
+                            txt = _norm(f.result())
+                            self.idx["files"][p] = {"m": m, "s": s, "l": lang, "t": txt}
+                            self.arch.upsert(p, self.e.base_root)
+                            self.arch.set_ocr(p, txt)
                         except Exception as e:
                             self.idx["files"][p] = {"m": m, "s": s, "l": lang, "t": "", "err": str(e)[:80]}
                         done += 1
@@ -171,25 +185,79 @@ class Tool:
         finally:
             self.running = False
 
+    def _flt(self, a):
+        return {k: (a.get(k) or "").strip() for k in ("paper", "cat", "page", "user", "date_from", "date_to")}
+
     def api_find(self, a):
-        words = [_norm(w) for w in re.split(r"[,\n]", a.get("q") or "") if _norm(w)]
-        if not words:
-            return {"ok": False, "error": "Type a keyword."}
-        all_ = bool(a.get("all"))
-        d1, d2 = a.get("from") or "", a.get("to") or ""
-        out = []
-        for p, v in self.idx["files"].items():
-            t = v.get("t", "")
-            hits = [w for w in words if w in t]
-            if not hits or (all_ and len(hits) < len(words)):
-                continue
-            dt = _date(p)
-            if (d1 and dt and dt < d1) or (d2 and dt and dt > d2):
-                continue
-            i = t.find(hits[0]); sn = ("…" if i > 60 else "") + t[max(0, i - 60): i + 100] + "…"
-            out.append({"path": p, "name": os.path.basename(p), "date": dt, "hits": hits, "snip": sn})
-        out.sort(key=lambda r: (r["date"], r["name"]), reverse=True)
-        return {"ok": True, "results": out[:500], "total": len(out)}
+        q = a.get("q") or ""
+        flt = self._flt(a)
+        if not q.strip() and not any(flt.values()):
+            return {"ok": False, "error": "Type a keyword or pick a filter."}
+        r = self.arch.search(q, bool(a.get("all")), 500, **flt)
+        return {"ok": True, "results": r["rows"], "total": r["total"], "more": r["more"]}
+
+    def api_scan(self, a):
+        """Fast pass: read file names and folders, no OCR. Safe to run any time."""
+        if self._scanning:
+            return {"ok": True, "busy": True}
+        self._scanning = True
+
+        def work():
+            try:
+                def prog(n, t, name):
+                    self._emit(ev="scan", n=n, total=t, name=name)
+                r = self.arch.scan(self.idx["folders"], self.e.base_root, progress=prog)
+                self._emit(ev="scan_done", **r)
+            except Exception as ex:
+                logging.exception("archive scan")
+                self._emit(ev="scan_done", error=str(ex), total=self.arch.count())
+            finally:
+                self._scanning = False
+        threading.Thread(target=work, daemon=True, name="NAB-Scan").start()
+        return {"ok": True}
+
+    def api_facets(self, a):
+        return dict(self.arch.facets(), ok=True, saved=self.arch.saved_list())
+
+    def api_dups(self, a):
+        return {"ok": True, "groups": self.arch.duplicate_groups(int(a.get("dist", 2) or 2))}
+
+    def api_saved_put(self, a):
+        return {"ok": self.arch.saved_put(a.get("name"), a.get("query")), "saved": self.arch.saved_list()}
+
+    def api_saved_delete(self, a):
+        self.arch.saved_delete(a.get("name") or "")
+        return {"ok": True, "saved": self.arch.saved_list()}
+
+    def api_export(self, a):
+        q = a.get("q") or ""
+        r = self.arch.search(q, bool(a.get("all")), 20000, **self._flt(a))
+        if not r["rows"]:
+            return {"ok": False, "error": "Nothing to export."}
+        folder = os.path.join(os.path.expanduser("~"), "Documents", "NAB Exports")
+        p = self.arch.export(r["rows"], folder, "csv" if a.get("kind") == "csv" else "xlsx")
+        try:
+            import nab_accounts
+            nab_accounts.audit("export", f"{len(r['rows'])} clips -> {os.path.basename(p)}")
+        except Exception:
+            pass
+        return {"ok": True, "path": p, "n": len(r["rows"])}
+
+    def api_delete_files(self, a):
+        """Delete the given clip files (used by the duplicate screen). Only files that are in the archive."""
+        n = 0
+        for p in a.get("paths") or []:
+            try:
+                if self.arch.has(p) and os.path.isfile(p):          # only files the archive knows about
+                    os.remove(p); self.arch.remove(p); n += 1
+                    try:
+                        import nab_accounts
+                        nab_accounts.audit("delete_clip", os.path.basename(p))
+                    except Exception:
+                        pass
+            except Exception as ex:
+                logging.error(f"delete {p}: {ex}")
+        return {"ok": True, "n": n}
 
     def api_open(self, a):
         p = a.get("path") or ""

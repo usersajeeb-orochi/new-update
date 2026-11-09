@@ -159,7 +159,27 @@
   }, true);
 
   // ───────────── extra commands (Ctrl+K) ─────────────
+  // ── batch folder mode: open page images one after another; the next one loads after each save ──
+  const BATCH = { on: false };
+  function batchStart() {
+    C.modal(`<h3>Batch: open a folder of images</h3><p class="sub">NAB opens the first image. After you save it, the next one opens by itself. Paste the folder path.</p><div class="field"><input id="bF" placeholder="D:\\Papers\\08-11-2026\\Daily Star" style="width:100%"></div><div class="modal-actions"><button class="btn" id="bNo">Cancel</button><button class="btn pri" id="bOk">Start</button></div>`, (cd, close) => {
+      $("#bNo").onclick = close; $("#bF").focus();
+      const go = async () => { const r = await api("batch_start", { folder: $("#bF").value }); if (!r.ok) return C.toast(r.error, "warn", 4000); close(); BATCH.on = !r.done && r.left > 0; C.toast("Batch " + r.n + " of " + r.total + ": " + r.name + (r.left ? "" : " (last one)"), "ok", 3500); };
+      $("#bOk").onclick = go; $("#bF").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+    });
+  }
+  async function batchNext(auto) {
+    const r = await api("batch_next");
+    if (!r.ok) { if (!auto) C.toast(r.error, "warn", 3000); BATCH.on = false; return; }
+    if (r.done) { BATCH.on = false; C.toast("Batch finished", "ok", 3000); return; }
+    BATCH.on = r.left > 0; C.toast("Batch " + r.n + " of " + r.total + ": " + r.name + (r.left ? "" : " (last one)"), "ok", 3000);
+  }
+  on("saved", () => { if (BATCH.on) setTimeout(() => batchNext(true), 600); });
+
   X.commands = function (add) {
+    add("Batch: open a folder of images", "", batchStart);
+    add("Batch: next image", "", () => batchNext(false));
+    add("Batch: stop", "", async () => { await api("batch_stop"); BATCH.on = false; C.toast("Batch stopped", "ok", 2000); });
     add("Setup guide (check what is missing)", "", () => guide(false));
     add("Set up the browser extension", "", () => extSetup());
     add("Sajeeb: show or hide the mascot", "", () => { const on = !((window.M && M.st && M.st.ui) || {}).mascot; api("ui_set", { mascot: on }); if (M.st && M.st.ui) M.st.ui.mascot = on; if (window.RIKO) RIKO.setEnabled(on); });

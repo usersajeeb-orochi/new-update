@@ -160,6 +160,7 @@
   // ───────────────────────── toasts / generic events ─────────────────────────
   on("toast", (ev) => toast(ev.text, ev.kind, ev.ms));
   on("clips", () => CLIPUI.onClips());
+  on("dup_warning", (ev) => C.toast("This looks the same as a clip already saved: " + ev.other + (ev.date ? " (" + ev.date + ")" : ""), "warn", 8000));
   on("saved", (ev) => { if (M.st) M.st.saved_today += ev.n; renderStatusCounts(); if (!$("#drawer").classList.contains("hidden")) loadRecent(); refreshQueue(); });
   on("save_failed", (ev) => toast("Save failed: " + (ev.failed[0] && ev.failed[0].error || ""), "error", 6000));
   on("save_partial", (ev) => toast(ev.failed.length + " categor" + (ev.failed.length > 1 ? "ies" : "y") + " failed to save", "warn", 6000));

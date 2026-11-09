@@ -945,6 +945,7 @@ class EngineBase:
                     nab_tools.get("wa", self).auto_saved(saved)
             except Exception as e:
                 logging.error(f"wa auto: {e}")
+            threading.Thread(target=self._archive_saved, args=(list(saved),), daemon=True, name="NAB-Archive").start()
             self._last_save = {"id": sid, "files": [s["path"] for s in saved], "snapshot": snapshot}
             # memory: the undo window is short — let go of the heavy copies afterwards
             def _release(sid_=sid):
@@ -975,6 +976,23 @@ class EngineBase:
         elif failed:
             self.hub.emit("save_partial", id=sid, failed=failed)
 
+    def _archive_saved(self, saved):
+        """Add the new clips to the archive and warn if one looks like a clip that is already saved."""
+        try:
+            import nab_archive
+            import nab_accounts
+            arch = nab_archive.get()
+            who = nab_accounts.current()["name"] or ""
+            same_save = [s["path"] for s in saved]
+            for s in saved:
+                arch.upsert(s["path"], self.base_root, user=who)
+            for s in saved[:1]:
+                d = arch.dup_of(s["path"], exclude=same_save)
+                if d:
+                    self.hub.emit("dup_warning", name=s["name"], other=d["name"], other_path=d["path"], date=d.get("date", ""))
+        except Exception as e:
+            logging.error(f"archive on save: {e}")
+
     def undo_save(self):
         """Toast 'Undo': delete what was just saved and bring the clips back."""
         ls = self._last_save
@@ -986,6 +1004,11 @@ class EngineBase:
                 if os.path.exists(p):
                     os.remove(p)
                     removed += 1
+                try:
+                    import nab_archive
+                    nab_archive.get().remove(p)
+                except Exception:
+                    pass
             except Exception as e:
                 logging.error(f"undo_save remove {p}: {e}")
         self.session_history = [h for h in self.session_history if h.get("path") not in set(ls["files"])]
