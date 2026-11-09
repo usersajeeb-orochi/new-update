@@ -144,6 +144,74 @@ class Api:
     def login_precheck(self, a):
         return self.e.login_precheck()
 
+    def selfcheck(self, a):
+        import nab_health
+        return nab_health.run_all(self.e)
+
+    # ---- accounts (see nab_accounts.py) ----
+    def acct_status(self, a):
+        import nab_accounts
+        r = nab_accounts.status()
+        r["owner_pc"] = self.e.acct_is_owner_pc()
+        return r
+
+    def acct_login(self, a):
+        return self.e.acct_login(a.get("name", ""), a.get("password", ""))
+
+    def acct_logout(self, a):
+        import nab_accounts
+        return nab_accounts.logout()
+
+    def acct_list(self, a):
+        import nab_accounts
+        return {"ok": True, "users": nab_accounts.list_users(), "owner_pc": self.e.acct_is_owner_pc()}
+
+    def acct_add(self, a):
+        import nab_accounts
+        r = nab_accounts.add_user(a.get("name", ""), a.get("password", ""), a.get("role", "staff"), a.get("display", ""), actor_ok=self.e.acct_can_manage())
+        if r.get("ok"):
+            self.e.sync_now()
+        return r
+
+    def acct_role(self, a):
+        import nab_accounts
+        r = nab_accounts.set_role(a.get("name", ""), a.get("role", ""), actor_ok=self.e.acct_can_manage())
+        if r.get("ok"):
+            self.e.sync_now()
+        return r
+
+    def acct_disable(self, a):
+        import nab_accounts
+        r = nab_accounts.set_disabled(a.get("name", ""), bool(a.get("disabled", True)), actor_ok=self.e.acct_can_manage())
+        if r.get("ok"):
+            self.e.sync_now()
+        return r
+
+    def acct_delete(self, a):
+        import nab_accounts
+        r = nab_accounts.delete_user(a.get("name", ""), actor_ok=self.e.acct_can_manage())
+        if r.get("ok"):
+            self.e.sync_now()
+        return r
+
+    def acct_reset(self, a):
+        import nab_accounts
+        r = nab_accounts.reset_password(a.get("name", ""), a.get("password", ""), actor_ok=self.e.acct_can_manage())
+        if r.get("ok"):
+            self.e.sync_now()
+        return r
+
+    def acct_change_pw(self, a):
+        import nab_accounts
+        r = nab_accounts.change_own_password(a.get("old", ""), a.get("new", ""))
+        if r.get("ok"):
+            self.e.sync_now()
+        return r
+
+    def audit_tail(self, a):
+        import nab_accounts
+        return {"ok": True, "rows": nab_accounts.audit_tail(int(a.get("n", 200) or 200), a.get("user", ""), a.get("action", ""))}
+
     def login_begin(self, a):
         if not getattr(self.e, "_login_started", False):
             self.e._login_started = True
@@ -281,7 +349,13 @@ class Api:
 
     # ---- saving -------------------------------------------------------------
     def save(self, a):
-        return self.e.save(a.get("cats", []), a.get("line", ""))
+        import nab_accounts
+        if not nab_accounts.can("save"):
+            return {"ok": False, "error": "Your account can only view. Ask the owner for a staff account to save clips."}
+        r = self.e.save(a.get("cats", []), a.get("line", ""))
+        if isinstance(r, dict) and r.get("ok"):
+            nab_accounts.audit("save", f"{', '.join(a.get('cats', []))} | {a.get('line', '')} | {getattr(self.e, 'paper', '')}")
+        return r
 
     def undo_save(self, a):
         return self.e.undo_save()
@@ -452,6 +526,9 @@ class Api:
         return self.e.sync_now()
 
     def sync_role(self, a):
+        import nab_accounts
+        if not nab_accounts.can("manage"):
+            return {"ok": False, "error": "Only an owner account can change the sync role."}
         return self.e.sync_set_role(a.get("role"), a.get("id"))
 
     def sync_history(self, a):

@@ -34,10 +34,22 @@
     g.innerHTML = '<div class="card gate-ch"><div class="big"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></div><h2>' + t("lock_title") + '</h2><p>How should this login be approved?</p>' +
       '<div class="gate-btns"><button class="gate-b' + (pre.mode === "group" ? " last" : "") + '" id="gcG"><b>Authorize by group</b><small>Anyone in the Telegram group can approve</small></button>' +
       '<button class="gate-b' + (pre.mode === "owner" ? " last" : "") + '" id="gcO"><b>Authorize by owner</b><small>Only the owner can approve, in a private chat</small></button></div>' +
+      '<button class="gate-b" id="gcA" style="width:100%;margin-top:8px"><b>Sign in with my account</b><small>Name and password, no Telegram needed</small></button>' +
       '<input id="gcR" class="gate-r" maxlength="140" placeholder="Reason (optional) — shown to whoever approves" autocomplete="off"><label class="gate-k"><input type="checkbox" id="gcK"> Remember my choice</label></div>';
     const go = (mode) => { const reason = $("#gcR").value.trim(), keep = $("#gcK").checked; if (keep) api("ui_set", { auth_default: mode }); showGate(last, "", mode); api("login_begin", { mode, reason }); };
-    $("#gcG").onclick = () => go("group"); $("#gcO").onclick = () => go("owner");
+    $("#gcG").onclick = () => go("group"); $("#gcO").onclick = () => go("owner"); $("#gcA").onclick = () => showAccount(pre, last);
     $("#gcR").addEventListener("keydown", (e) => { if (e.key === "Enter") go(pre.mode === "owner" ? "owner" : "group"); });
+  }
+  async function showAccount(pre, last) {
+    const g = $("#gate");
+    g.innerHTML = '<div class="card gate-ch"><div class="big"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></div><h2>Sign in</h2>' +
+      '<input id="acN" class="gate-r" placeholder="Name" autocomplete="username" maxlength="40"><input id="acP" class="gate-r" type="password" placeholder="Password" autocomplete="current-password" maxlength="80">' +
+      '<div class="status-line" id="acE" style="color:#ef4444;min-height:20px"></div>' +
+      '<div class="gate-btns"><button class="gate-b" id="acGo"><b>Sign in</b></button><button class="gate-b" id="acBack"><b>Back</b><small>Use Telegram instead</small></button></div></div>';
+    const go = async () => { const r = await api("acct_login", { name: $("#acN").value, password: $("#acP").value }); if (r.ok) { if (r.must_change) C.toast("Please set your own password in Settings, Accounts.", "warn", 6000); setTimeout(start, 400); } else { $("#acE").textContent = r.error || "Could not sign in."; $("#acP").value = ""; $("#acP").focus(); } };
+    $("#acGo").onclick = go; $("#acBack").onclick = () => showChoice(pre, last);
+    $("#acP").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); }); $("#acN").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#acP").focus(); });
+    $("#acN").focus();
   }
   let loginTimer = null;
   function onLogin(ev) {

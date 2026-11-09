@@ -364,7 +364,9 @@ class ExtrasMixin:
 
     def _backup_files(self):
         from nab_engine import UI_STATE_FILE
-        return [self.settings_file, self.sources_file, self.mappings_file, self.config_file, UI_STATE_FILE]
+        from nab_engine import DOC_DIR
+        extra = [os.path.join(DOC_DIR, "nab_wa.json"), os.path.join(os.path.expanduser("~"), "Documents", "nab_users.json")]
+        return [self.settings_file, self.sources_file, self.mappings_file, self.config_file, UI_STATE_FILE] + extra
 
     def backup_now(self, why="manual"):
         try:
@@ -376,7 +378,7 @@ class ExtrasMixin:
                     if os.path.exists(f):
                         z.write(f, os.path.basename(f))
             zs = sorted(x for x in os.listdir(d) if x.startswith("settings_") and x.endswith(".zip"))
-            for old in zs[:-15]:
+            for old in zs[:-30]:
                 try:
                     os.remove(os.path.join(d, old))
                 except OSError:

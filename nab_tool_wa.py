@@ -17,7 +17,8 @@ import nab_engine
 
 FILE = os.path.join(nab_engine.DOC_DIR, "nab_wa.json")
 DBG = os.path.join(nab_engine.DOC_DIR, "NAB_WhatsApp")
-DEFAULTS = {"chats": [], "default": "", "per_category": {}, "as_document": True, "caption": True, "auto": False, "show_window": False}
+DEFAULTS = {"chats": [], "default": "", "per_category": {}, "as_document": True, "caption": True, "auto": False, "show_window": False,
+            "gap_s": 3, "dup_minutes": 10, "send_timeout_s": 45, "idle_close_min": 30, "notify_fail": True}
 URL = os.environ.get("NAB_WA_URL") or "https://web.whatsapp.com/"
 
 
@@ -62,6 +63,11 @@ class Tool:
         self.pending = 0
         self.lock = threading.Lock()
         self.want_login = False
+        self.jobs = []                 # newest last; each: id, paths, chat, caption, state, error, t
+        self.jobmap = {}               # id(data tuple) -> job
+        self.last_ok = None
+        self.last_error = ""
+        self._jid = 0
 
     # ------------------------------------------------------------ helpers
     def _emit(self, **kw):
@@ -90,8 +96,8 @@ class Tool:
 
     # ------------------------------------------------------------ api
     def api_state(self, a):
-        return {"ok": True, "cfg": self.cfg, "status": self.status, "msg": self.msg, "linked": _is_linked(), "pending": self.pending, "deps": self.deps(),
-                "categories": list(getattr(self.e, "categories", []) or [])}
+        return {"ok": True, "cfg": self.cfg, "status": self.status, "msg": self.msg, "linked": _is_linked(), "pending": self.pending, "deps": self.deps(), "last_ok": self.last_ok, "last_error": self.last_error,
+                "jobs": self._jobs_view(), "categories": list(getattr(self.e, "categories", []) or [])}
 
     def api_settings(self, a):
         c = self.cfg
@@ -100,7 +106,13 @@ class Tool:
         for k in ("default",):
             if k in a:
                 c[k] = str(a[k]).strip()
-        for k in ("as_document", "caption", "auto", "show_window"):
+        for k, lo, hi in (("gap_s", 0, 60), ("dup_minutes", 0, 240), ("send_timeout_s", 15, 180), ("idle_close_min", 2, 240)):
+            if k in a:
+                try:
+                    c[k] = max(lo, min(hi, int(a[k])))
+                except Exception:
+                    pass
+        for k in ("as_document", "caption", "auto", "show_window", "notify_fail"):
             if k in a:
                 c[k] = bool(a[k])
         if "per_category" in a and isinstance(a["per_category"], dict):
@@ -135,8 +147,43 @@ class Tool:
             return {"ok": False, "error": "Choose a chat or group first (WhatsApp setup)."}
         if not self.deps():
             return {"ok": False, "error": "Playwright is not installed (pip install playwright)."}
-        self._enqueue(paths, chat, a.get("caption"))
+        try:
+            import nab_accounts
+            if not nab_accounts.can("send"):
+                return {"ok": False, "error": "Your account cannot send. Ask the owner for a staff account."}
+        except Exception:
+            nab_accounts = None
+        r = self._enqueue(paths, chat, a.get("caption"))
+        if r == "queued" and nab_accounts:
+            nab_accounts.audit("wa_send", f"{os.path.basename(paths[0])} -> {chat}")
+        if r == "busy":
+            return {"ok": True, "chat": chat, "n": len(paths), "note": "Already waiting to be sent. Ignored the extra click."}
+        if r == "dup":
+            return {"ok": True, "chat": chat, "n": len(paths), "note": "This file was just sent to that chat. Use Resend in the queue if you really want it again."}
         return {"ok": True, "chat": chat, "n": len(paths)}
+
+    def api_queue(self, a):
+        return {"ok": True, "jobs": self._jobs_view(), "pending": self.pending, "status": self.status, "msg": self.msg,
+                "last_ok": self.last_ok, "last_error": self.last_error, "linked": _is_linked()}
+
+    def api_retry(self, a):
+        """Resend a failed (or sent) job. Safe against double clicks: a job that is already queued or sending is left alone."""
+        jid = int(a.get("id", 0) or 0)
+        j = next((x for x in self.jobs if x["id"] == jid), None)
+        if not j:
+            return {"ok": False, "error": "That item is gone from the list."}
+        if j["state"] in ("queued", "sending"):
+            return {"ok": True, "note": "Already in progress."}
+        paths = [p for p in j["paths"] if os.path.isfile(p)]
+        if not paths:
+            return {"ok": False, "error": "The file no longer exists."}
+        r = self._enqueue(paths, j["chat"], j.get("caption"), force=True)
+        return {"ok": True, "note": "Queued again." if r == "queued" else "Already in progress."}
+
+    def api_clear_queue(self, a):
+        with self.lock:
+            self.jobs[:] = [j for j in self.jobs if j["state"] in ("queued", "sending")]
+        return self.api_queue({})
 
     def api_send_recent(self, a):
         try:
@@ -155,12 +202,49 @@ class Tool:
                 self._enqueue([s["path"]], chat, None)
 
     # ------------------------------------------------------------ queue + worker
-    def _enqueue(self, paths, chat, caption):
+    def _jobs_view(self):
+        return [{"id": j["id"], "name": os.path.basename(j["paths"][0]), "n": len(j["paths"]), "chat": j["chat"], "state": j["state"],
+                 "error": j["error"], "t": j["t"]} for j in self.jobs[-40:]]
+
+    def _find_job(self, paths, chat, states):
+        for j in reversed(self.jobs):
+            if j["paths"] == paths and j["chat"] == chat and j["state"] in states:
+                return j
+        return None
+
+    def _enqueue(self, paths, chat, caption, force=False):
+        """Queue one send. A second request for the same file and chat is ignored while the first is still queued
+        or sending, and for a few minutes after it was sent (so a double click never sends twice)."""
         with self.lock:
+            if self._find_job(paths, chat, ("queued", "sending")):
+                return "busy"
+            if not force:
+                j = self._find_job(paths, chat, ("sent",))
+                mins = int(self.cfg.get("dup_minutes", 10) or 0)
+                if j and mins and time.time() - j["t"] < mins * 60:
+                    return "dup"
+            self._jid += 1
+            job = {"id": self._jid, "paths": list(paths), "chat": chat, "caption": caption, "state": "queued", "error": "", "t": time.time()}
+            self.jobs.append(job)
+            del self.jobs[:-60]
             self.pending += 1
-        self.q.put(("send", (paths, chat, caption)))
+            data = (list(paths), chat, caption)
+            self.jobmap[id(data)] = job
+        self.q.put(("send", data))
         self._ensure_worker()
         self._emit(ev="status", status=self.status, msg=self.msg, pending=self.pending)
+        return "queued"
+
+    def _job_state(self, data, state, err=""):
+        j = self.jobmap.get(id(data))
+        if j:
+            j["state"], j["error"], j["t"] = state, err, time.time()
+            if state in ("sent", "failed"):
+                self.jobmap.pop(id(data), None)
+        if state == "sent":
+            self.last_ok = time.time()
+        elif state == "failed":
+            self.last_error = err
 
     def _ensure_worker(self):
         with self.lock:
@@ -181,7 +265,7 @@ class Tool:
             with sync_playwright() as p:
                 while True:
                     try:
-                        kind, data = self.q.get(timeout=1800)
+                        kind, data = self.q.get(timeout=max(120, int(self.cfg.get("idle_close_min", 30) or 30) * 60))
                     except queue.Empty:                                  # idle 30 min: close the browser to save memory
                         break
                     if kind == "logout":
@@ -221,8 +305,10 @@ class Tool:
                             if not self.cfg.get("show_window"):                  # carry on hidden: the saved profile keeps you linked
                                 ctx.close(); ctx = page = None
                         else:
+                            self._job_state(data, "sending")
                             try:
                                 self._send(page, *data)
+                                self._job_state(data, "sent")
                             except Exception as e1:
                                 if "closed" not in str(e1).lower():
                                     raise
@@ -237,6 +323,9 @@ class Tool:
                                 ctx, page = self._open(p, want_visible)
                                 visible = want_visible
                                 self._send(page, *data)
+                                self._job_state(data, "sent")
+                            if kind == "send":
+                                time.sleep(max(0, int(self.cfg.get("gap_s", 3) or 0)))
                     except Exception as e:
                         self._fail(kind, data, ("The WhatsApp window closed while sending. Leave it open until the file is sent, then send again." if "closed" in str(e).lower() else str(e)[:160]), page)
                         if "closed" in str(e).lower():
@@ -351,7 +440,7 @@ class Tool:
                 inp = files.first
             inp.set_input_files(paths)
             SENDSEL = 'span[data-icon="send"], span[data-icon="wds-ic-send-filled"], div[aria-label="Send"], button[aria-label="Send"], [role="button"][aria-label="Send"]'
-            page.wait_for_selector(SENDSEL, timeout=45000)
+            page.wait_for_selector(SENDSEL, timeout=int(self.cfg.get("send_timeout_s", 45) or 45) * 1000)
             page.wait_for_timeout(800)
             if caption is None and self.cfg.get("caption", True):
                 caption = os.path.splitext(os.path.basename(paths[0]))[0] if len(paths) == 1 else ""
@@ -397,5 +486,6 @@ class Tool:
         if kind == "send":
             with self.lock:
                 self.pending = max(0, self.pending - 1)
+            self._job_state(data, "failed", why)
             self._emit(ev="fail", chat=data[1], name=os.path.basename(data[0][0]), error=why, pending=self.pending)
         self._set("error" if kind == "login" else self.status if self.status != "starting" else "error", why)

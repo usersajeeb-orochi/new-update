@@ -284,3 +284,10 @@ v3.0.45
 - Updater safety net: if a new version never starts, the old files are put back (the update is still required; nothing lets a PC stay on an old version).
 - The previous run's log is kept (nab_log.prev.txt) so a crash can be read. Telegram: /health and /log.
 - Style polish: focus rings, depth, hover/press feedback, thin scrollbars, tidier settings headings. Reduced-motion respected.
+
+v3.0.46 - Accounts, WhatsApp queue, self-check
+ * Accounts (Settings > Accounts): named logins with owner / staff / viewer roles, activity log, password reset, lockout after wrong passwords. Made on the owner PC, downloaded by every other PC. Telegram approval still works.
+ * WhatsApp: double-click-safe Retry, send queue with Sent/Failed status, link health, repeat-send guard, all sending options in Settings, browser restarts cleanly if it closes mid-send.
+ * Self-check (Settings > Self-check): clock, internet, update server, Drive, Telegram, WhatsApp, disk, tools, backups, accounts.
+ * Backups now include accounts and WhatsApp settings (30 kept).
+ * The Google key is no longer in the repository; the build writes it from the GDRIVE_KEY_JSON secret. Automatic tests run before every build.

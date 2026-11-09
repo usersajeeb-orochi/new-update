@@ -1090,6 +1090,45 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         t = (_dt.datetime.now() + _dt.timedelta(days=days - 1)).replace(hour=23, minute=59, second=0, microsecond=0)
         return t.timestamp()
 
+    # ---- accounts ----
+    def acct_is_owner_pc(self):
+        try:
+            import nab_settings_sync as S
+            return S.get_role()["role"] == "owner"
+        except Exception:
+            return False
+
+    def acct_can_manage(self):
+        """Only the owner PC creates or changes accounts (other PCs download them). On that PC: an owner account,
+        or nobody signed in with an account (the Telegram-approved owner PC), or no accounts yet."""
+        import nab_accounts
+        if not self.acct_is_owner_pc():
+            return False
+        cur = nab_accounts.current()
+        return (not cur["role"]) or cur["role"] == "owner"
+
+    def acct_login(self, name, password):
+        import nab_accounts
+        from nab_telegram import PC_NAME
+        nab_accounts.init(PC_NAME)
+        try:
+            import nab_access
+            if PC_NAME in (nab_access._load_blocked_pcs() or {}):
+                return {"ok": False, "error": "This PC is blocked."}
+        except Exception:
+            pass
+        r = nab_accounts.login(name, password)
+        if not r.get("ok"):
+            return r
+        if not self.authorized:
+            self.authorized = True
+            self._login_started = True
+            self.hub.emit("login", sticky=True, stage="granted", how="account")
+            self._start_session_touch()
+            self.after_login()
+        self.hub.emit("state_changed")
+        return r
+
     def begin_login(self, mode="group", reason="", auto=False):
         def run():
             granted = False

@@ -346,3 +346,8 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;paddi
 .upd{box-shadow:var(--sh2)}
 .toast{box-shadow:var(--sh2);backdrop-filter:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* v3.0.46: small buttons inside tables (Accounts, WhatsApp queue) */
+.t .btn.mini{width:auto;height:30px;padding:0 12px;font-size:12px;white-space:nowrap;border-radius:999px;margin-right:4px}
+.t td{vertical-align:middle}
+.t td:last-child{white-space:nowrap}

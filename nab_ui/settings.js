@@ -2,7 +2,7 @@
 (function () {
   const { $, $$, esc, api, toast, on } = C;
   const S = { sec: "general", box: null, cur: null };
-  const SECS = [["general", "general"], ["papers", "papers"], ["detect", "detection"], ["quick", "quicksave"], ["keys", "hotkeys"], ["rules", "mapping"], ["cats", "categories_edit"], ["pdefs", "pdefs"], ["comfort", "comfort"], ["riko", "riko"], ["connections", "connections"], ["ai", "ai_sec"], ["sync", "sync"], ["whatsapp", "WhatsApp"], ["backups", "backups"], ["about", "about"]];
+  const SECS = [["general", "general"], ["papers", "papers"], ["detect", "detection"], ["quick", "quicksave"], ["keys", "hotkeys"], ["rules", "mapping"], ["cats", "categories_edit"], ["pdefs", "pdefs"], ["comfort", "comfort"], ["riko", "riko"], ["connections", "connections"], ["ai", "ai_sec"], ["sync", "sync"], ["accounts", "Accounts"], ["whatsapp", "WhatsApp"], ["selfcheck", "Self-check"], ["backups", "backups"], ["about", "about"]];
   const KEYS = [["paste", "Paste"], ["undo", "Undo"], ["redo", "Redo"], ["delete", "Delete layer"], ["generate", "Save"], ["trim", "Trim"], ["clean", "Clean"], ["pad", "Pad"], ["open", "Open file"], ["move_up", "Layer up"], ["move_down", "Layer down"], ["swap", "Swap last two"], ["tool_crop", "Crop tool"], ["tool_erase", "Erase tool"], ["tool_highlight", "Highlight tool"], ["tool_redact", "Redact tool"], ["discard", "Delete grabbed clip"]];
   const QKEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "Ctrl+1", "Ctrl+2", "Ctrl+3", "Ctrl+4", "Ctrl+5", "Ctrl+6", "Ctrl+7", "Ctrl+8", "Ctrl+9"];
 
@@ -198,7 +198,68 @@
     $("#waL", d).onclick = async () => { const x = await api("wa_login"); toast(x.ok ? "A browser window opens: scan the QR code" : x.error, x.ok ? "ok" : "bad"); };
     $("#waU", d).onclick = async () => { await api("wa_logout"); toast("Unlinked"); setTimeout(render, 800); };
     $("#waS", d).onclick = () => window.WA && WA.setup();
-    const off = on("tool", (ev) => { if (ev.tool === "wa" && ev.ev === "status" && $("#waT")) { $("#waT").textContent = lab[ev.status] || ev.status; $("#waM").textContent = ev.msg || ""; } });
+    const ago = (t) => { if (!t) return "never"; const m = Math.round((Date.now() / 1000 - t) / 60); return m < 1 ? "just now" : m < 90 ? m + " min ago" : Math.round(m / 60) + " h ago"; };
+    const num = (id, lbl, v, lo, hi, hint) => `<div class="kv"><span>${lbl}</span><input id="${id}" type="number" min="${lo}" max="${hi}" value="${v}" style="width:90px"><small class="sub">${hint}</small></div>`;
+    const o = card(b, "Sending options", `${chk("wa_doc", "Send as file (full quality, no WhatsApp compression)", c.as_document !== false)}${chk("wa_cap", "Use the file name as caption", !!c.caption)}${chk("wa_auto", "Send every saved clip automatically (categories with a chat, or the default)", !!c.auto)}${chk("wa_show", "Show the browser window while sending", !!c.show_window)}${chk("wa_nf", "Tell me when a send fails", c.notify_fail !== false)}
+      ${num("wa_gap", "Pause between sends (seconds)", c.gap_s ?? 3, 0, 60, "Longer is gentler on WhatsApp")}${num("wa_dup", "Ignore a repeat of the same file for (minutes)", c.dup_minutes ?? 10, 0, 240, "Stops double clicks sending twice. 0 = off")}${num("wa_to", "Wait for the send button (seconds)", c.send_timeout_s ?? 45, 15, 180, "Raise on a slow connection")}${num("wa_idle", "Close the hidden browser after idle (minutes)", c.idle_close_min ?? 30, 2, 240, "Saves memory")}
+      <div class="row"><button class="btn pri" id="waSv">Save sending options</button></div>`);
+    $("#waSv", o).onclick = async () => { await api("wa_settings", { as_document: $("#wa_doc", o).checked, caption: $("#wa_cap", o).checked, auto: $("#wa_auto", o).checked, show_window: $("#wa_show", o).checked, notify_fail: $("#wa_nf", o).checked, gap_s: $("#wa_gap", o).value, dup_minutes: $("#wa_dup", o).value, send_timeout_s: $("#wa_to", o).value, idle_close_min: $("#wa_idle", o).value }); toast("Saved"); };
+    const qd = card(b, "Send queue", `<p class="sub" id="waH"></p><div id="waQ"></div><div class="row"><button class="btn" id="waCl">Clear finished</button></div>`);
+    const stl = { queued: "Waiting", sending: "Sending", sent: "Sent", failed: "Failed" };
+    const drawQ = async () => {
+      const q = await api("wa_queue"); if (!$("#waQ", qd)) return;
+      $("#waH", qd).textContent = (q.linked ? "Linked" : "Not linked") + ". Last successful send: " + ago(q.last_ok) + (q.last_error ? ". Last problem: " + q.last_error : "") + ".";
+      $("#waQ", qd).innerHTML = (q.jobs || []).length ? '<table class="t"><tbody>' + q.jobs.slice().reverse().map(j => `<tr><td>${esc(j.name)}${j.n > 1 ? " +" + (j.n - 1) : ""}</td><td>${esc(j.chat)}</td><td>${esc(stl[j.state] || j.state)}${j.error ? ": " + esc(j.error) : ""}</td><td>${j.state === "failed" || j.state === "sent" ? `<button class="btn mini" data-r="${j.id}">${j.state === "failed" ? "Retry" : "Resend"}</button>` : ""}</td></tr>`).join("") + "</tbody></table>" : '<p class="sub">Nothing sent yet.</p>';
+      $("#waQ", qd).querySelectorAll("button[data-r]").forEach(bt => bt.onclick = async () => { bt.disabled = true; const x = await api("wa_retry", { id: +bt.dataset.r }); toast(x.note || x.error || "Queued", x.ok ? "ok" : "bad"); setTimeout(drawQ, 600); });
+    };
+    $("#waCl", qd).onclick = async () => { await api("wa_clear_queue"); drawQ(); };
+    drawQ();
+    const off = on("tool", (ev) => { if (ev.tool !== "wa") return; if (ev.ev === "status" && $("#waT")) { $("#waT").textContent = lab[ev.status] || ev.status; $("#waM").textContent = ev.msg || ""; } if ($("#waQ")) drawQ(); });
+  };
+
+  // ───── Self-check ─────
+  S.r_selfcheck = async function (b) {
+    hd(b, "Self-check", "One look at everything NAB depends on. Red means something needs fixing now, amber means worth a look.");
+    const d = card(b, "", `<div class="row"><button class="btn pri" id="scGo">Run the check</button><span class="tag" id="scT"></span></div><div id="scB"></div>`);
+    const dot = { ok: "#22c55e", warn: "#f59e0b", bad: "#ef4444" }, word = { ok: "OK", warn: "Check", bad: "Problem" };
+    const run = async () => {
+      $("#scGo", d).disabled = true; $("#scT", d).textContent = "Checking…";
+      const r = await api("selfcheck");
+      $("#scGo", d).disabled = false; $("#scT", d).textContent = (r.overall === "ok" ? "All good" : r.overall === "warn" ? "Some things to look at" : "Needs attention") + " · " + r.at;
+      $("#scB", d).innerHTML = '<table class="t"><tbody>' + (r.rows || []).map(x => `<tr><td style="width:14px"><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dot[x.status]}"></i></td><td><b>${esc(x.label)}</b></td><td>${esc(word[x.status])}</td><td>${esc(x.detail)}${x.fix ? `<br><small class="sub">${esc(x.fix)}</small>` : ""}</td></tr>`).join("") + "</tbody></table>";
+    };
+    $("#scGo", d).onclick = run; run();
+  };
+
+  // ───── Accounts ─────
+  S.r_accounts = async function (b) {
+    hd(b, "Accounts", "Named logins with roles. Owner: everything. Staff: clip, save and send. Viewer: look only. Accounts are made on the owner PC and every other PC downloads them. Telegram approval still works as a way in.");
+    const stt = await api("acct_status"), r = await api("acct_list"), cur = stt.current || {};
+    const info = card(b, "", `<div class="row"><span class="tag">${cur.name ? "Signed in as " + esc(cur.display || cur.name) + " (" + esc(cur.role) + ")" : "Not signed in with an account"}</span>${cur.name ? '<button class="btn" id="acOut">Sign out</button>' : ""}</div>
+      ${stt.owner_pc ? "" : '<p class="sub">This PC only downloads accounts. To add or change accounts, use the owner PC (Settings, Sync).</p>'}`);
+    if ($("#acOut", info)) $("#acOut", info).onclick = async () => { await api("acct_logout"); toast("Signed out. Restart NAB to sign in as someone else."); setTimeout(render, 500); };
+    const lst = card(b, "People", `<table class="t"><thead><tr><td>Name</td><td>Role</td><td>Last sign-in</td><td></td></tr></thead><tbody>${(r.users || []).map(u => `<tr data-n="${esc(u.name)}"><td><b>${esc(u.display)}</b>${u.disabled ? " (off)" : ""}${u.must_change ? " (must change password)" : ""}</td>
+      <td><select data-a="role" ${stt.owner_pc ? "" : "disabled"}>${["owner", "staff", "viewer"].map(x => `<option ${u.role === x ? "selected" : ""}>${x}</option>`).join("")}</select></td><td>${esc(u.last_login || "never")}</td>
+      <td>${stt.owner_pc ? `<button class="btn mini" data-a="reset">Reset password</button> <button class="btn mini" data-a="off">${u.disabled ? "Turn on" : "Turn off"}</button> <button class="btn mini" data-a="del">Delete</button>` : ""}</td></tr>`).join("") || '<tr><td colspan="4">No accounts yet. The first one you add becomes the owner.</td></tr>'}</tbody></table>`);
+    const msg = (x, ok) => { toast(x.ok ? (ok || "Done") : x.error, x.ok ? "ok" : "bad", x.ok ? 2500 : 6000); if (x.ok) setTimeout(render, 600); };
+    lst.querySelectorAll("tr[data-n]").forEach(tr => { const n = tr.dataset.n;
+      const sel = tr.querySelector("select[data-a=role]"); if (sel) sel.onchange = async () => msg(await api("acct_role", { name: n, role: sel.value }), "Role changed");
+      tr.querySelectorAll("button[data-a]").forEach(bt => bt.onclick = async () => {
+        if (bt.dataset.a === "reset") { C.modal(`<h3>Reset password for ${esc(n)}</h3><p class="sub">Type a temporary password (at least 6 characters). They must change it at their next sign-in.</p><div class="field"><input id="rsP" type="text" maxlength="80"></div><div class="modal-actions"><button class="btn" id="rsNo">Cancel</button><button class="btn pri" id="rsYes">Reset</button></div>`, (cd, close) => { $("#rsNo").onclick = close; $("#rsYes").onclick = async () => { const pw = $("#rsP").value; close(); msg(await api("acct_reset", { name: n, password: pw }), "Password reset"); }; }); }
+        else if (bt.dataset.a === "off") { const u = (r.users || []).find(x => x.name === n); msg(await api("acct_disable", { name: n, disabled: !(u && u.disabled) })); }
+        else if (bt.dataset.a === "del") { C.modal(`<h3>Delete the account ${esc(n)}?</h3><p class="sub">They will no longer be able to sign in.</p><div class="modal-actions"><button class="btn" id="dlNo">Cancel</button><button class="btn pri" id="dlYes">Delete</button></div>`, (cd, close) => { $("#dlNo").onclick = close; $("#dlYes").onclick = async () => { close(); msg(await api("acct_delete", { name: n }), "Deleted"); }; }); }
+      }); });
+    if (stt.owner_pc) {
+      const add = card(b, "Add a person", `<div class="kv"><span>Name</span><input id="anN" maxlength="32" placeholder="for example sajeeb"></div><div class="kv"><span>Password</span><input id="anP" type="password" maxlength="80" placeholder="at least 6 characters"></div>
+        <div class="kv"><span>Role</span><select id="anR"><option>staff</option><option>viewer</option><option>owner</option></select></div><div class="row"><button class="btn pri" id="anGo">Add account</button></div>`);
+      $("#anGo", add).onclick = async () => { const x = await api("acct_add", { name: $("#anN", add).value, password: $("#anP", add).value, role: $("#anR", add).value }); msg(x, "Account added"); };
+    }
+    if (cur.name) {
+      const pw = card(b, "My password", `<div class="kv"><span>Current</span><input id="pwO" type="password"></div><div class="kv"><span>New</span><input id="pwN" type="password"></div><div class="row"><button class="btn" id="pwGo">Change my password</button></div>`);
+      $("#pwGo", pw).onclick = async () => msg(await api("acct_change_pw", { old: $("#pwO", pw).value, new: $("#pwN", pw).value }), "Password changed");
+    }
+    const au = card(b, "Activity log", `<div class="row"><button class="btn" id="auGo">Show the latest 100 entries</button></div><div id="auB"></div>`);
+    $("#auGo", au).onclick = async () => { const x = await api("audit_tail", { n: 100 }); $("#auB", au).innerHTML = '<table class="t"><tbody>' + (x.rows || []).map(e => `<tr><td>${esc(e.t)}</td><td>${esc(e.user)}</td><td>${esc(e.action)}</td><td>${esc(e.detail)}</td></tr>`).join("") + "</tbody></table>"; };
   };
 
   // ───── Sync ─────
