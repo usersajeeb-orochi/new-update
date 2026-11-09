@@ -4,7 +4,7 @@
 import importlib
 import threading
 
-TOOLS = {"tracker": "nab_tool_tracker", "pdf": "nab_tool_pdf", "search": "nab_tool_search", "subs": "nab_tool_subs", "shot": "nab_tool_shot", "pr": "nab_tool_pr", "ai": "nab_tool_ai", "hunt": "nab_tool_hunt", "wa": "nab_tool_wa"}
+TOOLS = {"tracker": "nab_tool_tracker", "pdf": "nab_tool_pdf", "search": "nab_tool_search", "subs": "nab_tool_subs", "shot": "nab_tool_shot", "pr": "nab_tool_pr", "ai": "nab_tool_ai", "hunt": "nab_tool_hunt", "wa": "nab_tool_wa", "phone": "nab_tool_phone"}
 _inst = {}
 _lock = threading.Lock()
 

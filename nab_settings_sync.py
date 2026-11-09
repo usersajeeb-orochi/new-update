@@ -123,6 +123,7 @@ def default_adapters():
         "paper_aliases": FileAdapter(nab_clip_scan.ALIASES_FILE),
         "pdf_maker": FileAdapter(pdf_path, LOCAL_ONLY_PDF),
         "accounts": FileAdapter(os.path.join(DOC, "nab_users.json")),
+        "paper_urls": FileAdapter(os.path.join(DOC, "nab_paper_urls.json")),
     }
 
 

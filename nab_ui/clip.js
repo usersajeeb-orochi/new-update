@@ -511,6 +511,12 @@
     });
   });
   $("#saveBtn").onclick = doSave;
+  // Phone queue: fill paper, page, position, size and category from an entry typed on the phone
+  window.CLIP_APPLY = async function (m) {
+    if (m.paper) await api("set_paper", { paper: m.paper });
+    F.page.value = m.page || ""; F.cols.value = m.position || ""; F.size.value = m.size || ""; S.touched = { page: true, cols: true, size: true }; S.pageTyped = true;
+    arm((m.cats || []).slice(), false); updateDock(); refreshMetaSoon(); sendDraft();
+  };
   // ── repeat last metadata ──
   function repeatLast(save) {
     const m = (S.st && S.st.last_meta) || {};

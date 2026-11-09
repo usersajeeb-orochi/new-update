@@ -298,3 +298,5 @@ v3.0.47 - Stage 2: archive and search
  * Find duplicates: groups of look-alike clips with Open and Delete.
  * Save-time warning: if a new clip looks like one already saved, a warning shows which one (nothing is blocked).
  * Batch mode (Ctrl+K, Batch: open a folder of images): opens a folder of page images one by one, the next opens after each save.
+
+v3.0.48 - Phone queue: clips typed on the phone app (NAB Metadata) wait in a new Phone screen; Use fills paper, page, position, size and category. Epaper address for each paper. Report builder (stage 3 part).
