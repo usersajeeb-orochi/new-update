@@ -110,3 +110,27 @@ class Tool:
             d.pop(name, None)
         save_urls(d)
         return {"ok": True}
+
+    def api_image(self, a):
+        """Download the clip image attached on the phone and open it (so it can be copied into the Clip screen)."""
+        eid = "".join(c for c in str(a.get("id") or "") if c.isalnum() or c == "_")
+        try:
+            svc = self._service()
+            r = svc.files().list(q=f"name='nab_mi_{eid}.jpg' and '{self._root()}' in parents and trashed=false", fields="files(id)", pageSize=1,
+                                 supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
+            f = (r.get("files") or [None])[0]
+            if not f:
+                return {"ok": False, "error": "No image was attached to this entry."}
+            data = svc.files().get_media(fileId=f["id"], supportsAllDrives=True).execute()
+            d = os.path.join(DOC, "NAB Phone")
+            os.makedirs(d, exist_ok=True)
+            p = os.path.join(d, eid + ".jpg")
+            with open(p, "wb") as fh:
+                fh.write(data)
+            try:
+                os.startfile(p)          # Windows: opens in the photo viewer; copy from there
+            except Exception:
+                pass
+            return {"ok": True, "path": p}
+        except Exception as ex:
+            return {"ok": False, "error": "Drive error: " + str(ex)[:100]}
