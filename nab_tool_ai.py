@@ -25,6 +25,9 @@ class Tool:
     def api_chat(self, a):
         return self.brain.chat(a.get("history"), a.get("text"))
 
+    def api_confirm(self, a):
+        return self.brain.agent().confirm(a.get("id"), bool(a.get("yes", True)))
+
     def api_tip(self, a):
         out, why = self.brain.tip()
         return {"ok": bool(out), "tip": out, "error": why}

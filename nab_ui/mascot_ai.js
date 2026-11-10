@@ -63,6 +63,15 @@
     busy = false; if (!panel) return;
     if (!r.ok) { w.className = "m e"; w.textContent = r.error || "I could not answer right now."; return; }
     w.textContent = r.reply; hist.push({ role: "user", text }, { role: "assistant", text: r.reply }); hist = hist.slice(-12);
+    if (r.confirm) {
+      const bar = document.createElement("div"); bar.className = "chips";
+      bar.innerHTML = `<button data-y="1">${esc(r.confirm.label)}</button><button data-y="0">Cancel</button>`;
+      w.after(bar);
+      bar.querySelectorAll("button").forEach(b => b.onclick = async () => {
+        bar.remove(); const c = await api("ai_confirm", { id: r.confirm.id, yes: b.dataset.y === "1" }).catch(() => ({ ok: false, error: "no connection" }));
+        add(c.ok ? "a" : "e", c.reply || c.error || "Done."); panel && (panel.querySelector(".ms").scrollTop = 1e6);
+      });
+    }
     if (r.learned) add("l", "Learned: " + r.learned);
     panel.querySelector(".ms").scrollTop = 1e6; say(r.reply.length > 110 ? r.reply.slice(0, 107) + "..." : r.reply, "happy", 4000);
   }

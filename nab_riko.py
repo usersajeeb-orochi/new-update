@@ -127,6 +127,11 @@ class Brain:
             for i in reversed(hit):
                 self.del_note(i)
             return {"ok": True, "reply": f"Forgot {len(hit)} note(s)." if hit else "I had nothing like that."}
+        if getattr(self, "agent_on", True):
+            r = self.agent().run(history, t)
+            if r.get("ok") and not r.get("offline"):
+                r["learned"] = self.learn(t, r.get("reply", "")) if not r.get("confirm") else ""
+            return r
         msgs = [{"role": "system", "content": self.system()}]
         for h in (history or [])[-8:]:
             if h.get("role") in ("user", "assistant") and h.get("text"):
@@ -138,6 +143,12 @@ class Brain:
         out = re.sub(r"[\U0001F300-\U0001FAFF☀-➿]", "", out).strip()
         learned = self.learn(t, out)
         return {"ok": True, "reply": out, "learned": learned}
+
+    def agent(self):
+        if not hasattr(self, "_agent"):
+            import nab_agent
+            self._agent = nab_agent.Agent(self.e, nab_ai.get(), self)
+        return self._agent
 
     def learn(self, user_text, reply):
         """Ask the small model whether the user stated something durable about how they work."""

@@ -1,3 +1,9 @@
+v3.0.49
+  * Riko can now do things, not only explain. Ask in plain words: "find Bank clips from Prothom Alo this week", "is everything working?", "what is waiting from the phone?", "make today's report". Riko looks things up in NAB itself and answers from what it finds.
+  * Anything that makes a file (a report) waits for your Confirm button. Riko never does it alone.
+  * Bangla text for the daily screens, clearer keyboard focus and screen-reader names, reduced-motion support. Settings detail text can still be English.
+  * Fixed: the packaged build now includes the account, archive, health, report, schedule, phone and agent modules.
+
 v3.0.39
   * Start-up animation: the NAB layout assembles from boxy plates (blocks slide in and lock), then the NAB mark and spinning rings appear, with synthesised assembly sounds. It plays over the loading screen, so it uses time that was waiting anyway; if NAB needs longer, it holds on "finishing startup". Any key or click skips it.
   * NAB now opens full screen. F11 switches full screen on and off at any time.

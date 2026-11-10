@@ -55,7 +55,7 @@ for %%F in (
     nab_settings_sync.py nab_sync_ui.py nab_connections.py
     nab_session.py nab_meta.py nab_core.py nab_clipboard.py nab_engine.py nab_engine_host.py
     nab_headless_ops.py nab_web.py nab_main.py nab_winutil.py nab_tabserver.py nab_classic.py
-    nab_tools.py nab_ai.py nab_riko.py nab_tool_ai.py nab_tool_shot.py nab_tool_pr.py nab_tool_hunt.py nab_tool_wa.py pr_rates_default.json riko_knowledge.md nhunt\bdfilter.py nhunt\engine.py nab_tool_tracker.py nab_tool_subs.py nab_tool_pdf.py nab_tool_search.py nab_tool_phone.py nab_tool_reports.py nab_accounts.py nab_archive.py nab_health.py nab_reports.py nab_schedule.py nab_extras.py nab_mailer.py nab_mail_host.py
+    nab_tools.py nab_ai.py nab_riko.py nab_tool_ai.py nab_tool_shot.py nab_tool_pr.py nab_tool_hunt.py nab_tool_wa.py pr_rates_default.json riko_knowledge.md nhunt\bdfilter.py nhunt\engine.py nab_tool_tracker.py nab_tool_subs.py nab_tool_pdf.py nab_tool_search.py nab_tool_phone.py nab_tool_reports.py nab_accounts.py nab_archive.py nab_health.py nab_reports.py nab_schedule.py nab_agent.py nab_extras.py nab_mailer.py nab_mail_host.py
     nab_ui\intro.html nab_ui\catsearch.js nab_ui\tool_wa.js nab_ui\tool_hunt.js nab_ui\tool_tracker.js nab_ui\tool_tracker.css nab_ui\tool_mail.js nab_ui\tool_mail.css nab_ui\pet.html nab_ui\tool_pdf.js nab_ui\tool_pdf.css nab_ui\tool_search.js nab_ui\tool_search.css
     nab_ui\index.html nab_ui\app.css nab_ui\common.js nab_ui\clip.js nab_ui\main.js
     nab_ui\settings.js nab_ui\i18n.js nab_ui\overlay.html nab_ui\pet.html nab_ui\overlay.js nab_ui\extras.js nab_ui\mascot.js nab_ui\icons.js nab_ui\mascot_plus.js nab_ui\mascot_care.js nab_ui\mascot_fun.js nab_ui\mascot\skins.json
@@ -179,6 +179,7 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --hidden-import nab_health ^
     --hidden-import nab_reports ^
     --hidden-import nab_schedule ^
+    --hidden-import nab_agent ^
     --hidden-import openpyxl ^
     --collect-submodules nhunt ^
     --hidden-import gspread ^
