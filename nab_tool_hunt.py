@@ -227,8 +227,16 @@ class Tool:
         import nab_tools
         return nab_tools.get("shot", self.e).api_run({"text": "\n".join(links)})
 
+    def resume_auto(self):
+        """Hunter schedules survive a restart: if automatic runs were on, switch them on again."""
+        if self.d["settings"].get("auto_on") and not self.sched:
+            self.api_auto({"on": True, "_resume": True})
+
     def api_auto(self, a):
         on = bool(a.get("on"))
+        if not a.get("_resume"):
+            self.d["settings"]["auto_on"] = on
+            self._save()
         if on and not self.sched:
             def one(cid, cfg):
                 self._emit(ev="log", msg=f"Scheduled: {cfg.get('name', cid)}", at=time.strftime("%H:%M:%S"))

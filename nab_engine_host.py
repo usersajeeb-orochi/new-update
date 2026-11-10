@@ -1253,6 +1253,12 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         self.start_monitor()
         self.start_ticker()
         self.start_sync()
+        try:
+            import nab_schedule, nab_tools
+            nab_schedule.start(self)
+            nab_tools.get("hunt", self).resume_auto()
+        except Exception as ex:
+            logging.error(f"schedule start: {ex}")
         self.start_update_loop()
         self.after(3000, self._check_pending_upload)
         self.hub.emit("state_changed")

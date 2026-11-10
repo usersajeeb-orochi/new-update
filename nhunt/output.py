@@ -36,8 +36,15 @@ def write_txt(path, title, groups, plain_links=False):
 def send_telegram(settings, title, groups, log=print):
     tg = settings.get("telegram") or {}
     if not tg.get("token") or not tg.get("chat_id"):
-        log("    Telegram skipped (token or chat id missing in Settings)")
-        return 0
+        try:                                   # no Hunter-specific bot: use NAB's own Telegram group
+            import nab_telegram
+            text = title + "\n\n" + "\n\n".join(f"{g[0]['title']}\n{g[0]['link']}" for g in groups[:25])
+            nab_telegram._tg_send(text[:3900])
+            log("    Telegram: sent through NAB's own group")
+            return 1
+        except Exception as e:
+            log(f"    Telegram skipped (no token in Settings and NAB Telegram failed: {e})")
+            return 0
     base = _base(settings, "telegram")
     chunks, cur = [], title + "\n\n"
     for g in groups:
