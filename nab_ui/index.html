@@ -82,7 +82,6 @@
     <button class="rb" data-view="search" title="OCR search"><span>🔎</span><small data-i18n="nav_search">Search</small></button>
     <button class="rb" data-view="shot" title="Screenshot Bot"><span>◫</span><small>Shots</small></button>
     <button class="rb" data-view="reports" title="Reports"><span>▦</span><small>Reports</small></button>
-    <button class="rb" data-view="phone" title="Phone queue"><span>▤</span><small>Phone</small></button>
     <button class="rb" data-view="hunt" title="News Hunter"><span>⌖</span><small>Hunter</small></button>
     <button class="rb" data-view="pr" title="PR Value Calculator"><span>%</span><small>PR Value</small></button>
     <button class="rb" data-view="subs" title="Subscriptions"><span>🧾</span><small data-i18n="nav_subs">Subs</small></button>
@@ -145,6 +144,7 @@
     </section>
 
     <aside class="right" id="rightPanel">
+      <div class="panel" id="phonePanel"></div>
       <div class="panel">
         <div class="panel-h"><b data-i18n="layers">Layers</b>
           <span class="grow"></span>
@@ -154,15 +154,6 @@
           <button class="mini" id="lyDel" title="Delete layer">🗑</button>
         </div>
         <div id="layers" class="layers"></div>
-      </div>
-      <div class="panel" id="sizePanel">
-        <div class="panel-h"><b>Canvas &amp; size</b><span class="grow"></span><button class="mini" id="matchBtn" title="Make all clips the same width">↔</button><button class="mini" id="restackBtn" title="Stack all clips top-to-bottom again">⇅</button></div>
-        <div class="row"><i>Canvas</i><b id="cvInfo">—</b><span id="cvFree" class="tag hidden">free</span></div>
-        <div class="row sz"><span>Layer</span><input id="lyW" type="number" min="8" max="20000"><i>×</i><input id="lyH" type="number" min="8" max="40000"><button class="mini" id="lyLock" title="Keep proportions" data-on="1">🔗</button><button class="mini" id="lyApply" title="Apply size">✓</button></div>
-        <div class="btn-grid"><button class="b" data-sc="0.5">50%</button><button class="b" data-sc="0.75">75%</button><button class="b" data-sc="1.25">125%</button><button class="b" data-sc="2">200%</button></div>
-        <div class="row sz"><span>Save width</span><select id="outW"><option value="0">Original</option><option value="1600">1600 px</option><option value="1200">1200 px</option><option value="1000">1000 px</option><option value="800">800 px</option><option value="600">600 px</option></select></div>
-        <div class="row"><button class="b" id="estBtn" style="flex:1">Check file size</button><span id="estOut" class="tag"></span></div>
-        <div class="row"><button class="b" id="calBtn" style="flex:1" title="Select a part of known width, then click">Calibrate inches</button><span id="inchOut" class="tag"></span><button class="mini hidden" id="inchUse" title="Use as Size">→</button></div>
       </div>
       <div class="panel">
         <div class="panel-h"><b data-i18n="adjust">Image</b></div>
@@ -192,6 +183,16 @@
         <label class="row"><input type="checkbox" id="optSnatch"> <span data-i18n="auto_snatch">Auto-grab copied images</span></label>
         <label class="row"><input type="checkbox" id="optPolish"> <span data-i18n="auto_polish">Auto polish on paste</span></label>
       </div>
+
+      <div class="panel" id="sizePanel">
+        <div class="panel-h"><b>Canvas &amp; size</b><span class="grow"></span><button class="mini" id="matchBtn" title="Make all clips the same width">↔</button><button class="mini" id="restackBtn" title="Stack all clips top-to-bottom again">⇅</button></div>
+        <div class="row"><i>Canvas</i><b id="cvInfo">—</b><span id="cvFree" class="tag hidden">free</span></div>
+        <div class="row sz"><span>Layer</span><input id="lyW" type="number" min="8" max="20000"><i>×</i><input id="lyH" type="number" min="8" max="40000"><button class="mini" id="lyLock" title="Keep proportions" data-on="1">🔗</button><button class="mini" id="lyApply" title="Apply size">✓</button></div>
+        <div class="btn-grid"><button class="b" data-sc="0.5">50%</button><button class="b" data-sc="0.75">75%</button><button class="b" data-sc="1.25">125%</button><button class="b" data-sc="2">200%</button></div>
+        <div class="row sz"><span>Save width</span><select id="outW"><option value="0">Original</option><option value="1600">1600 px</option><option value="1200">1200 px</option><option value="1000">1000 px</option><option value="800">800 px</option><option value="600">600 px</option></select></div>
+        <div class="row"><button class="b" id="estBtn" style="flex:1">Check file size</button><span id="estOut" class="tag"></span></div>
+        <div class="row"><button class="b" id="calBtn" style="flex:1" title="Select a part of known width, then click">Calibrate inches</button><span id="inchOut" class="tag"></span><button class="mini hidden" id="inchUse" title="Use as Size">→</button></div>
+      </div>
     </aside>
   </main>
 
@@ -204,7 +205,6 @@
   <main id="view-subs" class="view tool hidden"></main>
   <main id="view-shot" class="view tool hidden"></main>
   <main id="view-hunt" class="view tool hidden"></main>
-  <main id="view-phone" class="view tool hidden"></main>
   <main id="view-reports" class="view tool hidden"></main>
   <main id="view-pr" class="view tool hidden"></main>
 

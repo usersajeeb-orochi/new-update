@@ -361,3 +361,15 @@ html.bg-hidden *,html.bg-hidden *::before,html.bg-hidden *::after{animation-play
 :lang(bn){font-family:"Nirmala UI","Noto Sans Bengali","Kalpurush","Vrinda",system-ui,sans-serif}
 :lang(bn) .btn,:lang(bn) td,:lang(bn) label,:lang(bn) small{line-height:1.45}
 .btn,.t td,.card h3,.card h4{overflow-wrap:anywhere}
+
+/* phone clips on the Clip screen */
+#phonePanel{padding:8px}
+.ph-list{max-height:46vh;overflow:auto;margin:6px -4px 0;padding:0 4px}
+.ph-gh{position:sticky;top:0;background:var(--surf);font-size:12px;font-weight:700;letter-spacing:.02em;padding:6px 0 4px;border-bottom:1px solid var(--line);margin-top:4px}
+.ph-gh i{font-style:normal;opacity:.65;font-weight:500;margin-left:4px}
+.ph-g.pri .ph-gh{color:var(--acc,#5fd0ff)}
+.ph-it{padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.ph-top{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}.ph-top b{font-size:13px}.ph-top span{opacity:.85}
+.ph-cat{opacity:.8;margin-top:2px}.ph-note{margin-top:2px;font-style:italic;opacity:.75}
+.ph-bot{display:flex;gap:6px;align-items:center;margin-top:5px}.ph-bot small{opacity:.6}
+.ph-bot .mini{margin-left:4px;padding:3px 9px}

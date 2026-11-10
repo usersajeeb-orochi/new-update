@@ -1,3 +1,6 @@
+v3.0.52
+  * Phone clips now sit on the right of the Clip screen (the separate Phone tab is gone). Telecom industry, GP, BL, Robi, Teletalk and Edotco come first, each as its own group; everything else follows, bundled by paper. Press Use to fill the clip details. The Canvas & size card moved to the bottom of that column.
+
 v3.0.51
   * Google sign-in is now open: anyone with a Gmail can join. A first sign-in creates a viewer account (look only); the owner can change its role, switch it off, or block an email in Settings > Accounts > Google sign-in.
 
