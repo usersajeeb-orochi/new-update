@@ -35,4 +35,5 @@ window.LANG = "en";
 window.t = function (k) { return (I18N[LANG] && I18N[LANG][k]) || I18N.en[k] || k; };
 window.applyI18n = function (root) {
   (root || document).querySelectorAll("[data-i18n]").forEach(function (n) { n.textContent = t(n.getAttribute("data-i18n")); });
+  if (window.BN) window.BN.apply();
 };

@@ -351,3 +351,13 @@ kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;paddi
 .t .btn.mini{width:auto;height:30px;padding:0 12px;font-size:12px;white-space:nowrap;border-radius:999px;margin-right:4px}
 .t td{vertical-align:middle}
 .t td:last-child{white-space:nowrap}
+
+/* ---- accessibility and performance (stage 4) ---- */
+:focus-visible{outline:2px solid #8ea2ff;outline-offset:2px;border-radius:6px}
+.btn:focus-visible,.rb:focus-visible,.chip:focus-visible{outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+html.bg-hidden *,html.bg-hidden *::before,html.bg-hidden *::after{animation-play-state:paused!important}
+.t tbody tr{content-visibility:auto;contain-intrinsic-size:auto 44px}
+:lang(bn){font-family:"Nirmala UI","Noto Sans Bengali","Kalpurush","Vrinda",system-ui,sans-serif}
+:lang(bn) .btn,:lang(bn) td,:lang(bn) label,:lang(bn) small{line-height:1.45}
+.btn,.t td,.card h3,.card h4{overflow-wrap:anywhere}
