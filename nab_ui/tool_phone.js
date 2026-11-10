@@ -16,7 +16,7 @@ window.TOOLS = window.TOOLS || {};
     er.style.display = r.ok ? "none" : ""; er.textContent = r.ok ? "" : r.error;
     items = r.items || [];
     $("#phList").innerHTML = items.length ? '<table class="t"><thead><tr><td>By</td><td>Paper</td><td>Page</td><td>Position</td><td>Size</td><td>Category</td><td>Note</td><td></td></tr></thead><tbody>' +
-      items.map((x, i) => `<tr><td>${esc(x.user)}<div class="sub">${esc(x.created)}</div></td><td>${esc(x.paper)}</td><td>${esc(x.page)}</td><td>${esc(x.position)}</td><td>${esc(x.size)}</td><td>${esc((x.cats || []).join(", "))}</td><td>${esc(x.note)}</td><td>${x.has_image ? `<button class="btn mini" data-im="${i}">Image</button> ` : ""}<button class="btn mini pri" data-u="${i}">Use</button></td></tr>`).join("") + "</tbody></table>" : (r.ok ? '<p class="sub">Nothing waiting.</p>' : "");
+      items.map((x, i) => `<tr><td>${esc(x.user)}<div class="sub">${esc(x.created)}</div></td><td>${esc(x.paper)}</td><td>${esc(x.page)}</td><td>${esc(x.position)}</td><td>${esc(x.size)}</td><td>${esc((x.cats || []).map(c => c.replace("/", " › ")).join(", "))}</td><td>${esc(x.note)}</td><td>${x.has_image ? `<button class="btn mini" data-im="${i}">Image</button> ` : ""}<button class="btn mini pri" data-u="${i}">Use</button></td></tr>`).join("") + "</tbody></table>" : (r.ok ? '<p class="sub">Nothing waiting.</p>' : "");
     $$("#phList [data-im]").forEach(b => b.onclick = async () => { const r = await api("phone_image", { id: items[+b.dataset.im].id }); toast(r.ok ? "Image opened. Copy it, then press Use." : r.error, r.ok ? "ok" : "error", 3500); });
     $$("#phList [data-u]").forEach(b => b.onclick = async () => {
       const x = items[+b.dataset.u];
