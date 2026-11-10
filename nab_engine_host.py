@@ -1182,7 +1182,7 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         p = nab_google.poll()
         if p["state"] == "ok":
             bad = self._acct_precheck()
-            return bad or dict(self._acct_granted(nab_accounts.login_google(p["email"])), state="done")
+            return bad or dict(self._acct_granted(nab_accounts.login_google(p["email"], p.get("name", ""))), state="done")
         return {"ok": p["state"] != "error", "state": p["state"], "error": p["error"]}
 
     def begin_login(self, mode="group", reason="", auto=False):

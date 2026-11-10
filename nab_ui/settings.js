@@ -252,9 +252,11 @@
       }); });
     if (stt.owner_pc) {
       const gc = await api("acct_google_cfg");
-      const g = card(b, "Google sign-in", `<p class="sub">Lets people sign in with their Google account instead of a password. Needs a free Google Cloud "OAuth client ID" of type Desktop app (steps are in GOOGLE_SIGNIN_SETUP.md). Then put each person's Google email in the table above.</p>
+      const g = card(b, "Google sign-in", `<p class="sub">Anyone with a Gmail can sign in with Google. A first sign-in makes a viewer account (look only); change its role above. Turn a person off in the table, or block an email below. Needs a free Google Cloud Desktop-app client ID (see GOOGLE_SIGNIN_SETUP.md).</p>
         <div class="kv"><span>Client ID</span><input id="gcI" value="${esc(gc.client_id || "")}" placeholder="123456-abc.apps.googleusercontent.com"></div><div class="kv"><span>Client secret</span><input id="gcS" type="password" placeholder="${gc.has_secret ? "saved (type to replace)" : "paste it here"}"></div>
-        <div class="row"><span class="tag">${gc.configured ? "On: the sign-in screen shows the Google button" : "Off"}</span><button class="btn pri" id="gcGo">Save</button></div>`);
+        <div class="row"><span class="tag">${gc.configured ? "On: the sign-in screen shows the Google button" : "Off"}</span><button class="btn pri" id="gcGo">Save</button></div>
+        <div class="kv"><span>Block a Google email</span><input id="gcB" type="email" placeholder="someone@gmail.com"><button class="btn" id="gcBb">Block</button></div>`);
+      $("#gcBb", g).onclick = async () => msg(await api("acct_block", { email: $("#gcB", g).value, blocked: true }), "Blocked");
       $("#gcGo", g).onclick = async () => { const x = await api("acct_google_cfg", { client_id: $("#gcI", g).value, client_secret: $("#gcS", g).value || undefined }); msg({ ok: x.ok, error: x.error }, "Saved"); };
     }
     if (stt.owner_pc) {

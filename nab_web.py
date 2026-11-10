@@ -182,6 +182,10 @@ class Api:
             c = nab_google.config()
         return {"ok": True, "configured": bool(c["client_id"]), "client_id": c["client_id"] if self.e.acct_can_manage() else "", "has_secret": bool(c["client_secret"])}
 
+    def acct_block(self, a):
+        import nab_accounts
+        return nab_accounts.block_email(a.get("email", ""), bool(a.get("blocked", True)), actor_ok=self.e.acct_can_manage())
+
     def acct_email(self, a):
         import nab_accounts
         r = nab_accounts.set_email(a.get("name", ""), a.get("email", ""), actor_ok=self.e.acct_can_manage())

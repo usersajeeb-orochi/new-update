@@ -1,3 +1,6 @@
+v3.0.51
+  * Google sign-in is now open: anyone with a Gmail can join. A first sign-in creates a viewer account (look only); the owner can change its role, switch it off, or block an email in Settings > Accounts > Google sign-in.
+
 v3.0.50
   * Sign in with Google (free). Settings > Accounts: add each person's Google email and paste a Google Cloud client ID once (steps in GOOGLE_SIGNIN_SETUP.md). The sign-in screen then shows a Google button that opens your browser.
   * Fixed: signing in with a NAB name and password on the lock screen was being blocked before sign-in.

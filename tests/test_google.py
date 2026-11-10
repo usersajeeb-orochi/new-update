@@ -12,17 +12,19 @@ def tmp(tmp_path, monkeypatch):
     A._fails.clear()
 
 
-def test_email_link_and_login():
-    assert A.add_user("sajeeb", "secret1", actor_ok=True)["ok"] and A.add_user("rahim", "secret2", actor_ok=True)["ok"]
-    assert A.set_email("rahim", "Rahim@Gmail.com", actor_ok=True)["ok"]
-    assert not A.set_email("sajeeb", "rahim@gmail.com", actor_ok=True)["ok"]       # one email, one person
-    assert not A.set_email("rahim", "nope", actor_ok=True)["ok"] and not A.set_email("rahim", "a@b.co", actor_ok=False)["ok"]
-    r = A.login_google("rahim@gmail.com")
-    assert r["ok"] and r["user"]["name"] == "rahim"
-    assert not A.login_google("other@gmail.com")["ok"] and not A.login_google("")["ok"]
-    A.set_disabled("rahim", True, actor_ok=True)
-    assert not A.login_google("rahim@gmail.com")["ok"]
-    assert [u["email"] for u in A.list_users() if u["name"] == "rahim"] == ["rahim@gmail.com"]
+def test_anyone_joins_then_block():
+    assert A.add_user("sajeeb", "secret1", actor_ok=True)["ok"]
+    r = A.login_google("New.Person@Gmail.com", "New Person")
+    assert r["ok"] and r["user"]["role"] == "viewer"                       # first sign-in creates a viewer
+    assert [u["email"] for u in A.list_users() if u["email"]] == ["new.person@gmail.com"]
+    assert A.login_google("new.person@gmail.com")["ok"] and len(A.list_users()) == 2   # same person, no duplicate
+    assert not A.block_email("new.person@gmail.com", True, actor_ok=False)["ok"]       # owner only
+    assert A.block_email("new.person@gmail.com", True, actor_ok=True)["ok"]
+    assert not A.login_google("new.person@gmail.com")["ok"]
+    assert A.block_email("never@gmail.com", True, actor_ok=True)["ok"] and not A.login_google("never@gmail.com")["ok"]   # block before they ever joined
+    assert A.block_email("new.person@gmail.com", False, actor_ok=True)["ok"] and A.login_google("new.person@gmail.com")["ok"]
+    assert not A.login_google("")["ok"]
+    assert not A.login("new.person@gmail.com", "")["ok"]                    # Google accounts have no password
 
 
 class Resp:

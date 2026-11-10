@@ -16,4 +16,4 @@ Settings > Accounts > Google sign-in: paste the Desktop Client ID and secret, Sa
 - `GOOGLE_CLIENT_ID` = the Web Client ID.
 - Optional `ALLOWED_EMAILS` = comma-separated Gmail addresses that may use the phone without a NAB account.
 
-The phone shows the Google button only when `GOOGLE_CLIENT_ID` is set. Only emails linked to a NAB account (or in `ALLOWED_EMAILS`) get in. The phone's plain "type your name" sign-in still works next to it.
+The phone shows the Google button only when `GOOGLE_CLIENT_ID` is set. Any Gmail can join; a switched-off or blocked email (NAB, or `BLOCKED_EMAILS` on Render) is refused. The phone's plain "type your name" sign-in still works next to it.

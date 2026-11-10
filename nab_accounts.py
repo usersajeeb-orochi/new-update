@@ -169,16 +169,24 @@ def login(name, password):
     return {"ok": True, "user": current(), "must_change": bool(u.get("must_change"))}
 
 
-def login_google(email):
-    """Sign in with a Google email Google has already verified. The email must be set on an active account."""
+def login_google(email, name=""):
+    """Any Google email may join. A first sign-in creates a viewer account (promote it in Settings); a switched-off or blocked email is refused."""
     email = str(email or "").strip().lower()
+    if not email:
+        return {"ok": False, "error": "Google did not give an email."}
     with _lock:
         d = _load()
-        hit = [(k, u) for k, u in d["users"].items() if email and str(u.get("email", "")).strip().lower() == email]
-        if not hit or hit[0][1].get("disabled"):
-            audit("login_failed", "google " + email, user=email or "?")
-            return {"ok": False, "error": f"No NAB account uses {email or 'that email'}. Ask the owner to add it in Settings, Accounts."}
-        k, u = hit[0]
+        hit = [(k, u) for k, u in d["users"].items() if str(u.get("email", "")).strip().lower() == email]
+        if hit and hit[0][1].get("disabled"):
+            audit("login_failed", "google blocked " + email, user=email)
+            return {"ok": False, "error": "This Google account is blocked in NAB."}
+        if hit:
+            k, u = hit[0]
+        else:
+            k = _key(email)
+            u = d["users"][k] = {"role": "viewer", "display": (name or email.split("@")[0])[:40], "email": email, "google": True,
+                                 "created": time.strftime("%Y-%m-%d %H:%M:%S"), "disabled": False, "must_change": False}
+            audit("account_add", f"{k} (viewer, joined with Google)", user=k)
         u["last_login"] = time.strftime("%Y-%m-%d %H:%M:%S")
         try:
             _save(d)
@@ -187,6 +195,27 @@ def login_google(email):
         _current.update({"name": k, "role": u.get("role", "staff"), "display": u.get("display") or k})
     audit("login", "google")
     return {"ok": True, "user": current(), "must_change": False}
+
+
+def block_email(email, blocked=True, actor_ok=False):
+    bad = _need_owner(actor_ok)
+    if bad:
+        return bad
+    email = str(email or "").strip().lower()
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        return {"ok": False, "error": "That does not look like an email address."}
+    with _lock:
+        d = _load()
+        hit = [u for u in d["users"].values() if str(u.get("email", "")).lower() == email]
+        if hit:
+            for u in hit:
+                u["disabled"] = bool(blocked)
+        elif blocked:
+            d["users"][_key(email)] = {"role": "viewer", "display": email, "email": email, "google": True, "disabled": True,
+                                       "created": time.strftime("%Y-%m-%d %H:%M:%S"), "must_change": False}
+        _save(d)
+    audit("account_block" if blocked else "account_unblock", email)
+    return {"ok": True}
 
 
 def set_email(name, email, actor_ok=False):

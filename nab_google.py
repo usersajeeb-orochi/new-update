@@ -24,7 +24,7 @@ TOKEN = "https://oauth2.googleapis.com/token"
 INFO = "https://oauth2.googleapis.com/tokeninfo"
 WAIT = 180
 BUILTIN = {"client_id": "", "client_secret": ""}      # fill in once, or set it in Settings
-_state = {"s": "idle", "email": "", "error": "", "ts": 0}
+_state = {"s": "idle", "email": "", "name": "", "error": "", "ts": 0}
 _lock = threading.Lock()
 
 
@@ -70,6 +70,7 @@ def verify_id_token(idt, client_id, http=None):
         return "", "Google answered for a different app."
     if str(j.get("email_verified")).lower() != "true" or not j.get("email"):
         return "", "That Google email is not verified."
+    _state["name"] = str(j.get("name") or "")[:40]
     return str(j["email"]).strip().lower(), ""
 
 
@@ -163,7 +164,7 @@ def _fail(msg):
 
 def poll(consume=True):
     with _lock:
-        r = {"state": _state["s"], "email": _state["email"], "error": _state["error"]}
+        r = {"state": _state["s"], "email": _state["email"], "name": _state["name"], "error": _state["error"]}
         if consume and _state["s"] in ("ok", "error"):
-            _state.update(s="idle", email="", error="")
+            _state.update(s="idle", email="", name="", error="")
     return r
