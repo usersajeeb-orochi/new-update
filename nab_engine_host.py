@@ -1146,7 +1146,7 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         cur = nab_accounts.current()
         return (not cur["role"]) or cur["role"] == "owner"
 
-    def acct_login(self, name, password):
+    def _acct_precheck(self):
         import nab_accounts
         from nab_telegram import PC_NAME
         nab_accounts.init(PC_NAME)
@@ -1156,17 +1156,34 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
                 return {"ok": False, "error": "This PC is blocked."}
         except Exception:
             pass
-        r = nab_accounts.login(name, password)
-        if not r.get("ok"):
-            return r
-        if not self.authorized:
+        return None
+
+    def _acct_granted(self, r):
+        if r.get("ok") and not self.authorized:
             self.authorized = True
             self._login_started = True
             self.hub.emit("login", sticky=True, stage="granted", how="account")
             self._start_session_touch()
             self.after_login()
-        self.hub.emit("state_changed")
+        if r.get("ok"):
+            self.hub.emit("state_changed")
         return r
+
+    def acct_login(self, name, password):
+        import nab_accounts
+        bad = self._acct_precheck()
+        if bad:
+            return bad
+        return self._acct_granted(nab_accounts.login(name, password))
+
+    def acct_google_poll(self):
+        import nab_google
+        import nab_accounts
+        p = nab_google.poll()
+        if p["state"] == "ok":
+            bad = self._acct_precheck()
+            return bad or dict(self._acct_granted(nab_accounts.login_google(p["email"])), state="done")
+        return {"ok": p["state"] != "error", "state": p["state"], "error": p["error"]}
 
     def begin_login(self, mode="group", reason="", auto=False):
         def run():

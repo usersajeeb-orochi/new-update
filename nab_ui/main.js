@@ -45,9 +45,19 @@
     g.innerHTML = '<div class="card gate-ch"><div class="big"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></div><h2>Sign in</h2>' +
       '<input id="acN" class="gate-r" placeholder="Name" autocomplete="username" maxlength="40"><input id="acP" class="gate-r" type="password" placeholder="Password" autocomplete="current-password" maxlength="80">' +
       '<div class="status-line" id="acE" style="color:#ef4444;min-height:20px"></div>' +
-      '<div class="gate-btns"><button class="gate-b" id="acGo"><b>Sign in</b></button><button class="gate-b" id="acBack"><b>Back</b><small>Use Telegram instead</small></button></div></div>';
+      '<div class="gate-btns"><button class="gate-b" id="acGo"><b>Sign in</b></button><button class="gate-b" id="acG" hidden><b>Sign in with Google</b><small>Opens your browser</small></button><button class="gate-b" id="acBack"><b>Back</b><small>Use Telegram instead</small></button></div></div>';
     const go = async () => { const r = await api("acct_login", { name: $("#acN").value, password: $("#acP").value }); if (r.ok) { if (r.must_change) C.toast("Please set your own password in Settings, Accounts.", "warn", 6000); setTimeout(start, 400); } else { $("#acE").textContent = r.error || "Could not sign in."; $("#acP").value = ""; $("#acP").focus(); } };
     $("#acGo").onclick = go; $("#acBack").onclick = () => showChoice(pre, last);
+    api("acct_google_cfg").then(c => { if (c && c.configured) $("#acG").hidden = false; }).catch(() => {});
+    $("#acG").onclick = async () => {
+      const r = await api("acct_google_begin"); if (!r.ok) { $("#acE").textContent = r.error || "Could not start Google sign-in."; return; }
+      $("#acE").style.color = ""; $("#acE").textContent = "Finish signing in with Google in your browser...";
+      for (let i = 0; i < 190; i++) {
+        await new Promise(x => setTimeout(x, 1000)); const p = await api("acct_google_poll").catch(() => ({ ok: true, state: "wait" }));
+        if (p.state === "done" && p.ok) { setTimeout(start, 300); return; }
+        if (p.state === "done" || p.state === "error" || p.ok === false) { $("#acE").style.color = "#ef4444"; $("#acE").textContent = p.error || "Google sign-in did not work."; return; }
+      }
+    };
     $("#acP").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); }); $("#acN").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#acP").focus(); });
     $("#acN").focus();
   }

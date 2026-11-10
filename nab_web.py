@@ -88,7 +88,7 @@ def ui_dir():
 
 
 # endpoints usable before the Telegram approval has been granted
-OPEN_API = {"state_min", "login_begin", "login_precheck", "ping"}
+OPEN_API = {"state_min", "login_begin", "login_precheck", "ping", "acct_login", "acct_google_begin", "acct_google_poll", "acct_google_cfg"}
 
 
 class _Img:
@@ -166,6 +166,26 @@ class Api:
 
     def acct_login(self, a):
         return self.e.acct_login(a.get("name", ""), a.get("password", ""))
+
+    def acct_google_begin(self, a):
+        import nab_google
+        return nab_google.begin()
+
+    def acct_google_poll(self, a):
+        return self.e.acct_google_poll()
+
+    def acct_google_cfg(self, a):
+        import nab_google
+        c = nab_google.config()
+        if "client_id" in a and self.e.authorized and self.e.acct_can_manage():
+            nab_google.save_config(a.get("client_id"), a.get("client_secret") if a.get("client_secret") else None)
+            c = nab_google.config()
+        return {"ok": True, "configured": bool(c["client_id"]), "client_id": c["client_id"] if self.e.acct_can_manage() else "", "has_secret": bool(c["client_secret"])}
+
+    def acct_email(self, a):
+        import nab_accounts
+        r = nab_accounts.set_email(a.get("name", ""), a.get("email", ""), actor_ok=self.e.acct_can_manage())
+        return r
 
     def acct_logout(self, a):
         import nab_accounts

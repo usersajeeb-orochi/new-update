@@ -139,7 +139,7 @@ def status():
 def list_users():
     d = _load()
     return [{"name": k, "display": v.get("display") or k, "role": v.get("role", "staff"), "disabled": bool(v.get("disabled")),
-             "created": v.get("created", ""), "last_login": v.get("last_login", ""), "must_change": bool(v.get("must_change"))}
+             "email": v.get("email", ""), "created": v.get("created", ""), "last_login": v.get("last_login", ""), "must_change": bool(v.get("must_change"))}
             for k, v in sorted(d["users"].items())]
 
 
@@ -167,6 +167,45 @@ def login(name, password):
         _current.update({"name": k, "role": u.get("role", "staff"), "display": u.get("display") or k})
     audit("login", "account")
     return {"ok": True, "user": current(), "must_change": bool(u.get("must_change"))}
+
+
+def login_google(email):
+    """Sign in with a Google email Google has already verified. The email must be set on an active account."""
+    email = str(email or "").strip().lower()
+    with _lock:
+        d = _load()
+        hit = [(k, u) for k, u in d["users"].items() if email and str(u.get("email", "")).strip().lower() == email]
+        if not hit or hit[0][1].get("disabled"):
+            audit("login_failed", "google " + email, user=email or "?")
+            return {"ok": False, "error": f"No NAB account uses {email or 'that email'}. Ask the owner to add it in Settings, Accounts."}
+        k, u = hit[0]
+        u["last_login"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            _save(d)
+        except Exception:
+            pass
+        _current.update({"name": k, "role": u.get("role", "staff"), "display": u.get("display") or k})
+    audit("login", "google")
+    return {"ok": True, "user": current(), "must_change": False}
+
+
+def set_email(name, email, actor_ok=False):
+    bad = _need_owner(actor_ok)
+    if bad:
+        return bad
+    k, email = _key(name), str(email or "").strip().lower()
+    if email and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        return {"ok": False, "error": "That does not look like an email address."}
+    with _lock:
+        d = _load()
+        if k not in d["users"]:
+            return {"ok": False, "error": "No such person."}
+        if email and any(kk != k and str(u.get("email", "")).lower() == email for kk, u in d["users"].items()):
+            return {"ok": False, "error": "Another account already uses that email."}
+        d["users"][k]["email"] = email
+        _save(d)
+    audit("account_email", f"{k} -> {email or 'none'}")
+    return {"ok": True}
 
 
 def logout():

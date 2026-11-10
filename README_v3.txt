@@ -1,3 +1,8 @@
+v3.0.50
+  * Sign in with Google (free). Settings > Accounts: add each person's Google email and paste a Google Cloud client ID once (steps in GOOGLE_SIGNIN_SETUP.md). The sign-in screen then shows a Google button that opens your browser.
+  * Fixed: signing in with a NAB name and password on the lock screen was being blocked before sign-in.
+  * Phone app: Google sign-in button, built-in paper and category lists until the owner PC uploads its own, separate column boxes that jump on after one digit, a smaller letter row, and 11 recent categories.
+
 v3.0.49
   * Riko can now do things, not only explain. Ask in plain words: "find Bank clips from Prothom Alo this week", "is everything working?", "what is waiting from the phone?", "make today's report". Riko looks things up in NAB itself and answers from what it finds.
   * Anything that makes a file (a report) waits for your Confirm button. Riko never does it alone.
