@@ -25,9 +25,26 @@
   const url = (p) => p + (p.includes("?") ? "&" : "?") + "t=" + encodeURIComponent((window.NAB && window.NAB.token) || "");
   function beep() { try { const a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(), g = a.createGain(); o.frequency.value = 880; g.gain.value = .06; o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + .12); } catch (e) {} }
   let known = null;
+  const nabDate = () => { const i = document.getElementById("dateInput"); return i ? i.value : ""; };
+  const dayName = (iso) => { const d = new Date(iso + "T00:00:00"); return isNaN(d) ? iso : d.toLocaleDateString(undefined, { day: "numeric", month: "short" }); };
+  async function setNabDate(iso) { const i = document.getElementById("dateInput"); if (!i || !iso || i.value === iso) return; i.value = iso; i.dispatchEvent(new Event("change")); await new Promise(r => setTimeout(r, 250)); }
+  const ask = (html, yes) => new Promise(res => C.modal(html + `<div class="modal-actions"><button class="btn" id="qNo">Cancel</button><button class="btn pri" id="qYes">${yes}</button></div>`, (cd, close) => { $("#qNo").onclick = () => { close(); res(false); }; $("#qYes").onclick = () => { close(); res(true); }; }));
+  // a paper or category typed on the phone that NAB does not have yet: add it (after a yes), then carry on
+  async function addNew(x) {
+    const st = (window.CLIPX && CLIPX.S.st) || {}, papers = st.papers || [], cats = JSON.parse(JSON.stringify(st.categories || {})), newc = (x.new_cats || []).filter(p => { const [g, s] = String(p).split("/"); return !(cats[g] || []).includes(s); });
+    const needP = x.new_paper && !papers.some(p => C.clean(p).toLowerCase() === String(x.paper).toLowerCase() || p === x.paper);
+    if (!needP && !newc.length) return true;
+    const lines = (needP ? [`Paper: <b>${esc(x.paper)}</b>`] : []).concat(newc.map(p => `Category: <b>${esc(String(p).replace("/", " › "))}</b>`));
+    if (!(await ask(`<h3>New from the phone</h3><p class="sub">${esc(x.user)} added something NAB does not have yet:</p><p>${lines.join("<br>")}</p><p class="sub">Add it to NAB so you can clip it?</p>`, "Add and use"))) return false;
+    if (needP) { const r = await api("paper_add", { name: x.paper }); if (!r.ok) { toast(r.error || "Could not add the paper", "error", 3500); return false; } }
+    if (newc.length) { newc.forEach(p => { const [g, s] = String(p).split("/"); (cats[g] = cats[g] || []).includes(s) || cats[g].push(s); }); await api("set_categories", { cats }); }
+    return true;
+  }
   function card(x, i) {
     const cats = (x.cats || []).map(c => String(c).replace("/", " › ")).join(", ");
-    return `<div class="ph-it" draggable="true" data-i="${i}" title="Drag onto the canvas, or press Use"><div class="ph-top"><b>${esc(x.paper)}</b><span>Page ${esc(x.page)}</span><span>${esc(x.position)} · ${esc(x.size)}</span></div>
+    const nd = nabDate(), dayB = x.date && nd && x.date !== nd ? `<span class="ph-day" title="The paper of this day">Paper of ${esc(dayName(x.date))}</span>` : "";
+    const newB = (x.new_paper ? '<span class="ph-new">New paper</span>' : "") + ((x.new_cats || []).length ? '<span class="ph-new">New category</span>' : "");
+    return `<div class="ph-it" draggable="true" data-i="${i}" title="Drag onto the canvas, or press Use"><div class="ph-top"><b>${esc(x.paper)}</b><span>Page ${esc(x.page)}</span><span>${esc(x.position)} · ${esc(x.size)}</span></div>${dayB || newB ? `<div class="ph-tags">${dayB}${newB}</div>` : ""}
       <div class="ph-cat">${esc(cats)}</div>${x.note ? `<div class="ph-note">${esc(x.note)}</div>` : ""}
       <div class="ph-bot"><small>${esc(x.user)} · ${esc((x.created || "").slice(11, 16))}</small><span class="grow"></span>${x.has_image ? `<button class="mini" data-im="${i}">Image</button>` : ""}<button class="mini pri" data-u="${i}">Use</button></div></div>`;
   }
@@ -41,9 +58,12 @@
     $$("[data-im]", box).forEach(b => b.onclick = async () => { const r = await api("phone_image", { id: flat[+b.dataset.im].id }); toast(r.ok ? "Image opened. Copy it, then press Use." : r.error, r.ok ? "ok" : "error", 3500); });
     const use = async (x) => {
       if (!window.CLIP_APPLY) return toast("The Clip screen is not ready", "error", 2500);
+      if (!(await addNew(x))) return;
       const t = await api("phone_taken", { id: x.id });
       if (!t.ok) { toast(t.error, "error", 3500); return load(); }
+      const was = nabDate(); await setNabDate(x.date);
       await window.CLIP_APPLY(x); load();
+      if (x.date && was && x.date !== was) toast("Date changed to " + dayName(x.date) + " for this clip", "warn", 3500);
       toast("Filled in from the phone. Clip the news now.", "ok", 3500);
     };
     window.PHONE_USE = (idx) => flat[+idx] && use(flat[+idx]);
@@ -54,7 +74,7 @@
   async function load(manual) {
     if (!manual && (document.hidden || !$("#view-clip") || $("#view-clip").classList.contains("hidden"))) return;
     const r = await api("phone_list").catch(() => ({ ok: false, error: "No connection" }));
-    items = r.items || [];
+    items = (r.items || []).slice().sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")) || String(a.created || "").localeCompare(String(b.created || "")));
     if (r.ok) { const ids = new Set(items.map(x => x.id)); if (known && items.some(x => !known.has(x.id))) { beep(); toast("New clip from the phone", "ok", 2500); } known = ids; }
     paint(r.ok ? "" : r.error);
   }

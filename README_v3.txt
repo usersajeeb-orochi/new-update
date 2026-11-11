@@ -1,3 +1,7 @@
+v3.0.54
+  * Phone clips know which day's paper they are for. When you press Use on a clip from another day, NAB switches its date to that day and tells you. Older-day clips are listed first and tagged "Paper of <date>".
+  * A paper or category typed on the phone that NAB does not have yet is tagged "New paper" / "New category". Pressing Use asks to add it to NAB first.
+
 v3.0.53
   * Drag and drop, smooth: drag a layer up or down to reorder it (the others slide out of the way; Esc cancels). Drag image files, or a phone clip card, onto the canvas: it shows a drop target while you drag. Paper logos now show faded in the paper list.
   * Phone clips arrive faster: the list checks every 6 seconds and only downloads new or changed entries, a sound and pop-up announce a new clip, the cloud server is kept awake, and Ctrl+Shift+N takes the next phone clip (opens its image and fills the fields).
