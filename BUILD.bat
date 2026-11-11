@@ -8,7 +8,7 @@ REM NAB.exe is built from NAB_entry.pyw, which pulls in every
 REM other nab_*.py module via their own "import nab_X" statements.
 REM
 REM Bundled INTO NAB.exe and dispatched by command-line flag
-REM (see nab_app.py), NOT built as separate EXEs:
+REM (see nab_main.py), NOT built as separate EXEs:
 REM   image_ocr_finder.py  -->  NAB.exe --ocr-finder
 REM   nab_pdf.py           -->  NAB.exe --pdf-bot       (NEW in 2.1.4)
 REM
@@ -21,7 +21,7 @@ REM
 REM Required next to this file before running:
 REM   NAB_entry.pyw, nab_constants.py, nab_telegram.py,
 REM   nab_update.py, nab_access.py, nab_auth.py, nab_dialogs.py,
-REM   nab_server.py, nab_bubble.py, nab_app.py, nab_updater.py,
+REM   nab_server.py, nab_bubble.py, nab_updater.py,
 REM   nab_pdf.py, nab_ui_scale.py, nab_clip_scan.py,
 REM   image_ocr_finder.py, surgical_tools.py, nab_tracker.py,
 REM   app_icon.ico, Logos\, nab-bot-498413-3ae32f0a2eec.json
@@ -48,13 +48,13 @@ if "%LOGOCOUNT%"=="0" (
 for %%F in (
     NAB_entry.pyw nab_constants.py nab_telegram.py nab_update.py
     nab_access.py nab_auth.py nab_dialogs.py nab_server.py
-    nab_bubble.py nab_app.py nab_updater.py nab_pdf.py
+    nab_bubble.py nab_updater.py nab_pdf.py nab_text.py
     nab_ui_scale.py nab_clip_scan.py image_ocr_finder.py
-    nab_loading.py nab_batch.py nab_batch_ui.py nab_subscriptions.py
+    nab_loading.py nab_subscriptions.py
     nab_tabreader.py nab_learn.py nab_recent.py
     nab_settings_sync.py nab_sync_ui.py nab_connections.py
     nab_session.py nab_meta.py nab_core.py nab_clipboard.py nab_engine.py nab_engine_host.py
-    nab_headless_ops.py nab_web.py nab_main.py nab_winutil.py nab_tabserver.py nab_classic.py
+    nab_headless_ops.py nab_web.py nab_main.py nab_winutil.py nab_tabserver.py
     nab_tools.py nab_ai.py nab_riko.py nab_tool_ai.py nab_tool_shot.py nab_tool_pr.py nab_tool_hunt.py nab_tool_wa.py pr_rates_default.json riko_knowledge.md nhunt\bdfilter.py nhunt\engine.py nab_tool_tracker.py nab_tool_subs.py nab_tool_pdf.py nab_tool_search.py nab_tool_phone.py nab_tool_reports.py nab_accounts.py nab_archive.py nab_health.py nab_reports.py nab_schedule.py nab_agent.py nab_google.py nab_extras.py nab_mailer.py nab_mail_host.py
     nab_ui\intro.html nab_ui\catsearch.js nab_ui\tool_wa.js nab_ui\tool_hunt.js nab_ui\tool_tracker.js nab_ui\tool_tracker.css nab_ui\tool_mail.js nab_ui\tool_mail.css nab_ui\pet.html nab_ui\tool_pdf.js nab_ui\tool_pdf.css nab_ui\tool_search.js nab_ui\tool_search.css
     nab_ui\index.html nab_ui\app.css nab_ui\common.js nab_ui\clip.js nab_ui\main.js
@@ -138,8 +138,6 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --hidden-import nab_ui_scale ^
     --hidden-import nab_clip_scan ^
     --hidden-import nab_loading ^
-    --hidden-import nab_batch ^
-    --hidden-import nab_batch_ui ^
     --hidden-import nab_subscriptions ^
     --hidden-import nab_tabreader ^
     --hidden-import nab_learn ^
@@ -157,7 +155,6 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --hidden-import nab_main ^
     --hidden-import nab_winutil ^
     --hidden-import nab_tabserver ^
-    --hidden-import nab_classic ^
     --hidden-import nab_tools ^
     --hidden-import nab_tool_tracker ^
     --hidden-import nab_tool_subs ^
@@ -183,6 +180,7 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --hidden-import nab_reports ^
     --hidden-import nab_schedule ^
     --hidden-import nab_agent ^
+    --hidden-import nab_text ^
     --hidden-import nab_google ^
     --hidden-import openpyxl ^
     --collect-submodules nhunt ^

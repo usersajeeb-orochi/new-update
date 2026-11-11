@@ -31,9 +31,6 @@ if __name__ == "__main__":
     elif "--tool" in argv:
         import nab_main
         nab_main.run_tool(argv[argv.index("--tool") + 1])
-    elif "--classic" in argv:
-        import nab_classic
-        nab_classic.run()
     else:
         try:
             import nab_main
@@ -41,6 +38,10 @@ if __name__ == "__main__":
         except SystemExit:
             raise
         except BaseException:
-            logging.error("NAB web UI failed, falling back to classic:\n" + traceback.format_exc())
-            import nab_classic
-            nab_classic.run()
+            logging.error("NAB failed to start:\n" + traceback.format_exc())
+            try:
+                import ctypes
+                ctypes.windll.user32.MessageBoxW(0, "NAB could not start. Details are in Documents\\nab_log.txt", "NAB", 0x10)
+            except Exception:
+                pass
+            sys.exit(1)

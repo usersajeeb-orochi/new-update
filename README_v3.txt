@@ -327,3 +327,4 @@ v3.0.47 - Stage 2: archive and search
 v3.0.48 - Phone queue: clips typed on the phone app (NAB Metadata) wait in a new Phone screen; Use fills paper, page, position, size and category. Epaper address for each paper. Report builder (stage 3 part).
 3.0.55: phone Drive folder default changed to the new folder; phone app icon matches desktop emblem.
 3.0.56: Drive writes sign in as the folder-owner Gmail (nab_drive_user.json) instead of the service account (no storage quota); phone queue reads no longer collide (SSL errors fixed).
+3.0.57: Phone clips: Delete, Put back after Use, drag to reorder, paper logo on each clip, category and position highlighted, Use no longer waits for Drive. Detection pop-ups only when the paper changes. Auto-grab of copied images retries and runs before detection (no more missed copies). Classic window and batch mode removed. Tracker error-handler bugs fixed.

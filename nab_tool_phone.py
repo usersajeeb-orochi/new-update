@@ -99,20 +99,66 @@ class Tool:
         es.sort(key=lambda e: e.get("created", ""))
         return {"ok": True, "items": [{k: v for k, v in e.items() if k != "_fid"} for e in es]}
 
+    def _find(self, eid):
+        """(file id, entry) of a phone entry. Uses what the last look already knows, so no extra Drive round trip."""
+        for fid, (_m, d) in list(self.__dict__.get("_cache", {}).items()):
+            if d.get("id") == eid:
+                return fid, dict(d)
+        for e in self._list():
+            if e.get("id") == eid:
+                return e.get("_fid"), dict(e)
+        return None, None
+
+    def _write(self, fid, e):
+        from googleapiclient.http import MediaIoBaseUpload
+        e = {k: v for k, v in e.items() if k != "_fid"}
+        media = MediaIoBaseUpload(io.BytesIO(json.dumps(e, ensure_ascii=False).encode()), mimetype="application/json", resumable=False)
+        with self._lock:
+            self._service().files().update(fileId=fid, media_body=media, supportsAllDrives=True).execute()
+            self.__dict__.setdefault("_cache", {}).pop(fid, None)      # changed on Drive: read it fresh next time
+
     def api_taken(self, a):
         """Mark an entry as taken (the phone then can no longer edit or delete it)."""
-        from googleapiclient.http import MediaIoBaseUpload
         eid = str(a.get("id") or "")
         try:
-            for e in self._list():
-                if e.get("id") == eid:
-                    fid = e.pop("_fid")
-                    e.update(status="clipped", taken_at=time.strftime("%Y-%m-%d %H:%M:%S"))
-                    media = MediaIoBaseUpload(io.BytesIO(json.dumps(e, ensure_ascii=False).encode()), mimetype="application/json", resumable=False)
-                    with self._lock:
-                        self._service().files().update(fileId=fid, media_body=media, supportsAllDrives=True).execute()
-                    return {"ok": True}
-            return {"ok": False, "error": "That entry is gone (the phone user may have deleted it)."}
+            fid, e = self._find(eid)
+            if not fid:
+                return {"ok": False, "error": "That entry is gone (the phone user may have deleted it)."}
+            e.update(status="clipped", taken_at=time.strftime("%Y-%m-%d %H:%M:%S"))
+            self._write(fid, e)
+            return {"ok": True}
+        except Exception as ex:
+            return {"ok": False, "error": "Drive error: " + str(ex)[:100]}
+
+    def api_release(self, a):
+        """Put a taken entry back in the waiting list (changed your mind after pressing Use)."""
+        eid = str(a.get("id") or "")
+        try:
+            fid, e = self._find(eid)
+            if not fid:
+                return {"ok": False, "error": "That entry is gone."}
+            e["status"] = "new"
+            e.pop("taken_at", None)
+            self._write(fid, e)
+            return {"ok": True}
+        except Exception as ex:
+            return {"ok": False, "error": "Drive error: " + str(ex)[:100]}
+
+    def api_delete(self, a):
+        """Remove an entry (and its image) from the queue."""
+        eid = "".join(c for c in str(a.get("id") or "") if c.isalnum() or c == "_")
+        try:
+            fid, _e = self._find(eid)
+            with self._lock:
+                svc = self._service()
+                if fid:
+                    svc.files().delete(fileId=fid, supportsAllDrives=True).execute()
+                    self.__dict__.setdefault("_cache", {}).pop(fid, None)
+                r = svc.files().list(q=f"name='nab_mi_{eid}.jpg' and '{self._root()}' in parents and trashed=false", fields="files(id)", pageSize=1,
+                                     supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
+                for f in r.get("files", []):
+                    svc.files().delete(fileId=f["id"], supportsAllDrives=True).execute()
+            return {"ok": True}
         except Exception as ex:
             return {"ok": False, "error": "Drive error: " + str(ex)[:100]}
 
@@ -136,13 +182,14 @@ class Tool:
         """Download the clip image attached on the phone and open it (so it can be copied into the Clip screen)."""
         eid = "".join(c for c in str(a.get("id") or "") if c.isalnum() or c == "_")
         try:
-            svc = self._service()
-            r = svc.files().list(q=f"name='nab_mi_{eid}.jpg' and '{self._root()}' in parents and trashed=false", fields="files(id)", pageSize=1,
-                                 supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
-            f = (r.get("files") or [None])[0]
-            if not f:
-                return {"ok": False, "error": "No image was attached to this entry."}
-            data = svc.files().get_media(fileId=f["id"], supportsAllDrives=True).execute()
+            with self._lock:
+                svc = self._service()
+                r = svc.files().list(q=f"name='nab_mi_{eid}.jpg' and '{self._root()}' in parents and trashed=false", fields="files(id)", pageSize=1,
+                                     supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
+                f = (r.get("files") or [None])[0]
+                if not f:
+                    return {"ok": False, "error": "No image was attached to this entry."}
+                data = svc.files().get_media(fileId=f["id"], supportsAllDrives=True).execute()
             d = os.path.join(DOC, "NAB Phone")
             os.makedirs(d, exist_ok=True)
             p = os.path.join(d, eid + ".jpg")

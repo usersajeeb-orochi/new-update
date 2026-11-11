@@ -151,17 +151,20 @@
   document.addEventListener("pointerdown", (e) => { const m = $("#paperMenu"); if (!m.classList.contains("hidden") && !e.target.closest("#paperMenu,#paperBtn")) m.classList.add("hidden"); });
 
   // detection pill, learn card, lock
+  let lastDet = "", lastMiss = "", lastMissAt = 0;
   on("detected", (ev) => {
     if (M.st) { M.st.paper = ev.paper; M.st.paper_clean = ev.clean; renderTop(); }
+    if (ev.clean === lastDet) return;           // same paper again: no pop-up, nothing to refresh
+    lastDet = ev.clean;
     const p = $("#detectPill"); p.className = "pill"; p.style.color = "#22c55e"; p.textContent = "📍 " + ev.clean + "  (" + ev.how + ")"; clearTimeout(timers.det); timers.det = setTimeout(() => p.classList.add("hidden"), 2600); CLIPUI.refresh(true);
   });
-  on("detect_miss", (ev) => { const p = $("#detectPill"); p.className = "pill"; p.style.color = "#ef4444"; p.textContent = "⚠ No paper match — tab: " + ev.tab; clearTimeout(timers.det); timers.det = setTimeout(() => p.classList.add("hidden"), 3800); });
+  on("detect_miss", (ev) => { if (ev.tab === lastMiss && Date.now() - lastMissAt < 120000) return; lastMiss = ev.tab; lastMissAt = Date.now(); const p = $("#detectPill"); p.className = "pill"; p.style.color = "#ef4444"; p.textContent = "⚠ No paper match — tab: " + ev.tab; clearTimeout(timers.det); timers.det = setTimeout(() => p.classList.add("hidden"), 3800); });
   on("learn", (ev) => {
     const c = $("#learnCard"); c.classList.remove("hidden");
     c.innerHTML = "<b>Remember this?</b><div style='margin-top:4px'>Detection picked <b>" + esc(ev.replaces || "nothing") + "</b>.<br>Always choose <b>" + esc(ev.clean) + "</b> for tabs containing:</div><input id='lrnFrag' value='" + esc(ev.fragment) + "' style='width:100%;margin-top:6px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surf2);padding:0 8px;-webkit-user-select:text;user-select:text'><div style='color:var(--dim);font-size:11px;margin-top:3px'>" + esc((ev.url || ev.title || "").slice(0, 70)) + "</div><div class='row'><button class='btn pri' id='lrnYes'>Remember</button><button class='btn' id='lrnNo'>Not this one</button></div>";
     $("#lrnYes").onclick = async () => { const r = await api("learn_remember", { fragment: $("#lrnFrag").value, paper: ev.paper }); if (!r.ok) toast(r.error, "warn", 2500); c.classList.add("hidden"); };
     $("#lrnNo").onclick = () => { api("learn_decline", { fragment: ev.fragment }); c.classList.add("hidden"); };
-    clearTimeout(timers.lrn); timers.lrn = setTimeout(() => c.classList.add("hidden"), 20000);
+    clearTimeout(timers.lrn); timers.lrn = setTimeout(() => { c.classList.add("hidden"); api("learn_decline", { fragment: ev.fragment }); }, 12000);
   });
   $("#lockBtn").onclick = async () => { const r = await api("lock_tab"); toast(r.msg || r.error, r.ok ? "ok" : "warn", 2800); };
   $("#lockBtn").oncontextmenu = async (e) => { e.preventDefault(); const r = await api("clear_tab_locks"); toast(r.msg, "ok", 2000); };
@@ -268,7 +271,6 @@
     add("Build today's PDFs", "", () => { M.show("pdf"); setTimeout(() => { const g = $("#pdGo"); if (g && !g.disabled) g.click(); }, 1300); });
     add("Open PDF Maker", "", () => M.show("pdf")); add("Open Send by mail", "", () => M.show("mail")); add("Open Tracker", "", () => M.show("tracker"));
     add("Open OCR search", "", () => M.show("search")); add("Open Subscriptions", "", () => M.show("subs")); add("Open Screenshot Bot", "", () => M.show("shot")); add("Open PR Value Calculator", "", () => M.show("pr")); add("Open News Hunter", "", () => M.show("hunt")); add("WhatsApp setup", "", () => window.WA && WA.setup());
-    add("Open classic NAB window (Batch mode etc.)", "", () => api("launch_tool", { name: "classic" }));
     add("Lock this tab to the current paper 📍", "", () => $("#lockBtn").click());
     add("Show / hide mini overlay", "", () => api("window", { action: "overlay" }));
     add("Settings", "", () => M.show("settings")); add("Settings: Connections (Advanced)", "", () => { M.show("settings"); SETTINGS.go("connections"); });

@@ -23,7 +23,7 @@ import nab_meta
 import nab_recent
 import nab_connections
 import nab_clipboard
-from nab_batch import strip_emoji_prefix
+from nab_text import strip_emoji_prefix
 
 DOC_DIR = os.environ.get("NAB_DOC_DIR") or os.path.join(os.path.expanduser("~"), "Documents")
 UI_STATE_FILE = os.path.join(DOC_DIR, "nab_ui_state.json")        # per-PC, never synced

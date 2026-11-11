@@ -10,7 +10,24 @@
     ["Teletalk", (p, s) => s === "tt" || /teletalk/.test(p)],
     ["Edotco", (p, s) => /edotco/.test(p)],
   ];
-  let items = [], timer = 0, box;
+  let items = [], timer = 0, box, using = null, dragId = null;
+  const ORD = "nab_phone_order";
+  const getOrd = () => { try { return JSON.parse(localStorage.getItem(ORD) || "[]"); } catch (e) { return []; } };
+  const setOrd = (a) => { try { localStorage.setItem(ORD, JSON.stringify(a.slice(-400))); } catch (e) { } };
+  function sortItems() {
+    const o = getOrd(), ix = new Map(o.map((id, i) => [id, i]));
+    items.sort((a, b) => {
+      const ia = ix.has(a.id), ib = ix.has(b.id);
+      if (ia && ib) return ix.get(a.id) - ix.get(b.id);
+      if (ia !== ib) return ia ? -1 : 1;
+      return String(a.date || "").localeCompare(String(b.date || "")) || String(a.created || "").localeCompare(String(b.created || ""));
+    });
+  }
+  function moveBefore(id, beforeId) {
+    const ids = items.map(x => x.id).filter(i => i !== id), at = ids.indexOf(beforeId);
+    ids.splice(at < 0 ? ids.length : at, 0, id); setOrd(ids);
+    sortItems(); paint("");
+  }
   const low = x => String(x || "").toLowerCase();
   // -> [["Telecom industry", [items]], ..., ["Daily Star", [items]]]
   function group(list) {
@@ -44,13 +61,14 @@
     const cats = (x.cats || []).map(c => String(c).replace("/", " › ")).join(", ");
     const nd = nabDate(), dayB = x.date && nd && x.date !== nd ? `<span class="ph-day" title="The paper of this day">Paper of ${esc(dayName(x.date))}</span>` : "";
     const newB = (x.new_paper ? '<span class="ph-new">New paper</span>' : "") + ((x.new_cats || []).length ? '<span class="ph-new">New category</span>' : "");
-    return `<div class="ph-it" draggable="true" data-i="${i}" title="Drag onto the canvas, or press Use"><div class="ph-top"><b>${esc(x.paper)}</b><span>Page ${esc(x.page)}</span><span>${esc(x.position)} · ${esc(x.size)}</span></div>${dayB || newB ? `<div class="ph-tags">${dayB}${newB}</div>` : ""}
+    return `<div class="ph-it" draggable="true" data-i="${i}" data-id="${esc(x.id)}" title="Drag onto the canvas to use it, or drag up/down to reorder"><div class="ph-top"><img class="ph-lg" alt="" src="${url("/logo?n=" + encodeURIComponent(x.paper || ""))}" onerror="this.remove()"><b>${esc(x.paper)}</b><span>Page ${esc(x.page)}</span><span class="ph-pos">${esc(x.position)} · ${esc(x.size)}</span></div>${dayB || newB ? `<div class="ph-tags">${dayB}${newB}</div>` : ""}
       <div class="ph-cat">${esc(cats)}</div>${x.note ? `<div class="ph-note">${esc(x.note)}</div>` : ""}
-      <div class="ph-bot"><small>${esc(x.user)} · ${esc((x.created || "").slice(11, 16))}</small><span class="grow"></span>${x.has_image ? `<button class="mini" data-im="${i}">Image</button>` : ""}<button class="mini pri" data-u="${i}">Use</button></div></div>`;
+      <div class="ph-bot"><small>${esc(x.user)} · ${esc((x.created || "").slice(11, 16))}</small><span class="grow"></span>${x.has_image ? `<button class="mini" data-im="${i}">Image</button>` : ""}<button class="mini" data-del="${i}" title="Delete this phone clip">Delete</button><button class="mini pri" data-u="${i}">Use</button></div></div>`;
   }
   function paint(err) {
     const order = group(items), flat = [];
     box.innerHTML = `<div class="panel-h"><b>Phone clips</b><span class="tag" id="phN">${items.length}</span><span class="grow"></span><button class="mini" id="phR" title="Refresh">↻</button><button class="mini" id="phU" title="Epaper address of each paper">⚙</button></div>` +
+      (using ? `<div class="ph-using"><span>In use: <b>${esc(using.paper)}</b> p${esc(using.page)} ${esc(using.position)}</span><span class="grow"></span><button class="mini" id="phBack">Put back</button><button class="mini pri" id="phDone">Done</button></div>` : "") +
       (err ? `<div class="tag warn" style="display:block;margin:6px 0">${esc(err)}</div>` : "") +
       `<div class="ph-list">` + (order.length ? order.map(([n, arr, byPaper]) => `<div class="ph-g${byPaper ? "" : " pri"}"><div class="ph-gh">${esc(n)} <i>${arr.length}</i>${byPaper ? `<img class="plg" alt="" src="${url("/logo?n=" + encodeURIComponent(n))}" onerror="this.remove()">` : ""}</div>${arr.map(x => { flat.push(x); return card(x, flat.length - 1); }).join("")}</div>`).join("")
         : `<p class="sub">${err ? "" : "Nothing waiting."}</p>`) + `</div>`;
@@ -59,22 +77,39 @@
     const use = async (x) => {
       if (!window.CLIP_APPLY) return toast("The Clip screen is not ready", "error", 2500);
       if (!(await addNew(x))) return;
-      const t = await api("phone_taken", { id: x.id });
-      if (!t.ok) { toast(t.error, "error", 3500); return load(); }
-      const was = nabDate(); await setNabDate(x.date);
-      await window.CLIP_APPLY(x); load();
+      const was = nabDate();
+      items = items.filter(i => i.id !== x.id); using = x; paint("");          // gone from the list at once; Drive is told in the background
+      api("phone_taken", { id: x.id }).then(t => { if (!t.ok) { toast(t.error, "error", 3500); using = null; load(true); } });
+      await setNabDate(x.date);
+      await window.CLIP_APPLY(x);
       if (x.date && was && x.date !== was) toast("Date changed to " + dayName(x.date) + " for this clip", "warn", 3500);
-      toast("Filled in from the phone. Clip the news now.", "ok", 3500);
+      toast("Filled in from the phone. Clip the news now.", "ok", 2500);
     };
+    const back = $("#phBack", box), done = $("#phDone", box);
+    if (back) back.onclick = async () => { const x = using; using = null; if (x) { items.push(x); sortItems(); } paint(""); const r = await api("phone_release", { id: x.id }); if (!r.ok) toast(r.error, "error", 3500); load(true); };
+    if (done) done.onclick = () => { using = null; paint(""); };
+    $$("[data-del]", box).forEach(b => b.onclick = async () => {
+      const x = flat[+b.dataset.del];
+      if (!(await ask(`<h3>Delete this phone clip?</h3><p>${esc(x.paper)} · Page ${esc(x.page)} · ${esc(x.position)}</p><p class="sub">It is removed for everyone.</p>`, "Delete"))) return;
+      items = items.filter(i => i.id !== x.id); paint("");
+      const r = await api("phone_delete", { id: x.id }); if (!r.ok) { toast(r.error, "error", 3500); load(true); }
+    });
     window.PHONE_USE = (idx) => flat[+idx] && use(flat[+idx]);
     window.PHONE_NEXT = async () => { const x = flat[0]; if (!x) return toast("No phone clips waiting", "", 1800); if (x.has_image) api("phone_image", { id: x.id }); await use(x); };
     $$("[data-u]", box).forEach(b => b.onclick = () => use(flat[+b.dataset.u]));
-    $$(".ph-it", box).forEach(el => { el.ondragstart = (e) => { e.dataTransfer.setData("application/x-nab-phone", el.dataset.i); e.dataTransfer.effectAllowed = "copy"; el.classList.add("dragging"); }; el.ondragend = () => el.classList.remove("dragging"); });
+    $$(".ph-it", box).forEach(el => {
+      el.ondragstart = (e) => { dragId = el.dataset.id; e.dataTransfer.setData("application/x-nab-phone", el.dataset.i); e.dataTransfer.effectAllowed = "copyMove"; el.classList.add("dragging"); };
+      el.ondragend = () => { dragId = null; el.classList.remove("dragging"); $$(".ph-it.over", box).forEach(n => n.classList.remove("over")); };
+      el.ondragover = (e) => { if (!dragId || dragId === el.dataset.id) return; e.preventDefault(); e.dataTransfer.dropEffect = "move"; el.classList.add("over"); };
+      el.ondragleave = () => el.classList.remove("over");
+      el.ondrop = (e) => { if (!dragId || dragId === el.dataset.id) return; e.preventDefault(); e.stopPropagation(); el.classList.remove("over"); moveBefore(dragId, el.dataset.id); };
+    });
   }
   async function load(manual) {
     if (!manual && (document.hidden || !$("#view-clip") || $("#view-clip").classList.contains("hidden"))) return;
     const r = await api("phone_list").catch(() => ({ ok: false, error: "No connection" }));
-    items = (r.items || []).slice().sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")) || String(a.created || "").localeCompare(String(b.created || "")));
+    items = (r.items || []).slice(); sortItems();
+    if (using) items = items.filter(i => i.id !== using.id);
     if (r.ok) { const ids = new Set(items.map(x => x.id)); if (known && items.some(x => !known.has(x.id))) { beep(); toast("New clip from the phone", "ok", 2500); } known = ids; }
     paint(r.ok ? "" : r.error);
   }

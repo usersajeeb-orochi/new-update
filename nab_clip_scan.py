@@ -15,7 +15,7 @@ import re
 import json
 import logging
 import difflib
-import nab_batch   # strip_emoji_prefix — no GUI deps, safe to import here
+import nab_text   # strip_emoji_prefix - no GUI deps
 
 _DOC = os.path.join(os.path.expanduser("~"), "Documents")
 
@@ -220,7 +220,7 @@ def _name_key(s):
     """Lowercase letters/digits only (unicode-aware, so Bangla names keep
     their letters), emoji prefix removed. Never returns something that
     could spuriously equal another empty key — callers must check truthy."""
-    return re.sub(r"[\W_]+", "", nab_batch.strip_emoji_prefix(s or "").lower())
+    return re.sub(r"[\W_]+", "", nab_text.strip_emoji_prefix(s or "").lower())
 
 
 def resolve_paper(name, paper_list):

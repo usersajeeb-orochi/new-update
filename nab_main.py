@@ -664,11 +664,6 @@ def run_edge(engine, srv):
                 sh.quit()
 
 
-def run_classic():
-    import nab_classic
-    nab_classic.run()
-
-
 def run_tool(name):
     """Tk tools that still live in their own process: tracker / subscriptions / tracker-end."""
     import nab_ui_scale

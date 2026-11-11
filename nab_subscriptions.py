@@ -12,7 +12,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 import nab_ui_scale
-import nab_batch   # reusing its self-contained strip_emoji_prefix — see its
+import nab_text
                     # docstring for why this isn't read off the app instance
 
 try:
@@ -90,7 +90,7 @@ def _known_papers(app):
     form with the emoji prefix still on it. Comparing the two directly
     would never match anything, silently filtering every subscription out."""
     papers = getattr(app, "paper_list", []) or []
-    return {nab_batch.strip_emoji_prefix(p) for p in papers}
+    return {nab_text.strip_emoji_prefix(p) for p in papers}
 
 
 def check_and_remind(app):
@@ -246,7 +246,7 @@ def open_subscription_manager(app):
         data = load_expiries()
         papers = getattr(app, "paper_list", []) or []
         for raw in papers:
-            paper = nab_batch.strip_emoji_prefix(raw)
+            paper = nab_text.strip_emoji_prefix(raw)
             row = ctk.CTkFrame(body, fg_color="#151520", corner_radius=6)
             row.pack(fill="x", pady=2)
             ctk.CTkLabel(row, text=paper, font=ctk.CTkFont(size=12),

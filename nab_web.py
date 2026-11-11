@@ -144,14 +144,6 @@ class Api:
     def login_precheck(self, a):
         return self.e.login_precheck()
 
-    def batch_start(self, a):
-        return self.e.batch_start(a.get("folder", ""))
-
-    def batch_next(self, a):
-        return self.e.batch_next()
-
-    def batch_stop(self, a):
-        return self.e.batch_stop()
 
     def selfcheck(self, a):
         import nab_health
@@ -487,7 +479,7 @@ class Api:
 
     def logo_upload(self, a):
         import base64
-        from nab_batch import strip_emoji_prefix
+        from nab_text import strip_emoji_prefix
         d = a.get("data", "")
         raw = base64.b64decode(d.split(",", 1)[1] if "," in d else d)
         try:
@@ -500,7 +492,7 @@ class Api:
     def logo_from_clipboard(self, a):
         """Logo from a screenshot on the clipboard (Win+Shift+S)."""
         import io
-        from nab_batch import strip_emoji_prefix
+        from nab_text import strip_emoji_prefix
         try:
             import nab_clipboard
             imgs = nab_clipboard.grab_images() or []
@@ -526,7 +518,7 @@ class Api:
         return {"ok": True}
 
     def logo_remove(self, a):
-        from nab_batch import strip_emoji_prefix
+        from nab_text import strip_emoji_prefix
         self.e.logo_delete(strip_emoji_prefix(a["paper"]))
         self.e.hub.emit("state_changed")
         return {"ok": True}
@@ -535,7 +527,7 @@ class Api:
         """Which papers have a logo file (for the dropdown)."""
         out = {}
         for p in self.e.paper_list:
-            from nab_batch import strip_emoji_prefix
+            from nab_text import strip_emoji_prefix
             out[p] = bool(self.e.logo_path(strip_emoji_prefix(p)))
         return {"logos": out, "dirs": self.e.logo_dirs(), "found": sum(1 for v in out.values() if v), "total": len(out)}
 
@@ -838,7 +830,7 @@ class NabServer:
                 self._send(200, data, "image/jpeg", {"Cache-Control": "no-store"})
 
             def _logo(self, name):
-                from nab_batch import strip_emoji_prefix
+                from nab_text import strip_emoji_prefix
                 eng = srv.engine
                 im = eng.get_logo(strip_emoji_prefix(name), small=True)
                 if im is None:

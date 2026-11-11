@@ -528,8 +528,9 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         import nab_clip_scan
         last_tab_key = None
         last_seq = None
+        pending = 0
         while True:
-            time.sleep(0.5)
+            time.sleep(0.25)
             try:
                 if not self.authorized or self.paused:
                     continue
@@ -557,6 +558,22 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
                         last_seq = seq
                     elif seq != last_seq:
                         last_seq, clip_event = seq, True
+                # Auto-grab FIRST (reading a browser's address bar below can take a second). A copy whose image is not
+                # readable yet (another program still holds the clipboard, or it is still being rendered) is retried for a few seconds.
+                if clip_event:
+                    pending = time.time() + (4.0 if has_image else 1.5)
+                if pending and self.auto_snatch:
+                    if has_image:
+                        imgs = nab_clipboard.grab_images()
+                        if imgs:
+                            pending = 0
+                            h = nab_clipboard.thumb_hash(imgs[0])
+                            if h != self.last_clipboard_hash:
+                                self.last_clipboard_hash = h
+                                self.add_images(imgs)
+                                self.hub.emit("snatched", n=len(self.doc.layers))
+                    if pending and time.time() > pending:
+                        pending = 0
                 tab_key = (hwnd, re.sub(r"[\W\d_]+", "", title.lower())) if title else None
                 tab_changed = bool(tab_key and tab_key != last_tab_key)
                 if tab_key:
@@ -606,14 +623,6 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
                     elif clip_event and has_image:
                         self.hub.emit("detect_miss", tab=(title or "(no window title)")[:34],
                                       src=(tab_url or snap["source_url"] or "")[:120])
-                if self.auto_snatch and clip_event and has_image:
-                    imgs = nab_clipboard.grab_images()
-                    if imgs:
-                        h = nab_clipboard.thumb_hash(imgs[0])
-                        if h != self.last_clipboard_hash:
-                            self.last_clipboard_hash = h
-                            self.add_images(imgs)
-                            self.hub.emit("snatched", n=len(self.doc.layers))
             except Exception as e:
                 logging.error(f"monitor: {e}")
 
@@ -1090,53 +1099,6 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         t = (_dt.datetime.now() + _dt.timedelta(days=days - 1)).replace(hour=23, minute=59, second=0, microsecond=0)
         return t.timestamp()
 
-    # ---- batch: work through a folder of page images one after another ----
-    def batch_start(self, folder):
-        folder = (folder or "").strip().strip('"')
-        if not os.path.isdir(folder):
-            return {"ok": False, "error": "That folder was not found."}
-        exts = (".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff")
-        nat = lambda t: [int(x) if x.isdigit() else x.lower() for x in re.split(r"(\d+)", t)]
-        files = sorted([os.path.join(folder, n) for n in os.listdir(folder) if n.lower().endswith(exts)], key=lambda p: nat(os.path.basename(p)))
-        if not files:
-            return {"ok": False, "error": "No images in that folder."}
-        self._batch = {"files": files, "i": 0, "folder": folder}
-        return self.batch_next()
-
-    def batch_next(self):
-        b = getattr(self, "_batch", None)
-        if not b:
-            return {"ok": False, "error": "No batch is open."}
-        while b["i"] < len(b["files"]):
-            p = b["files"][b["i"]]
-            b["i"] += 1
-            try:
-                with Image.open(p) as im:
-                    im.load()
-                    img = im.convert("RGB")
-            except Exception as e:
-                logging.error(f"batch open {p}: {e}")
-                continue
-            self.add_images([img], os.path.basename(p))
-            left = len(b["files"]) - b["i"]
-            if not left:
-                self._batch = None
-            return {"ok": True, "name": os.path.basename(p), "n": b["i"], "total": len(b["files"]), "left": left}
-        self._batch = None
-        return {"ok": True, "done": True, "left": 0}
-
-    def batch_stop(self):
-        self._batch = None
-        return {"ok": True}
-
-    # ---- accounts ----
-    def acct_is_owner_pc(self):
-        try:
-            import nab_settings_sync as S
-            return S.get_role()["role"] == "owner"
-        except Exception:
-            return False
-
     def acct_can_manage(self):
         """Only the owner PC creates or changes accounts (other PCs download them). On that PC: an owner account,
         or nobody signed in with an account (the Telegram-approved owner PC), or no accounts yet."""
@@ -1323,8 +1285,7 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
     # ───────────────────────────── tools (other windows) ────────────────────
     def launch_tool(self, name):
         flags = {"pdf": ["--pdf-bot"], "ocr": ["--ocr-finder"], "tracker": ["--tool", "tracker"],
-                 "subscriptions": ["--tool", "subscriptions"], "batch": ["--classic"],
-                 "classic": ["--classic"]}
+                 "subscriptions": ["--tool", "subscriptions"]}
         if name not in flags:
             return {"ok": False, "error": "unknown tool"}
         try:

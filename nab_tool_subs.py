@@ -6,7 +6,7 @@ import logging
 import datetime
 
 import nab_engine
-from nab_batch import strip_emoji_prefix
+from nab_text import strip_emoji_prefix
 
 SUBS_FILE = os.path.join(nab_engine.DOC_DIR, "nab_subscription_expiry.json")
 WARN_DAYS_BEFORE = 3

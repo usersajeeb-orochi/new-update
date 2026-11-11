@@ -1035,7 +1035,7 @@ class NewspaperTracker(ctk.CTkToplevel):
 
             ctk.CTkLabel(popup, text=f'"{raw}" is actually:',
                          font=ctk.CTkFont(size=13, weight="bold"),
-                         text_color=C_TEXT_MAIN, wraplength=320
+                         text_color="#F9FAFB", wraplength=320
                          ).pack(pady=(16, 8), padx=16)
 
             pick_var = ctk.StringVar(value=self.papers[0])
@@ -1670,7 +1670,7 @@ class NewspaperTracker(ctk.CTkToplevel):
             self.after(0, lambda: self._render_heatmap(data, None))
         except Exception as e:
             logging.error(f"_scan_heatmap_worker: {e}")
-            self.after(0, lambda: self._render_heatmap(None, e))
+            self.after(0, lambda err=e: self._render_heatmap(None, err))
 
     def _render_heatmap(self, data, error):
         """MAIN THREAD — builds the grid widgets from data already gathered
@@ -1801,8 +1801,8 @@ class NewspaperTracker(ctk.CTkToplevel):
                     text=f"✅ Pushed to Sheet: {tab_title}",
                     text_color="#43A047"))
             except Exception as e:
-                self.after(0, lambda: self._hm_status.configure(
-                    text=f"❌ {e}", text_color="#EF5350"))
+                self.after(0, lambda err=e: self._hm_status.configure(
+                    text=f"❌ {err}", text_color="#EF5350"))
                 logging.error(f"_push_heatmap_to_sheet: {e}")
 
         threading.Thread(target=_do, daemon=True).start()
@@ -1914,8 +1914,8 @@ class NewspaperTracker(ctk.CTkToplevel):
                 self.after(0, lambda: self._cfg_status.configure(
                     text=f"✅ Connected to: \"{name}\"", text_color=C_SUCCESS))
             except Exception as e:
-                self.after(0, lambda: self._cfg_status.configure(
-                    text=f"❌ {e}", text_color=C_DANGER))
+                self.after(0, lambda err=e: self._cfg_status.configure(
+                    text=f"❌ {err}", text_color=C_DANGER))
         threading.Thread(target=_test, daemon=True).start()
 
     def _save_settings(self):

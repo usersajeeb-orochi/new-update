@@ -55,8 +55,6 @@
       C.modal("<h3>Upload older days</h3><p class='sub'>Files already on Drive are skipped.</p><label class='row'><input type='checkbox' id='uAll'> All days</label><div style='max-height:260px;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:4px'>" + days.map(x => "<label class='row'><input type='checkbox' class='uD' value='" + x + "'> " + x + "</label>").join("") + "</div><div class='modal-actions'><button class='btn' id='uNo'>Cancel</button><button class='btn pri' id='uGo'>Upload</button></div>", (c, close) => {
         $("#uNo").onclick = close; $("#uGo").onclick = async () => { const sel = $("#uAll").checked ? ["all"] : Array.from(c.querySelectorAll(".uD:checked")).map(x => x.value); const x = await api("upload_dates", { dates: sel }); close(); toast(x.ok ? "Upload started" : x.error, x.ok ? "ok" : "error", 3000); }; }); };
     $("#o_dt", d).onclick = async () => { const r = await api("drive_test"); $("#o_msg", d).textContent = r.ok ? "✓ Drive OK" : "✗ " + (r.error || "failed"); };
-    d = card(b, "Tools", `<div class="btn-grid">${[["batch", "Batch clipper (classic window)"], ["classic", "Classic NAB window"]].map(([k, n]) => `<button class="btn" data-tool="${k}">${n}</button>`).join("")}</div>`);
-    $$("[data-tool]", d).forEach(x => x.onclick = () => api("launch_tool", { name: x.dataset.tool }));
   }
   S.r_general = r_general;
 
