@@ -456,16 +456,10 @@ class HeadlessOps:
         """Get Google Drive service using service account credentials."""
         try:
             from googleapiclient.discovery import build
-            from google.oauth2 import service_account
-
-            creds_file = nab_connections.google_key_file()
-            if not creds_file:
+            creds = nab_connections.drive_credentials()
+            if not creds:
                 logging.error("Google key not found (not bundled in this build).")
                 return None
-
-            creds = service_account.Credentials.from_service_account_file(
-                creds_file, scopes=["https://www.googleapis.com/auth/drive"]
-            )
             return build("drive", "v3", credentials=creds, cache_discovery=False)
         except Exception as e:
             logging.error(f"_get_gdrive_service: {e}")

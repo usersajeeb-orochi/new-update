@@ -326,3 +326,4 @@ v3.0.47 - Stage 2: archive and search
 
 v3.0.48 - Phone queue: clips typed on the phone app (NAB Metadata) wait in a new Phone screen; Use fills paper, page, position, size and category. Epaper address for each paper. Report builder (stage 3 part).
 3.0.55: phone Drive folder default changed to the new folder; phone app icon matches desktop emblem.
+3.0.56: Drive writes sign in as the folder-owner Gmail (nab_drive_user.json) instead of the service account (no storage quota); phone queue reads no longer collide (SSL errors fixed).

@@ -18,6 +18,7 @@ BUILTIN_SHEET_ID = "1wuFSBKyw0vIDlWshuMEY8yG8ijdZWxFWs44NtJk0jyo"
 
 # The Google service-account key is bundled into the EXE by BUILD.bat.
 # Either file name works; BUILD.bat adds whichever one sits next to it.
+USER_KEY_NAME = "nab_drive_user.json"   # the Gmail sign-in token (see GET_DRIVE_TOKEN.md); never in the repo
 BUNDLED_KEY_NAMES = ("nab-bot-498413-3ae32f0a2eec.json", "nab_gdrive_creds.json")
 
 # override name -> registry value
@@ -168,3 +169,29 @@ def summary():
                        else "found on this PC" if key else "missing"),
         "customized": [k for k in _REG if override(k)],
     }
+
+
+def drive_user_file():
+    """Token of the Gmail account that owns the Drive folder (made once by get_drive_token.py). Empty if none."""
+    cand = [os.path.join(d, USER_KEY_NAME) for d in _bundle_dirs()]
+    home = os.path.expanduser("~")
+    cand += [os.path.join(home, "Documents", USER_KEY_NAME), os.path.join(home, USER_KEY_NAME), os.path.join(os.getcwd(), USER_KEY_NAME)]
+    for p in cand:
+        if os.path.isfile(p):
+            return p
+    return ""
+
+
+def drive_credentials(scopes=("https://www.googleapis.com/auth/drive",)):
+    """Credentials for Drive. The Gmail sign-in wins (a service account has no storage quota, so it cannot create files
+    in a normal Gmail folder); the service-account key stays as the fallback."""
+    scopes = list(scopes)
+    up = drive_user_file()
+    if up:
+        from google.oauth2.credentials import Credentials
+        return Credentials.from_authorized_user_file(up, scopes)
+    kf = google_key_file()
+    if not kf:
+        return None
+    from google.oauth2 import service_account
+    return service_account.Credentials.from_service_account_file(kf, scopes=scopes)

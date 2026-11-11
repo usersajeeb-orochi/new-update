@@ -2,3 +2,4 @@ nab-bot-*.json
 nab_gdrive_creds.json
 __pycache__/
 .pytest_cache/
+nab_drive_user.json

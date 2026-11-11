@@ -6,6 +6,7 @@ import io
 import json
 import time
 import logging
+import threading
 
 import nab_connections
 
@@ -35,17 +36,16 @@ class Tool:
     def __init__(self, engine):
         self.e = engine
         self._svc = None
+        self._lock = threading.RLock()   # the Drive connection is not thread-safe: one call at a time
 
     # -- drive --
     def _service(self):
         if self._svc:
             return self._svc
         from googleapiclient.discovery import build
-        from google.oauth2 import service_account
-        kf = nab_connections.google_key_file()
-        if not kf:
+        creds = nab_connections.drive_credentials()
+        if not creds:
             raise RuntimeError("The Google key is missing in this build.")
-        creds = service_account.Credentials.from_service_account_file(kf, scopes=["https://www.googleapis.com/auth/drive"])
         self._svc = build("drive", "v3", credentials=creds, cache_discovery=False)
         return self._svc
 
@@ -53,6 +53,16 @@ class Tool:
         return nab_connections.drive_folder_id()
 
     def _list(self):
+        with self._lock:
+            try:
+                return self._list_locked()
+            except Exception as ex:
+                if "SSL" in str(ex) or "ssl" in str(ex).lower():   # broken connection: start a fresh one and try once more
+                    self._svc = None
+                    return self._list_locked()
+                raise
+
+    def _list_locked(self):
         """All phone entries. Only files that are new or changed since the last look are downloaded (fast even with many entries)."""
         svc, root, out, tok, seen = self._service(), self._root(), [], None, set()
         cache = self.__dict__.setdefault("_cache", {})
@@ -99,7 +109,8 @@ class Tool:
                     fid = e.pop("_fid")
                     e.update(status="clipped", taken_at=time.strftime("%Y-%m-%d %H:%M:%S"))
                     media = MediaIoBaseUpload(io.BytesIO(json.dumps(e, ensure_ascii=False).encode()), mimetype="application/json", resumable=False)
-                    self._service().files().update(fileId=fid, media_body=media, supportsAllDrives=True).execute()
+                    with self._lock:
+                        self._service().files().update(fileId=fid, media_body=media, supportsAllDrives=True).execute()
                     return {"ok": True}
             return {"ok": False, "error": "That entry is gone (the phone user may have deleted it)."}
         except Exception as ex:

@@ -109,6 +109,9 @@ if not defined CRED_FLAG (
     echo Bundling the Google key into NAB.exe.
 )
 
+set USER_FLAG=
+if exist "nab_drive_user.json" set "USER_FLAG=--add-data nab_drive_user.json;."
+
 set ICON_FLAG=
 set ICON_DATA=
 if exist "app_icon.ico" set "ICON_FLAG=--icon=app_icon.ico"
@@ -204,7 +207,7 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --add-data "NAB_TabReporter;NAB_TabReporter" ^
     %ICON_DATA% ^
     %BG_FLAG% ^
-    %CRED_FLAG% ^
+    %CRED_FLAG% %USER_FLAG% ^
     NAB_entry.pyw
 
 if errorlevel 1 (
