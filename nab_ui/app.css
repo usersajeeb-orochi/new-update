@@ -373,3 +373,15 @@ html.bg-hidden *,html.bg-hidden *::before,html.bg-hidden *::after{animation-play
 .ph-cat{opacity:.8;margin-top:2px}.ph-note{margin-top:2px;font-style:italic;opacity:.75}
 .ph-bot{display:flex;gap:6px;align-items:center;margin-top:5px}.ph-bot small{opacity:.6}
 .ph-bot .mini{margin-left:4px;padding:3px 9px}
+
+/* drag and drop */
+#layers.dragging .ly{pointer-events:none}
+#layers .ly.lifted{position:relative;z-index:5;box-shadow:0 10px 26px rgba(0,0,0,.35);border-color:var(--acc);cursor:grabbing;transition:none}
+#layers .ly{touch-action:none;cursor:grab}
+#layers.dragging .ly:not(.lifted){will-change:transform}
+.stage.drop-on,#stage.drop-on{outline:2px dashed var(--acc);outline-offset:-6px}
+.stage.drop-on::after,#stage.drop-on::after{content:attr(data-drop);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 20px;border-radius:12px;background:rgba(10,18,30,.82);color:#fff;font-size:15px;font-weight:600;pointer-events:none;z-index:20}
+.ph-it[draggable=true]{cursor:grab}.ph-it.dragging{opacity:.45}
+.mi img{opacity:.5}
+.ph-gh .plg{height:16px;max-width:70px;object-fit:contain;opacity:.4;float:right;margin-top:-1px}
+@media (prefers-reduced-motion:reduce){#layers .ly{transition:none}}

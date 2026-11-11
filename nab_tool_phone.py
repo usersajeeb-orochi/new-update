@@ -53,20 +53,30 @@ class Tool:
         return nab_connections.drive_folder_id()
 
     def _list(self):
-        svc, root, out, tok = self._service(), self._root(), [], None
+        """All phone entries. Only files that are new or changed since the last look are downloaded (fast even with many entries)."""
+        svc, root, out, tok, seen = self._service(), self._root(), [], None, set()
+        cache = self.__dict__.setdefault("_cache", {})
         while True:
-            r = svc.files().list(q=f"name contains '{PREFIX}' and '{root}' in parents and trashed=false", fields="nextPageToken,files(id)",
+            r = svc.files().list(q=f"name contains '{PREFIX}' and '{root}' in parents and trashed=false", fields="nextPageToken,files(id,modifiedTime)",
                                  pageSize=200, pageToken=tok, supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
             for f in r.get("files", []):
+                seen.add(f["id"])
+                hit = cache.get(f["id"])
+                if hit and hit[0] == f.get("modifiedTime"):
+                    out.append(dict(hit[1]))
+                    continue
                 try:
                     raw = svc.files().get_media(fileId=f["id"], supportsAllDrives=True).execute()
                     d = json.loads(raw.decode("utf-8") if isinstance(raw, (bytes, bytearray)) else raw)
                     d["_fid"] = f["id"]
-                    out.append(d)
+                    cache[f["id"]] = (f.get("modifiedTime"), d)
+                    out.append(dict(d))
                 except Exception:
                     pass
             tok = r.get("nextPageToken")
             if not tok:
+                for k in [k for k in cache if k not in seen]:
+                    cache.pop(k, None)
                 return out
 
     # -- api --
@@ -134,3 +144,18 @@ class Tool:
             return {"ok": True, "path": p}
         except Exception as ex:
             return {"ok": False, "error": "Drive error: " + str(ex)[:100]}
+
+
+def start_keepalive(every=480):
+    """The free cloud server sleeps after ~15 minutes idle (first phone save then waits up to a minute). A light ping keeps it awake."""
+    import threading
+    import urllib.request
+
+    def loop():
+        while True:
+            try:
+                urllib.request.urlopen(nab_connections.cloud_url().rstrip("/") + "/m/api/ping", timeout=20).read()
+            except Exception:
+                pass
+            time.sleep(every)
+    threading.Thread(target=loop, daemon=True, name="phone-keepalive").start()

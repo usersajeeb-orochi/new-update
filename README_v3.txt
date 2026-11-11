@@ -1,3 +1,7 @@
+v3.0.53
+  * Drag and drop, smooth: drag a layer up or down to reorder it (the others slide out of the way; Esc cancels). Drag image files, or a phone clip card, onto the canvas: it shows a drop target while you drag. Paper logos now show faded in the paper list.
+  * Phone clips arrive faster: the list checks every 6 seconds and only downloads new or changed entries, a sound and pop-up announce a new clip, the cloud server is kept awake, and Ctrl+Shift+N takes the next phone clip (opens its image and fills the fields).
+
 v3.0.52
   * Phone clips now sit on the right of the Clip screen (the separate Phone tab is gone). Telecom industry, GP, BL, Robi, Teletalk and Edotco come first, each as its own group; everything else follows, bundled by paper. Press Use to fill the clip details. The Canvas & size card moved to the bottom of that column.
 

@@ -1273,6 +1273,8 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         try:
             import nab_schedule, nab_tools
             nab_schedule.start(self)
+            import nab_tool_phone
+            nab_tool_phone.start_keepalive()
             nab_tools.get("hunt", self).resume_auto()
         except Exception as ex:
             logging.error(f"schedule start: {ex}")

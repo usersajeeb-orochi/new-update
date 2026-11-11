@@ -377,13 +377,10 @@
   function renderLayers() {
     updateSizePanel(); const box = $("#layers"); box.innerHTML = ""; const _seen = S._lyIds || (S._lyIds = new Set());
     S.layers.slice().reverse().forEach((l) => {
-      const d = document.createElement("div"); d.className = "ly" + (_seen.has(l.id) ? "" : " in") + (l.id === S.active ? " sel" : "") + (l.visible ? "" : " hid"); d.dataset.id = l.id; d.draggable = true;
+      const d = document.createElement("div"); d.className = "ly" + (_seen.has(l.id) ? "" : " in") + (l.id === S.active ? " sel" : "") + (l.visible ? "" : " hid"); d.dataset.id = l.id;
       d.innerHTML = '<img loading="lazy" src="' + url("/lthumb?id=" + l.id + "&w=48&r=" + S.rev) + '"><span class="nm">' + esc(l.name) + " · " + l.w + "×" + l.h + '</span><button class="eye">' + (l.visible ? "👁" : "·") + "</button>";
       d.onclick = (e) => { if (e.target.closest(".eye")) { layerCmdFor(l.id, "visible", { visible: !l.visible }); return; } S.active = l.id; renderLayers(); };
       d.ondblclick = () => { const n = prompt("Layer name", l.name); if (n) layerCmdFor(l.id, "rename", { name: n }); };
-      d.ondragstart = (e) => { e.dataTransfer.setData("text/plain", String(l.id)); };
-      d.ondragover = (e) => e.preventDefault();
-      d.ondrop = (e) => { e.preventDefault(); const from = +e.dataTransfer.getData("text/plain"); const idx = S.layers.findIndex(x => x.id === l.id); if (from && from !== l.id) layerCmdFor(from, "reorder", { index: idx }); };
       box.appendChild(d);
     });
     S._lyIds = new Set(S.layers.map(l => l.id));
@@ -674,10 +671,17 @@
   const opt = (id, key, ev, conv) => { const el = $(id); el.addEventListener(ev, async () => { const v = conv ? conv(el) : el.checked; await api("set_options", { [key]: v }); if (S.st) S.st.settings[key] = v; if (id === "#optQuality") $("#qVal").textContent = v; refreshSoon(); }); };
   opt("#optHeader", "show_header", "change"); opt("#optLogo", "logo_scale", "input", e => +e.value); opt("#optText", "text_scale", "input", e => +e.value);
   opt("#optQuality", "quality", "input", e => +e.value); opt("#optHD", "hd_mode", "change"); opt("#optSnatch", "auto_snatch", "change"); opt("#optPolish", "auto_polish", "change"); $("#optFit") && opt("#optFit", "smart_fit", "change");
-  // drag & drop image files onto the stage
-  stage.addEventListener("dragover", (e) => e.preventDefault());
+  // drag & drop onto the stage: image files, or a phone clip card from the right panel
+  const dropOn = (on, txt) => { stage.classList.toggle("drop-on", on); if (txt) stage.dataset.drop = txt; };
+  let dragDepth = 0;
+  const kind = (e) => { const t = Array.from(e.dataTransfer && e.dataTransfer.types || []); return t.includes("application/x-nab-phone") ? "phone" : t.includes("Files") ? "files" : ""; };
+  stage.addEventListener("dragenter", (e) => { const k = kind(e); if (!k) return; dragDepth++; dropOn(true, k === "phone" ? "Drop to use this phone clip" : "Drop image to add it as a layer"); });
+  stage.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; dropOn(false); } });
+  stage.addEventListener("dragover", (e) => { if (kind(e)) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } });
   stage.addEventListener("drop", async (e) => {
-    e.preventDefault(); const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/")); if (!files.length) return;
+    e.preventDefault(); dragDepth = 0; dropOn(false);
+    const ph = e.dataTransfer.getData("application/x-nab-phone"); if (ph && window.PHONE_USE) return window.PHONE_USE(ph);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/")); if (!files.length) return;
     const imgs = await Promise.all(files.map(f => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); })));
     await api("paste_data", { images: imgs });
   });
@@ -687,6 +691,7 @@
     init(st) { S.st = st; prefillMeta(); measure(); syncOptions(); renderCats(); onClips(); },
     setState(st) { S.st = st; syncOptions(); renderCats(); updateDock(); },
     onClips, refresh, measure, applyView, paste, doSave, undoSave, arm, filter, layerCmd, setTool, applySuggest,
+    layerMove(id, pos) { const idx = S.layers.length - 1 - pos; return layerCmdFor(id, "reorder", { index: idx }); },
     focusMeta, renderCats, updateDock,
     onShow() { measure(); applyView(); },
   };
