@@ -23,21 +23,50 @@ def _save_access_log(log):
     except Exception:
         pass
 
-def _load_blocked_pcs():
+def _read_blocked_file():
     try:
         if os.path.exists(BLOCKED_PCS_FILE):
             with open(BLOCKED_PCS_FILE, 'r') as f:
                 return json.load(f)
     except Exception:
-        pass
-    return {}
+        return {"_sig": "unreadable"}
+    return None
+
+def _load_blocked_pcs():
+    """Blocked PCs. The file is signed and a copy lives in the registry: a hand-edited file is ignored, a deleted file is
+    restored from the copy, and a file that cannot be trusted blocks this PC until the admin sends /unblock."""
+    import nab_secrets
+    reg = None
+    try:
+        raw = nab_secrets.reg_get("BlockedPCs")
+        reg = json.loads(raw) if raw else None
+    except Exception:
+        reg = {"_sig": "unreadable"}
+    f = _read_blocked_file()
+    for cand in (f, reg):
+        if isinstance(cand, dict) and nab_secrets.valid(cand, "blocked"):
+            return {k: v for k, v in cand.items() if k != "_sig"}
+    if f is None and reg is None:
+        return {}                                                   # never blocked on this PC
+    if isinstance(f, dict) and not f.get("_sig") and reg is None and "NAB_UNSIGNED_OK" in os.environ:
+        return f
+    if isinstance(f, dict) and not f.get("_sig") and reg is None and not nab_secrets.has_key():
+        return {k: v for k, v in f.items()}                         # development build, no secret key
+    try:
+        import socket
+        return {socket.gethostname(): {"user": "?", "blocked_at": "tampered file", "deny_count": 0}}
+    except Exception:
+        return {"?": {}}
 
 def _save_blocked_pcs(blocked):
+    import nab_secrets
+    signed = nab_secrets.sign({k: v for k, v in blocked.items() if k != "_sig"}, "blocked")
     try:
         with open(BLOCKED_PCS_FILE, 'w') as f:
-            json.dump(blocked, f)
+            json.dump(signed, f)
     except Exception:
         pass
+    nab_secrets.reg_set("BlockedPCs", json.dumps(signed))
 
 def _log_access_attempt(pc, user, result):
     log = _load_access_log()

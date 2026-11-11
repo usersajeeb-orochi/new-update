@@ -112,6 +112,9 @@ if not defined CRED_FLAG (
 set USER_FLAG=
 if exist "nab_drive_user.json" set "USER_FLAG=--add-data nab_drive_user.json;."
 
+set SEC_FLAG=
+if exist "nab_secrets.json" set "SEC_FLAG=--add-data nab_secrets.json;."
+
 set ICON_FLAG=
 set ICON_DATA=
 if exist "app_icon.ico" set "ICON_FLAG=--icon=app_icon.ico"
@@ -181,6 +184,7 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --hidden-import nab_schedule ^
     --hidden-import nab_agent ^
     --hidden-import nab_text ^
+    --hidden-import nab_secrets ^
     --hidden-import nab_google ^
     --hidden-import openpyxl ^
     --collect-submodules nhunt ^
@@ -205,7 +209,7 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --add-data "NAB_TabReporter;NAB_TabReporter" ^
     %ICON_DATA% ^
     %BG_FLAG% ^
-    %CRED_FLAG% %USER_FLAG% ^
+    %CRED_FLAG% %USER_FLAG% %SEC_FLAG% ^
     NAB_entry.pyw
 
 if errorlevel 1 (

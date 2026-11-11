@@ -31,23 +31,47 @@ def init(pc_name=""):
 
 
 # ------------------------------------------------------------------ storage
+_state = {"tampered": False}
+
+
+def tampered():
+    """True when nab_users.json was changed by hand: nobody can sign in with an account until it is restored from the synced copy."""
+    _load()
+    return _state["tampered"]
+
+
 def _load():
+    """Accounts file. It is signed: a hand-edited copy (role changed to owner, password hash swapped...) is refused.
+    The first load of an older unsigned file is accepted once and signed on the next save."""
+    import nab_secrets
+    _state["tampered"] = False
+    if not os.path.exists(USERS_FILE):
+        return {"v": 1, "users": {}}
     try:
         with open(USERS_FILE, encoding="utf-8") as f:
             d = json.load(f)
         if isinstance(d, dict) and isinstance(d.get("users"), dict):
-            return d
+            if nab_secrets.valid(d, "accounts"):
+                return {k: v for k, v in d.items() if k != "_sig"}
+            if not d.get("_sig") and nab_secrets.reg_get("AccountsSigned") != "1":
+                return d                                            # old file from before signing existed
     except Exception:
         pass
+    logging.error("nab_users.json is not trusted (edited by hand?) - accounts are locked until it is restored")
+    _state["tampered"] = True
     return {"v": 1, "users": {}}
 
 
 def _save(d):
+    import nab_secrets
+    if _state["tampered"]:
+        raise PermissionError("The accounts file was changed by hand. Restore it from the synced copy first.")
     os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
     tmp = USERS_FILE + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(d, f, ensure_ascii=False, indent=1)
+        json.dump(nab_secrets.sign({k: v for k, v in d.items() if k != "_sig"}, "accounts"), f, ensure_ascii=False, indent=1)
     os.replace(tmp, USERS_FILE)
+    nab_secrets.reg_set("AccountsSigned", "1")
 
 
 def _key(name):
@@ -245,6 +269,8 @@ def logout():
 
 # ------------------------------------------------------------------ management (owner PC only; the caller checks that)
 def _need_owner(actor_ok):
+    if tampered():
+        return {"ok": False, "error": "The accounts file was changed by hand. Restore it from the synced copy first."}
     if not actor_ok:
         return {"ok": False, "error": "Only the owner can manage accounts, on the owner PC."}
     return None

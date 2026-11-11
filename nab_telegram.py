@@ -56,7 +56,8 @@ def _broker_enabled():
             and _reg_get("BrokerTelegram", "") == "1")
 
 
-_BUILTIN_BOT_TOKEN = "8737601809:AAFOcuApledbL4XwDMNt0AR2zjnTj7_EQV0"
+import nab_secrets as _nab_secrets
+_BUILTIN_BOT_TOKEN = _nab_secrets.get("tg_token")   # packed into the EXE at build time (GitHub secret NAB_SECRETS_JSON); never in the repo
 TG_GROUP_LINK = _reg_get("TGGroupLink", "https://t.me/+cMLBGanlKVphNmQ1")
 TG_BOT_TOKEN  = _reg_get("TGToken", "") or _BUILTIN_BOT_TOKEN
 TG_CHAT_ID    = _reg_get("TGChatID", "7020459302")

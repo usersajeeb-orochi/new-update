@@ -40,6 +40,13 @@ jobs:
           DRIVE_USER_JSON: ${{ secrets.DRIVE_USER_JSON }}
         run: |
           if ($env:DRIVE_USER_JSON) { [IO.File]::WriteAllText("nab_drive_user.json", $env:DRIVE_USER_JSON) } else { Write-Host "No DRIVE_USER_JSON secret: building with the service-account key only" }
+      - name: Write nab_secrets.json (Telegram bot token + signing key) from the repository secret
+        shell: pwsh
+        env:
+          NAB_SECRETS_JSON: ${{ secrets.NAB_SECRETS_JSON }}
+        run: |
+          if (-not $env:NAB_SECRETS_JSON) { Write-Error "Secret NAB_SECRETS_JSON is missing - a build without it cannot reach Telegram, so it is not released."; exit 1 }
+          [IO.File]::WriteAllText("nab_secrets.json", $env:NAB_SECRETS_JSON)
       - name: Build (BUILD.bat)
         shell: cmd
         run: BUILD.bat < nul
