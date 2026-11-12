@@ -21,3 +21,4 @@ pyperclip
 openpyxl
 playwright
 playwright-stealth
+python-docx

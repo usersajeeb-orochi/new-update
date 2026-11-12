@@ -76,7 +76,7 @@ class Tool:
             r = nab_daily_report.build_for_day(self._arch(), day)
             if a.get("upload"):
                 try:
-                    r["link"] = nab_daily_report.upload_to_drive(r["path"])
+                    r["link"] = nab_daily_report.upload_to_drive(r.get("doc") or r["path"])
                 except Exception as ex:
                     r["upload_error"] = str(ex)[:140]
             return r

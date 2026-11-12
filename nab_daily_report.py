@@ -356,12 +356,70 @@ def build_workbook(rows_all, day, out_dir=None, client=""):
     return path, A
 
 
+# ------------------------------------------------------------------ Google Doc archive (Word file; Drive turns it into a Google Doc)
+def build_doc(A, out_dir=None):
+    """Clip-by-clip archive of one day: summary, findings, paper x category counts, then every clip grouped by paper."""
+    from docx import Document
+    from docx.shared import Pt
+    day = A["day"]
+    out_dir = out_dir or OUT_DIR
+    os.makedirs(out_dir, exist_ok=True)
+    d = Document()
+    d.styles["Normal"].font.name = "Calibri"
+    d.styles["Normal"].font.size = Pt(10)
+    d.add_heading(f"NAB Clip Archive {day}", 0)
+    d.add_paragraph(f"{A['n']} clips from {len(A['by_paper'])} papers. Yesterday: {A['n_prev']}. 7-day average: {A['avg7']:.1f}.")
+    if A["insights"]:
+        d.add_heading("What stands out", 1)
+        for t in A["insights"]:
+            d.add_paragraph(t, style="List Bullet")
+    d.add_heading("Papers", 1)
+    t = d.add_table(rows=1, cols=3); t.style = "Light Grid Accent 1"
+    for c, h in zip(t.rows[0].cells, ("Paper", "Clips", "Categories")):
+        c.text = h
+    for p, n in sorted(A["by_paper"].items(), key=lambda x: -x[1]):
+        cats = {}
+        for r in A["rows"]:
+            if (r["paper"] or "-") == p:
+                cats[_main(r["cat"])] = cats.get(_main(r["cat"]), 0) + 1
+        row = t.add_row().cells
+        row[0].text, row[1].text = str(p), str(n)
+        row[2].text = ", ".join(f"{k} {v}" for k, v in sorted(cats.items(), key=lambda x: -x[1]))
+    d.add_heading("Categories", 1)
+    t = d.add_table(rows=1, cols=2); t.style = "Light Grid Accent 1"
+    t.rows[0].cells[0].text, t.rows[0].cells[1].text = "Category", "Clips"
+    for k, v in sorted(A["by_cat"].items(), key=lambda x: -x[1]):
+        row = t.add_row().cells
+        row[0].text, row[1].text = str(k), str(v)
+    if A.get("missing"):
+        d.add_heading("Papers missing today", 1)
+        d.add_paragraph(", ".join(str(m[0]) for m in A["missing"]))
+    d.add_heading("Every clip, by paper", 1)
+    for p in sorted(A["by_paper"]):
+        rs = sorted([r for r in A["rows"] if (r["paper"] or "-") == p], key=lambda r: (r["page"] or "", r["pos"] or ""))
+        d.add_heading(f"{p} ({len(rs)})", 2)
+        t = d.add_table(rows=1, cols=6); t.style = "Light Grid Accent 1"
+        for c, h in zip(t.rows[0].cells, ("Page", "Position", "Size", "Category", "By", "Time")):
+            c.text = h
+        for r in rs:
+            row = t.add_row().cells
+            for c, v in zip(row, (r.get("page"), r.get("pos"), r.get("size"), r.get("cat"), r.get("user"), str(r.get("added") or "")[11:16])):
+                c.text = str(v or "")
+    path = os.path.join(out_dir, f"NAB Clip Archive {day}.docx")
+    d.save(path)
+    return path
+
+
 def build_for_day(arch, day, out_dir=None, client=""):
     d0 = _day(day)
     d_from = (d0 - datetime.timedelta(days=30)).isoformat()
     rows = arch.search("", False, 50000, date_from=d_from, date_to=day)["rows"]
     path, A = build_workbook(rows, day, out_dir=out_dir, client=client)
-    return {"ok": True, "path": path, "n": A["n"], "day": day, "insights": A["insights"]}
+    try:
+        doc = build_doc(A, out_dir=out_dir)
+    except Exception:
+        doc = ""
+    return {"ok": True, "path": path, "doc": doc, "n": A["n"], "day": day, "insights": A["insights"]}
 
 
 # ------------------------------------------------------------------ Drive upload
@@ -381,10 +439,13 @@ def upload_to_drive(path, subfolder=DRIVE_SUBFOLDER):
     fid = f[0]["id"] if f else svc.files().create(body={"name": subfolder, "mimeType": "application/vnd.google-apps.folder", "parents": [root]},
                                                   fields="id", supportsAllDrives=True).execute()["id"]
     name = os.path.basename(path)
-    media = MediaFileUpload(path, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", resumable=False)
+    is_doc = path.lower().endswith(".docx")
+    media = MediaFileUpload(path, mimetype="application/vnd.openxmlformats-officedocument." + ("wordprocessingml.document" if is_doc else "spreadsheetml.sheet"), resumable=False)
+    if is_doc:
+        name = name[:-5]                       # shows in Drive as a Google Doc, without the extension
     old = svc.files().list(q=f"name='{name}' and '{fid}' in parents and trashed=false", fields="files(id)", pageSize=1, **kw).execute().get("files", [])
     if old:
         out = svc.files().update(fileId=old[0]["id"], media_body=media, fields="id,webViewLink", supportsAllDrives=True).execute()
     else:
-        out = svc.files().create(body={"name": name, "parents": [fid]}, media_body=media, fields="id,webViewLink", supportsAllDrives=True).execute()
+        out = svc.files().create(body=dict({"name": name, "parents": [fid]}, **({"mimeType": "application/vnd.google-apps.document"} if is_doc else {})), media_body=media, fields="id,webViewLink", supportsAllDrives=True).execute()
     return out.get("webViewLink", "")

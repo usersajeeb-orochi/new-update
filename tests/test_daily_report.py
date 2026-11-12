@@ -42,3 +42,11 @@ def test_analyse_and_workbook(tmp_path):
 def test_empty_day_does_not_crash(tmp_path):
     path, A = D.build_workbook([], "2026-11-11", out_dir=str(tmp_path))
     assert A["n"] == 0 and os.path.exists(path)
+
+
+def test_doc_archive(tmp_path):
+    A = D.analyse(fake("2026-11-10", 1, 30), "2026-11-10")
+    p = D.build_doc(A, out_dir=str(tmp_path))
+    from docx import Document
+    d = Document(p)
+    assert "Clip Archive" in d.paragraphs[0].text and len(d.tables) >= 3

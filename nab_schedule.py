@@ -167,9 +167,9 @@ class Runner:
                     done.append("folder")
                 elif d == "drive":
                     import nab_daily_report
-                    for pth in paths:
-                        if pth.lower().endswith(".xlsx"):
-                            nab_daily_report.upload_to_drive(pth)
+                    ups = [x for x in paths if x.lower().endswith(".docx")] or [x for x in paths if x.lower().endswith(".xlsx")]
+                    for pth in ups:
+                        nab_daily_report.upload_to_drive(pth)
                     done.append("Google Drive")
                 elif d == "telegram":
                     self._tg_files(paths, title, job["tg_chat"]); done.append("Telegram")
@@ -201,7 +201,7 @@ class Runner:
             import nab_daily_report
             d1, _d2 = nab_reports.resolve_range(job["params"].get("range") or "today")
             r = nab_daily_report.build_for_day(nab_archive.get(), d1, client=job["params"].get("client", ""))
-            paths = [r["path"]]
+            paths = [r["path"]] + ([r["doc"]] if r.get("doc") else [])
             title = f'{job["name"]}: {r.get("n", 0)} clips on {d1}'
             done, errs = self.deliver(job, paths, title)
             return {"ok": not errs, "msg": title + (" | sent: " + ", ".join(done) if done else "") + ((" | failed: " + "; ".join(errs)) if errs else ""), "path": r["path"]}

@@ -131,6 +131,7 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --collect-all urllib3 ^
     --collect-all pytesseract ^
     --collect-all reportlab ^
+    --collect-all docx ^
     --collect-all googleapiclient ^
     --collect-all gspread ^
     --collect-all google ^
