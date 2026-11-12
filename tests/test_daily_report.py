@@ -50,3 +50,7 @@ def test_doc_archive(tmp_path):
     from docx import Document
     d = Document(p)
     assert "Clip Archive" in d.paragraphs[0].text and len(d.tables) >= 3
+
+
+def test_natural_page_order():
+    assert sorted(["10", "2", "1"], key=D._nat) == ["1", "2", "10"]

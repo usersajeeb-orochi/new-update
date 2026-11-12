@@ -289,7 +289,7 @@ def build_workbook(rows_all, day, out_dir=None, client=""):
     # ---------------- all clips
     cl = wb.create_sheet("Clips")
     header(cl, 1, ["Newspaper", "Date", "Page", "Position", "Size", "Category", "Saved by", "Saved at", "KB", "File"])
-    for i, r in enumerate(sorted(A["rows"], key=lambda r: (r["paper"] or "", r["page"] or "", r["pos"] or "")), 2):
+    for i, r in enumerate(sorted(A["rows"], key=lambda r: (str(r["paper"] or "").lower(), _nat(r["page"]), _nat(r["pos"]))), 2):
         for j, x in enumerate([r["paper"], r["date"], r["page"], r["pos"], r["size"], r["cat"], r["user"], (r.get("added") or "")[11:16], r["kb"], r["path"]], 1):
             cl.cell(row=i, column=j, value=x)
     widths(cl, [24, 12, 8, 10, 10, 30, 14, 10, 8, 70])
@@ -357,6 +357,12 @@ def build_workbook(rows_all, day, out_dir=None, client=""):
 
 
 # ------------------------------------------------------------------ Google Doc archive (Word file; Drive turns it into a Google Doc)
+def _nat(v):
+    """Natural order: 2 before 10, 3-6 before 12-14."""
+    import re
+    return [int(x) if x.isdigit() else x.lower() for x in re.split(r"(\d+)", str(v or ""))]
+
+
 def build_doc(A, out_dir=None):
     """Clip-by-clip archive of one day: summary, findings, paper x category counts, then every clip grouped by paper."""
     from docx import Document
@@ -396,7 +402,7 @@ def build_doc(A, out_dir=None):
         d.add_paragraph(", ".join(str(m[0]) for m in A["missing"]))
     d.add_heading("Every clip, by paper", 1)
     for p in sorted(A["by_paper"]):
-        rs = sorted([r for r in A["rows"] if (r["paper"] or "-") == p], key=lambda r: (r["page"] or "", r["pos"] or ""))
+        rs = sorted([r for r in A["rows"] if (r["paper"] or "-") == p], key=lambda r: (_nat(r["page"]), _nat(r["pos"])))
         d.add_heading(f"{p} ({len(rs)})", 2)
         t = d.add_table(rows=1, cols=6); t.style = "Light Grid Accent 1"
         for c, h in zip(t.rows[0].cells, ("Page", "Position", "Size", "Category", "By", "Time")):
