@@ -297,7 +297,7 @@ class Archive:
                 i = t.find(hit)
                 sn = ("..." if i > 60 else "") + t[max(0, i - 60): i + 100] + "..."
             out.append({"id": r["id"], "path": r["path"], "name": r["name"], "paper": r["paper"], "page": r["page"], "pos": r["pos"],
-                        "size": r["size"], "cat": r["cat"], "date": r["date"], "user": r["user"], "kb": round((r["bytes"] or 0) / 1024),
+                        "size": r["size"], "cat": r["cat"], "date": r["date"], "user": r["user"], "kb": round((r["bytes"] or 0) / 1024), "added": r["added"] or "",
                         "snip": sn, "has_text": bool(r["ocr"])})
         return {"rows": out, "total": total, "more": total > limit}
 

@@ -34,7 +34,16 @@ window.TOOLS = window.TOOLS || {};
   const readParams = pre => ({ template: $("#" + pre + "Tpl").value, paper: $("#" + pre + "Paper").value, cat: $("#" + pre + "Cat").value, range: $("#" + pre + "Range").value, date_from: $("#" + pre + "From").value, date_to: $("#" + pre + "To").value, user: $("#" + pre + "User").value });
 
   function run() {
-    $("#rpBody").innerHTML = `<div class="card">${paramsForm({}, "r")}<div class="tk-bar" style="margin-top:10px"><button class="btn pri" id="rGo">Make the report</button><span id="rInfo" class="sub grow"></span></div></div><div id="rOut"></div>`;
+    $("#rpBody").innerHTML = `<div class="card">${paramsForm({}, "r")}<div class="tk-bar" style="margin-top:10px"><button class="btn pri" id="rGo">Make the report</button><span id="rInfo" class="sub grow"></span></div></div><div class="card" style="margin-top:10px"><b>Daily analysis</b><div class="sub">One Excel file with every clip, paper x category heat map, charts and written findings. It is also made automatically every day and put on the shared Drive.</div><div class="tk-bar" style="margin-top:8px"><button class="btn pri" id="dGo">Make today's analysis and send to Drive</button><button class="btn" id="dLocal">Only make the file</button><span id="dInfo" class="sub grow"></span></div></div><div id="rOut"></div>`;
+    const daily = async (upload) => {
+      $("#dInfo").textContent = "Building…"; $("#dGo").disabled = $("#dLocal").disabled = true;
+      const r = await api("reports_daily_now", { upload }); $("#dGo").disabled = $("#dLocal").disabled = false;
+      if (!r.ok) { $("#dInfo").textContent = ""; return toast(r.error || "Could not make the analysis", "error", 4000); }
+      $("#dInfo").textContent = r.n + " clips" + (upload ? (r.upload_error ? " - Drive failed: " + r.upload_error : " - sent to Drive") : "");
+      $("#rOut").innerHTML = `<div class="card"><b>Analysis ready</b><div class="sub">${esc(r.path)}</div>${(r.insights || []).map(t => `<div class="sub">- ${esc(t)}</div>`).join("")}<div class="tk-bar" style="margin-top:8px"><button class="btn" id="rOpen">Open folder</button></div></div>`;
+      $("#rOpen").onclick = () => api("reports_open", { path: r.path.replace(/[\\/][^\\/]*$/, "") });
+    };
+    $("#dGo").onclick = () => daily(true); $("#dLocal").onclick = () => daily(false);
     $("#rGo").onclick = async () => {
       $("#rInfo").textContent = "Building…"; $("#rGo").disabled = true;
       const r = await api("reports_run", readParams("r")); $("#rGo").disabled = false;
@@ -59,11 +68,11 @@ window.TOOLS = window.TOOLS || {};
     const isNew = !j.id, d = j.deliver || ["folder"];
     C.modal(`<h3>${isNew ? "New job" : "Edit job"}</h3><div style="max-height:62vh;overflow:auto">
       <div class="field"><label>Name</label><input id="jN" value="${esc(j.name || "")}" maxlength="60"></div>
-      <div class="field"><label>What</label><select id="jK"><option value="report" ${j.kind !== "selfcheck" ? "selected" : ""}>Report (PDF + Excel)</option><option value="selfcheck" ${j.kind === "selfcheck" ? "selected" : ""}>Self-check, alert me only if something is wrong</option></select></div>
+      <div class="field"><label>What</label><select id="jK"><option value="report" ${j.kind !== "selfcheck" && j.kind !== "daily" ? "selected" : ""}>Report (PDF + Excel)</option><option value="daily" ${j.kind === "daily" ? "selected" : ""}>Daily analysis (Excel with charts)</option><option value="selfcheck" ${j.kind === "selfcheck" ? "selected" : ""}>Self-check, alert me only if something is wrong</option></select></div>
       <div id="jP">${paramsForm(j.params || {}, "j")}</div>
       <div class="tk-bar" style="flex-wrap:wrap"><label class="sub">Time <input type="time" id="jT" value="${esc(j.time || "09:00")}"></label><label class="sub">Catch-up hours <input type="number" id="jC" min="0" max="23" value="${j.catchup_h == null ? 6 : j.catchup_h}" style="width:70px"></label></div>
       <div class="tk-bar" style="flex-wrap:wrap">${DAYS.map((n, i) => `<label class="row"><input type="checkbox" data-d="${i}" ${!j.days || j.days.includes(i) ? "checked" : ""}> ${n}</label>`).join("")}</div>
-      <div class="tk-bar" style="flex-wrap:wrap">${["folder", "telegram", "whatsapp", "mail"].map(k => `<label class="row"><input type="checkbox" data-s="${k}" ${d.includes(k) ? "checked" : ""}> ${{ folder: "Save in folder", telegram: "Telegram", whatsapp: "WhatsApp", mail: "E-mail" }[k]}</label>`).join("")}</div>
+      <div class="tk-bar" style="flex-wrap:wrap">${["folder", "drive", "telegram", "whatsapp", "mail"].map(k => `<label class="row"><input type="checkbox" data-s="${k}" ${d.includes(k) ? "checked" : ""}> ${{ folder: "Save in folder", drive: "Google Drive", telegram: "Telegram", whatsapp: "WhatsApp", mail: "E-mail" }[k]}</label>`).join("")}</div>
       <div class="field"><label>WhatsApp chat or group name</label><input id="jW" value="${esc(j.chat || "")}"></div>
       <div class="field"><label>E-mail addresses (comma separated)</label><input id="jM" value="${esc((j.mail_to || []).join(", "))}"></div>
       <label class="row"><input type="checkbox" id="jE" ${j.enabled === false ? "" : "checked"}> Job is on</label></div>

@@ -13,8 +13,8 @@ import datetime
 DOC = os.path.join(os.path.expanduser("~"), "Documents")
 FILE = os.path.join(DOC, "nab_schedule.json")
 LOG = os.path.join(DOC, "nab_schedule_log.jsonl")
-KINDS = ("report", "selfcheck")
-DELIVER = ("folder", "telegram", "whatsapp", "mail")
+KINDS = ("report", "selfcheck", "daily")
+DELIVER = ("folder", "telegram", "whatsapp", "mail", "drive")
 _lock = threading.RLock()
 
 
@@ -48,7 +48,7 @@ def clean_job(j):
     o["catchup_h"] = max(0, min(23, int(j.get("catchup_h") or 6)))
     p = j.get("params") or {}
     o["params"] = {k: str(p.get(k) or "")[:120] for k in ("template", "cat", "paper", "range", "date_from", "date_to", "user", "client")}
-    o["params"]["range"] = o["params"]["range"] or "yesterday"
+    o["params"]["range"] = o["params"]["range"] or ("today" if o["kind"] == "daily" else "yesterday")
     o["deliver"] = [d for d in (j.get("deliver") or ["folder"]) if d in DELIVER] or ["folder"]
     o["chat"] = str(j.get("chat") or "")[:120]            # WhatsApp chat or group
     o["tg_chat"] = str(j.get("tg_chat") or "")[:60]       # empty = the NAB group
@@ -165,6 +165,12 @@ class Runner:
             try:
                 if d == "folder":
                     done.append("folder")
+                elif d == "drive":
+                    import nab_daily_report
+                    for pth in paths:
+                        if pth.lower().endswith(".xlsx"):
+                            nab_daily_report.upload_to_drive(pth)
+                    done.append("Google Drive")
                 elif d == "telegram":
                     self._tg_files(paths, title, job["tg_chat"]); done.append("Telegram")
                 elif d == "whatsapp":
@@ -191,6 +197,14 @@ class Runner:
             return {"ok": True, "msg": f"{len(bad)} problem(s)"}
         import nab_archive
         import nab_reports
+        if job["kind"] == "daily":
+            import nab_daily_report
+            d1, _d2 = nab_reports.resolve_range(job["params"].get("range") or "today")
+            r = nab_daily_report.build_for_day(nab_archive.get(), d1, client=job["params"].get("client", ""))
+            paths = [r["path"]]
+            title = f'{job["name"]}: {r.get("n", 0)} clips on {d1}'
+            done, errs = self.deliver(job, paths, title)
+            return {"ok": not errs, "msg": title + (" | sent: " + ", ".join(done) if done else "") + ((" | failed: " + "; ".join(errs)) if errs else ""), "path": r["path"]}
         r = nab_reports.run_report(nab_archive.get(), job["params"], user="schedule")
         if not r.get("ok"):
             return {"ok": False, "msg": r.get("error") or "Report failed"}
@@ -258,10 +272,21 @@ class Runner:
 _runner = None
 
 
+def ensure_daily_job():
+    """The daily Excel analysis (saved here and uploaded to the shared Drive) exists from the start; the owner can change or switch it off."""
+    if not any(j.get("kind") == "daily" for j in jobs()):
+        save_job({"name": "Daily news analysis", "kind": "daily", "time": "23:30", "catchup_h": 8,
+                  "params": {"range": "today"}, "deliver": ["folder", "drive"]})
+
+
 def start(engine):
     global _runner
     if _runner:
         return _runner
+    try:
+        ensure_daily_job()
+    except Exception:
+        logging.exception("daily job")
     _runner = Runner(engine)
     threading.Thread(target=_runner.loop, daemon=True, name="NAB-Schedule").start()
     return _runner
