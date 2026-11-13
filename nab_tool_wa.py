@@ -420,6 +420,33 @@ class Tool:
         hit.click()
         page.wait_for_selector('footer div[contenteditable="true"]', timeout=20000)
 
+    DOC_ITEMS = ('li[data-testid="mi-attach-document"]', '[data-testid="attach-document"]', 'div[role="button"][aria-label="Document"]',
+                 'button[aria-label="Document"]', '[role="menuitem"]:has-text("Document")', 'li:has-text("Document")')
+
+    def _attach_document(self, page, paths):
+        """Pick the files through the Document entry so they arrive as files, full quality. Raises if that entry cannot be found."""
+        item_clicked = None
+        for sel in self.DOC_ITEMS + ("TEXT",):
+            try:
+                loc = page.get_by_text("Document", exact=True).first if sel == "TEXT" else page.locator(sel).first
+                if loc.count() == 0:
+                    continue
+                with page.expect_file_chooser(timeout=6000) as fc:
+                    loc.click(timeout=4000)
+                fc.value.set_files(paths)
+                return
+            except Exception as ex:
+                item_clicked = ex
+                page.wait_for_timeout(300)
+        # no clickable Document entry: use a file input that is not limited to images/videos (that one is the document input)
+        files = page.locator('input[type="file"]')
+        for i in range(files.count()):
+            acc = (files.nth(i).get_attribute("accept") or "")
+            if "image" not in acc and "video" not in acc:
+                files.nth(i).set_input_files(paths)
+                return
+        raise RuntimeError("Could not find WhatsApp's Document option, so nothing was sent (sending as a photo would lose the quality). WhatsApp Web may have changed; see last_error.png.")
+
     def _send(self, page, paths, chat, caption):
         try:
             self._ensure_ready(page)
@@ -427,18 +454,17 @@ class Tool:
             doc = bool(self.cfg.get("as_document", True))
             page.locator('footer span[data-icon="plus"], footer span[data-icon="clip"], footer span[data-icon="attach-menu-plus"], footer button[aria-label*="Attach"], footer div[title*="Attach"]').first.click(timeout=15000)
             page.wait_for_timeout(700)
-            files = page.locator('input[type="file"]')
-            inp = None
-            n = files.count()
-            for i in range(n):                                           # document input has no image/video restriction
-                acc = (files.nth(i).get_attribute("accept") or "")
-                if doc and ("image" not in acc and "video" not in acc):
-                    inp = files.nth(i); break
-                if not doc and "image" in acc:
-                    inp = files.nth(i); break
-            if inp is None:
-                inp = files.first
-            inp.set_input_files(paths)
+            if doc:
+                # "Send as document" means the Document entry of the attach menu. The photo/video input must never be used
+                # for it: WhatsApp compresses whatever goes in there into a small preview picture.
+                self._attach_document(page, paths)
+            else:
+                files = page.locator('input[type="file"]')
+                inp = None
+                for i in range(files.count()):
+                    if "image" in (files.nth(i).get_attribute("accept") or ""):
+                        inp = files.nth(i); break
+                (inp or files.first).set_input_files(paths)
             SENDSEL = 'span[data-icon="send"], span[data-icon="wds-ic-send-filled"], div[aria-label="Send"], button[aria-label="Send"], [role="button"][aria-label="Send"]'
             page.wait_for_selector(SENDSEL, timeout=int(self.cfg.get("send_timeout_s", 45) or 45) * 1000)
             page.wait_for_timeout(800)
