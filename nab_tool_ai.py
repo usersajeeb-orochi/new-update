@@ -15,7 +15,7 @@ class Tool:
         return s
 
     def api_settings(self, a):
-        nab_ai.get().save(**{k: a[k] for k in ("enabled", "keys", "use_builtin", "text_model", "fast_model", "vision_model", "whisper_model") if k in a})
+        nab_ai.get().save(**{k: a[k] for k in ("enabled", "keys", "use_builtin", "text_model", "fast_model", "vision_model", "whisper_model", "alt_key", "alt_model", "alt_free") if k in a})
         return self.api_status({})
 
     def api_test(self, a):

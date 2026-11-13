@@ -39,21 +39,27 @@ class TelegramAuth:
     def request_sync_approval(summary, timeout=180):
         """Ask the admin on Telegram to approve UPLOADING settings changes to the shared
         Drive file. Returns True / False. Downloading never needs this."""
-        rid = str(int(time.time() * 1000))
+        import nab_remote
+        rid = "s" + str(int(time.time() * 1000))[-9:]
+        relay = nab_remote.available()
         TelegramAuth._sync_decisions.pop(rid, None)
         text = (f"🔄 <b>NAB settings sync — upload request</b>\n\n💻 PC: <code>{PC_NAME}</code>\n"
                 f"📝 {summary}\n\n⏳ Auto-denied in {timeout}s.")
-        mid = _tg_send_callback_buttons(text, buttons=[("✅ Allow upload", f"nab_sync_ok_{rid}"),
-                                                       ("⛔ Deny", f"nab_sync_no_{rid}")], chat_id=TG_CHAT_ID)
+        yes, no = ((f"nabS|{rid}|ok", f"nabS|{rid}|no") if relay else (f"nab_sync_ok_{rid}", f"nab_sync_no_{rid}"))
+        mid = _tg_send_callback_buttons(text, buttons=[("✅ Allow upload", yes), ("⛔ Deny", no)], chat_id=TG_CHAT_ID)
         if not mid:
             return None            # could not reach Telegram — caller retries later
         end = time.time() + timeout
         while time.time() < end:
             d = TelegramAuth._sync_decisions.pop(rid, None)
+            if d is None and relay:
+                r = nab_remote.get_decision(rid, PC_NAME)
+                if r:
+                    d = (r[0] == "ok")
             if d is not None:
                 _tg_edit_message(TG_CHAT_ID, mid, text.split("\n\n⏳")[0] + ("\n\n✅ <b>Allowed</b>" if d else "\n\n⛔ <b>Denied</b>"))
                 return d
-            time.sleep(1)
+            time.sleep(2 if relay else 1)
         _tg_edit_message(TG_CHAT_ID, mid, text.split("\n\n⏳")[0] + "\n\n⏰ <b>Timed out</b> — not uploaded")
         return False
 
@@ -102,9 +108,14 @@ class TelegramAuth:
                 _log_access_attempt(PC_NAME, user, "outside_hours")
                 return False
 
-        # ── Drain queue so we don't pick up old messages ──
-        _tg_drain_queue()
+        # ── With a cloud bot the cloud reads the button taps (one reader per token); without it this PC reads them itself ──
+        import nab_remote, uuid as _uuid
+        relay = nab_remote.available()
+        rid = _uuid.uuid4().hex[:8]
+        if not relay:
+            _tg_drain_queue()
         TelegramAuth._last_update_id = None
+        _cb = (lambda act: f"nabA|{rid}|{act}") if relay else (lambda act: f"nab_{act}_{PC_NAME}")
 
         # ── Targets: the request buttons go to the GROUP only. Everything
         # else in this function (confirmations, screenshots, blocked-PC
@@ -133,16 +144,16 @@ class TelegramAuth:
             mid = _tg_send_callback_buttons(
                 request_text,
                 buttons=([
-                    ("Allow",   f"nab_allow_{PC_NAME}"),
-                    ("2 Hours", f"nab_allow2_{PC_NAME}"),
-                    ("Remember today", f"nab_today_{PC_NAME}"),
-                    ("Remember for days", f"nab_week_{PC_NAME}"),
-                    ("Deny",    f"nab_deny_{PC_NAME}"),
+                    ("Allow",   _cb("allow")),
+                    ("2 Hours", _cb("allow2")),
+                    ("Remember today", _cb("today")),
+                    ("Remember for days", _cb("week")),
+                    ("Deny",    _cb("deny")),
                 ] if owner_only else [
-                    ("Allow",   f"nab_allow_{PC_NAME}"),
-                    ("2 Hours", f"nab_allow2_{PC_NAME}"),
-                    ("Remember today", f"nab_today_{PC_NAME}"),
-                    ("Deny",    f"nab_deny_{PC_NAME}"),
+                    ("Allow",   _cb("allow")),
+                    ("2 Hours", _cb("allow2")),
+                    ("Remember today", _cb("today")),
+                    ("Deny",    _cb("deny")),
                 ]),
                 chat_id=cid,
             )
@@ -162,45 +173,53 @@ class TelegramAuth:
             poll_timeout = min(remaining, 5)
             if poll_timeout <= 0:
                 break
-            data = _tg_get_updates(offset=last_update_id, timeout=poll_timeout)
-            for update in data.get("result", []):
-                last_update_id = update["update_id"] + 1
-                TelegramAuth._last_update_id = last_update_id
-
-                cb = update.get("callback_query")
-                if cb:
-                    cb_chat_id = str(cb.get("message", {}).get("chat", {}).get("id", ""))
-                    if cb_chat_id not in targets:
-                        continue
-                    data_str  = cb.get("data", "")
-                    responder = (cb.get("from", {}).get("first_name")
-                                 or cb.get("from", {}).get("username") or "Someone")
-                    _tg_answer_callback_query(cb["id"], text="Got it!")
-                    if data_str == f"nab_deny_{PC_NAME}":
-                        text = "deny"
-                    elif data_str == f"nab_allow2_{PC_NAME}":
-                        text = "allow 2"
-                    elif data_str == f"nab_allow_{PC_NAME}":
-                        text = "allow"
-                    elif data_str == f"nab_today_{PC_NAME}":
-                        text = "today"
-                    elif data_str == f"nab_week_{PC_NAME}" and owner_only:
-                        text = "week"
+            events = []                                   # (text, responder)
+            if relay:
+                time.sleep(min(2, max(poll_timeout, 0)))
+                d = nab_remote.get_decision(rid, PC_NAME)
+                if d:
+                    act, responder = d
+                    text = {"allow": "allow", "allow2": "allow 2", "today": "today", "week": "week", "deny": "deny"}.get(act)
+                    if text == "week" and not owner_only:
+                        text = None
+                    if text:
+                        events.append((text, responder))
+            else:
+                data = _tg_get_updates(offset=last_update_id, timeout=poll_timeout)
+                for update in data.get("result", []):
+                    last_update_id = update["update_id"] + 1
+                    TelegramAuth._last_update_id = last_update_id
+                    cb = update.get("callback_query")
+                    if cb:
+                        cb_chat_id = str(cb.get("message", {}).get("chat", {}).get("id", ""))
+                        if cb_chat_id not in targets:
+                            continue
+                        data_str  = cb.get("data", "")
+                        responder = (cb.get("from", {}).get("first_name")
+                                     or cb.get("from", {}).get("username") or "Someone")
+                        _tg_answer_callback_query(cb["id"], text="Got it!")
+                        if data_str == f"nab_deny_{PC_NAME}":
+                            text = "deny"
+                        elif data_str == f"nab_allow2_{PC_NAME}":
+                            text = "allow 2"
+                        elif data_str == f"nab_allow_{PC_NAME}":
+                            text = "allow"
+                        elif data_str == f"nab_today_{PC_NAME}":
+                            text = "today"
+                        elif data_str == f"nab_week_{PC_NAME}" and owner_only:
+                            text = "week"
+                        else:
+                            continue
                     else:
-                        continue
-                else:
-                    # Plain-text fallback — only trusted from the admin's own
-                    # DM (TG_CHAT_ID), never from the group, since matching
-                    # bare words like "allow"/"deny" against normal group
-                    # chatter would false-trigger. Group approvals must use
-                    # the buttons above.
-                    msg     = update.get("message", {})
-                    chat_id = str(msg.get("chat", {}).get("id", ""))
-                    text    = msg.get("text", "").strip().lower()
-                    if chat_id != TG_CHAT_ID:
-                        continue
-                    responder = "Admin"
-
+                        # Plain-text fallback only from the admin's own DM, never from the group.
+                        msg     = update.get("message", {})
+                        chat_id = str(msg.get("chat", {}).get("id", ""))
+                        text    = msg.get("text", "").strip().lower()
+                        if chat_id != TG_CHAT_ID:
+                            continue
+                        responder = "Admin"
+                    events.append((text, responder))
+            for text, responder in events:
                 if text == "deny":
                     _clear_request_buttons(f"⛔ <b>Denied</b> by {responder}")
                     _tg_send(f"⛔ Access <b>DENIED</b> to <code>{PC_NAME}</code>.")
@@ -497,9 +516,49 @@ class TelegramAuth:
 
         def _handle_cloud_command(cmd):
             """Handle commands queued by the cloud bot (file/upload only)."""
+            if cmd.startswith("EVT|"):                       # a button under the live picture
+                live.send_event(cmd[4:].strip())
+                return
             if cmd.startswith("CMD|"):
                 cmd = cmd[4:]
             tl = cmd.strip().lower()
+
+            simple = {"screenshot": "/screenshot", "pause": "/pause", "resume": "/resume", "restart": "/restart",
+                      "health": "/health", "report": "/report", "status": "/status"}
+            if tl in simple:
+                _handle_local_command(simple[tl], {})
+                return
+            if tl.startswith("extend|"):
+                try:
+                    _handle_local_command(f"/extend {float(tl.split('|')[1]) / 60:g}", {})
+                except ValueError:
+                    pass
+                return
+            if tl.startswith("live|"):
+                live.start(cmd.split("|", 1)[1].strip(), app)
+                return
+            if tl.startswith("ask|"):
+                parts = cmd.split("|", 2)
+                if len(parts) == 3:
+                    nab_remote.ask_riko(_nab_telegram_mod, app, parts[1].strip(), parts[2])
+                return
+            if tl == "lock":
+                _tg_send(f"🔒 Screen of <b>{PC_NAME}</b> locked." if nab_remote.lock_screen() else "❌ Could not lock the screen.")
+                return
+            if tl == "daily":
+                def _daily():
+                    try:
+                        import nab_archive, nab_daily_report
+                        r = nab_daily_report.build_for_day(nab_archive.get(), datetime.date.today().isoformat())
+                        try:
+                            link = nab_daily_report.upload_to_drive(r.get("doc") or r["path"])
+                        except Exception as ex:
+                            link = "upload failed: " + str(ex)[:120]
+                        _tg_send(f"📊 Daily analysis for <b>{PC_NAME}</b>: {r.get('n', 0)} clips.\n" + "\n".join("• " + t for t in r.get("insights", [])[:5]) + f"\n{link}")
+                    except Exception as ex:
+                        _tg_send(f"❌ Daily analysis failed: {str(ex)[:200]}")
+                threading.Thread(target=_daily, daemon=True, name="daily-from-telegram").start()
+                return
 
             if tl.startswith("upload_old|"):
                 parts = cmd.split("|")
@@ -569,6 +628,10 @@ class TelegramAuth:
                 cat = cmd.split("|", 1)[1]
                 app.after(0, lambda c=cat: app._send_category_files(c))
 
+        import nab_remote, threading
+        relay = nab_remote.available()
+        live = nab_remote.Live(_nab_telegram_mod, PC_NAME)
+
         # ── MAIN LOOP ──────────────────────────────────────────────────────
         while True:
             try:
@@ -586,8 +649,9 @@ class TelegramAuth:
                             TelegramAuth._access_deadline).strftime("%H:%M:%S")
                         app.after(0, lambda e=exp_str: app._show_expiry_warning(e))
 
-                # ── LOCAL BOT: poll getUpdates (30s long-poll) ──
-                data = _tg_get_updates(offset=last_update_id, timeout=30)
+                # ── LOCAL BOT: poll getUpdates (30s long-poll). With a cloud bot this PC does NOT read Telegram:
+                # the cloud bot is the one reader and hands commands over with the heartbeat below. ──
+                data = {} if relay else _tg_get_updates(offset=last_update_id, timeout=30)
                 for update in data.get("result", []):
                     last_update_id = update["update_id"] + 1
                     cbq = update.get("callback_query")
@@ -617,7 +681,9 @@ class TelegramAuth:
 
                 # ── CLOUD BOT: heartbeat every 30s ──
                 now = time.time()
-                if now - last_heartbeat_time >= 30:
+                if relay:
+                    time.sleep(1)
+                if now - last_heartbeat_time >= (3 if relay else 30):
                     last_heartbeat_time = now
                     try:
                         cloud_commands = _cloud_heartbeat_post(APP_VERSION)

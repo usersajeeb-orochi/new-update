@@ -23,15 +23,15 @@ BASE = os.environ.get("NAB_AI_BASE") or "https://api.groq.com/openai/v1"
 FILE = os.path.join(nab_engine.DOC_DIR, "nab_ai.json")
 BRAIN = os.path.join(nab_engine.DOC_DIR, "nab_riko_brain.json")
 
-# built-in free keys (can be replaced / extended in Settings > AI without an update)
-DEFAULT_KEYS = [
-    "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",
-    "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",
-    "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",
-    "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",
-]
+# Built-in keys are NOT in the source any more (a key in a public repo is found and revoked by the provider within hours).
+# They come from the build secret NAB_SECRETS_JSON ("groq_keys": "gsk_..., gsk_...") and/or Settings > AI on each PC.
+import nab_secrets
+DEFAULT_KEYS = [k for k in re.split(r"[\s,]+", nab_secrets.get("groq_keys")) if k]
+GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai"
+POLLI_BASE = "https://text.pollinations.ai/openai"
 DEFAULTS = {"enabled": True, "keys": [], "use_builtin": True, "text_model": "llama-3.3-70b-versatile",
-            "fast_model": "llama-3.1-8b-instant", "vision_model": "", "whisper_model": "whisper-large-v3-turbo"}
+            "fast_model": "llama-3.1-8b-instant", "vision_model": "", "whisper_model": "whisper-large-v3-turbo",
+            "alt_key": "", "alt_model": "gemini-flash-latest", "alt_free": False}
 VISION_HINTS = ("llama-4-scout", "llama-4-maverick", "vision", "-vl", "pixtral")
 
 
@@ -60,7 +60,7 @@ class AI:
                 if k in DEFAULTS:
                     if k == "keys":
                         v = [x.strip() for x in (v if isinstance(v, list) else re.split(r"[\s,]+", str(v))) if x.strip()]
-                    elif k in ("enabled", "use_builtin"):
+                    elif k in ("enabled", "use_builtin", "alt_free"):
                         v = bool(v)
                     self.cfg[k] = v
             try:
@@ -80,7 +80,34 @@ class AI:
         return ks
 
     def ready(self):
-        return bool(self.cfg.get("enabled", True) and self.keys())
+        return bool(self.cfg.get("enabled", True) and (self.keys() or self.cfg.get("alt_key") or self.cfg.get("alt_free")))
+
+    # ------------------------------------------------------------ backup providers (free)
+    def _alt_chat(self, messages, max_tokens, temperature, json_mode):
+        """Second chance when Groq has no key or fails: a free Gemini key of your own, then (only if you allowed it) the anonymous Pollinations service.
+        -> (text, "") or (None, reason)"""
+        tries = []
+        if self.cfg.get("alt_key"):
+            tries.append((GEMINI_BASE, self.cfg["alt_key"], self.cfg.get("alt_model") or "gemini-flash-latest"))
+        if self.cfg.get("alt_free"):
+            tries.append((POLLI_BASE, "", "openai"))
+        why = "no backup provider set"
+        for base, key, model in tries:
+            body = {"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": temperature}
+            if json_mode and key:
+                body["response_format"] = {"type": "json_object"}
+            hdr = {"Content-Type": "application/json", "User-Agent": "NAB/3"}
+            if key:
+                hdr["Authorization"] = "Bearer " + key
+            try:
+                req = urllib.request.Request(base + "/chat/completions", data=json.dumps(body).encode(), headers=hdr)
+                with urllib.request.urlopen(req, timeout=40) as r:
+                    return json.loads(r.read().decode())["choices"][0]["message"]["content"].strip(), ""
+            except urllib.error.HTTPError as e:
+                why = f"backup provider refused ({e.code})"
+            except Exception as e:
+                why = "backup provider: " + str(e)[:60]
+        return None, why
 
     # ------------------------------------------------------------ http
     def _request(self, path, body=None, raw=None, ctype="application/json", method=None, timeout=45):
@@ -172,7 +199,8 @@ class AI:
                 body["model"] = ids[0]
                 j, why = self._request("/chat/completions", body)
         if j is None:
-            return None, why
+            alt, why2 = self._alt_chat(messages, max_tokens, temperature, json_mode)
+            return (alt, "") if alt is not None else (None, why)
         try:
             return j["choices"][0]["message"]["content"].strip(), ""
         except Exception:
@@ -221,7 +249,7 @@ class AI:
         return {"enabled": self.cfg.get("enabled", True), "keys": len(self.keys()), "use_builtin": self.cfg.get("use_builtin", True),
                 "own_keys": len(self.cfg.get("keys") or []), "text_model": self.cfg["text_model"], "fast_model": self.cfg["fast_model"],
                 "vision_model": self.cfg.get("vision_model") or "", "resting": sum(1 for k, t in self.cool.items() if t > time.time()),
-                "last_error": self.last_error}
+                "last_error": self.last_error, "alt_key": bool(self.cfg.get("alt_key")), "alt_model": self.cfg.get("alt_model", ""), "alt_free": bool(self.cfg.get("alt_free"))}
 
 
 _ai = None

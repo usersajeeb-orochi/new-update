@@ -186,6 +186,7 @@ pyinstaller --onedir --noconfirm --windowed --name NAB ^
     --hidden-import nab_agent ^
     --hidden-import nab_text ^
     --hidden-import nab_daily_report ^
+    --hidden-import nab_remote ^
     --hidden-import nab_secrets ^
     --hidden-import nab_google ^
     --hidden-import openpyxl ^

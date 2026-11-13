@@ -18,6 +18,7 @@ READ_TOOLS = {
     "list_filters": "List the papers and categories that exist in the archive. No args.",
     "self_check": "Run the health check (internet, Drive, Telegram, disk, backups...). No args.",
     "phone_queue": "List entries the colleague sent from the phone that are not yet taken. No args.",
+    "daily_summary": "Today's numbers and written findings: clips, papers, top category, busiest hour, papers missing. args: day (YYYY-MM-DD, optional).",
     "scheduled_jobs": "List scheduled reports and their last result. No args.",
 }
 WRITE_TOOLS = {
@@ -62,6 +63,16 @@ class Agent:
             if not r.get("ok"):
                 return {"error": r.get("error", "unavailable")}
             return {"waiting": len(r["items"]), "items": [{k: i.get(k, "") for k in ("paper", "page", "position", "size", "cats", "user")} for i in r["items"][:8]]}
+        if name == "daily_summary":
+            import datetime
+            import nab_daily_report as D
+            day = str(args.get("day") or datetime.date.today().isoformat())[:10]
+            d0 = D._day(day)
+            rows = self._arch().search("", False, 50000, date_from=(d0 - datetime.timedelta(days=30)).isoformat(), date_to=day)["rows"]
+            A = D.analyse(rows, day)
+            return {"day": day, "clips": A["n"], "yesterday": A["n_prev"], "papers": len(A["by_paper"]),
+                    "top_papers": sorted(A["by_paper"].items(), key=lambda x: -x[1])[:5], "top_categories": sorted(A["by_cat"].items(), key=lambda x: -x[1])[:5],
+                    "findings": A["insights"][:6], "missing_papers": [m[0] for m in A["missing"]][:8]}
         if name == "scheduled_jobs":
             import nab_schedule
             return {"jobs": [{"name": j.get("name"), "time": j.get("time"), "on": j.get("on", True)} for j in nab_schedule.jobs()][:12]}

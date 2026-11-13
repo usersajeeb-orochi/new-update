@@ -158,7 +158,12 @@ def _cloud_heartbeat_post(app_version):
         return []
     try:
         data = _urllib_parse.urlencode({"pc": PC_NAME, "version": app_version}).encode()
-        req  = _urllib_req.Request(f"{cloud_url}/heartbeat", data=data, method="POST")
+        try:
+            import nab_remote
+            hdr = nab_remote.sign_headers(PC_NAME)
+        except Exception:
+            hdr = {}
+        req  = _urllib_req.Request(f"{cloud_url}/heartbeat", data=data, method="POST", headers=hdr)
         resp = _urllib_req.urlopen(req, context=_SSL_CTX, timeout=10)
         return json.loads(resp.read().decode()).get("commands", [])
     except Exception as e:
