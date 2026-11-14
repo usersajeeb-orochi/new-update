@@ -40,6 +40,14 @@ from nab_extras import ExtrasMixin
 from nab_mail_host import MailMixin
 
 
+# Telegram login at start-up. False = NAB opens without asking (temporary, until approval is fixed).
+LOGIN_REQUIRED = False
+
+
+class _LoginSkipped(Exception):
+    pass
+
+
 class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
     """Everything NAB does, window-less. One instance per process."""
 
@@ -1152,6 +1160,9 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
             granted = False
             note = ""
             try:
+                if not LOGIN_REQUIRED:                 # switched off for now: open straight away
+                    granted, note = True, "login off"
+                    raise _LoginSkipped()
                 import nab_auth
                 import nab_telegram
                 sess = self._session_init()
@@ -1174,6 +1185,8 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
                     granted = nab_auth.TelegramAuth.request_access(mode=md, reason=reason, remember_until=self._remember_ts(), remember_long=self._remember_long_ts())
                     if granted and getattr(nab_auth.TelegramAuth, "_remember_until", None):
                         sess.remember(nab_auth.TelegramAuth._remember_until)
+            except _LoginSkipped:
+                pass
             except Exception as e:
                 logging.error(f"login: {e}")
                 granted = False
