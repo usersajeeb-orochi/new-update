@@ -132,6 +132,14 @@ class Api:
     # ---- state / preview ----------------------------------------------------
     def state_min(self, a):
         e = self.e
+        try:
+            import nab_engine_host
+            if not nab_engine_host.LOGIN_REQUIRED and not e.authorized:     # login switched off: open at once, no gate screen
+                e.authorized = True
+                e._start_session_touch()
+                e.after_login()
+        except Exception as ex:
+            logging.error(f"open without login: {ex}")
         return {"authorized": e.authorized, "ui": e.ui_state, "version": _ver(),
                 "login": e.hub._last.get("login")}
 

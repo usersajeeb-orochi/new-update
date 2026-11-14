@@ -334,3 +334,4 @@ v3.0.48 - Phone queue: clips typed on the phone app (NAB Metadata) wait in a new
 3.0.60: WhatsApp 'send as document' now uses WhatsApp's Document entry, so clips arrive as full-quality files. If that entry cannot be found NAB reports an error instead of falling back to the compressed photo path.
 
 3.0.61 - Telegram login at start-up switched off for now (NAB opens straight away); to be re-enabled after approval is fixed.
+3.0.62 - With login off NAB now opens at once, without showing the login screen.
