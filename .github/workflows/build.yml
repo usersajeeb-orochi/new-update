@@ -55,9 +55,19 @@ jobs:
         run: |
           if (!(Test-Path build_output/NAB_win.zip)) { throw "NAB_win.zip was not produced" }
           Get-Item build_output/NAB_win.zip | Select-Object Name, Length
+      - name: Make the installer (NAB_Setup.exe)
+        shell: pwsh
+        run: |
+          Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile build_output/MicrosoftEdgeWebview2Setup.exe
+          choco install innosetup -y --no-progress
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DAppVer=${{ steps.v.outputs.ver }}" NAB_Setup.iss
+          if (!(Test-Path build_output/NAB_Setup.exe)) { throw "NAB_Setup.exe was not produced" }
+          Get-Item build_output/NAB_Setup.exe | Select-Object Name, Length
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.v.outputs.ver }}
           name: NAB v${{ steps.v.outputs.ver }}
-          files: build_output/NAB_win.zip
+          files: |
+            build_output/NAB_win.zip
+            build_output/NAB_Setup.exe
