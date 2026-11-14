@@ -310,6 +310,7 @@
   $$("#rail .rb[data-tool]").forEach(b => b.onclick = async () => { const r = await api("launch_tool", { name: b.dataset.tool }); if (!r.ok) toast(r.error || "Could not open", "error", 3000); else toast("Opening " + b.title + "…", "", 1500); });
 
   // ───────────────────────── closing ─────────────────────────
+  on("lock", () => { location.reload(); });            // session ended from Telegram: back to the lock screen, a new approval is needed
   on("close_request", async () => {
     try { if (window.TOOLS && TOOLS.tracker && (await TOOLS.tracker.endPrompt()) === "cancel") return; } catch (e) {}
     const sm = await api("close_summary");

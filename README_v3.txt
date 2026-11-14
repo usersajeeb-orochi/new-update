@@ -338,3 +338,4 @@ v3.0.48 - Phone queue: clips typed on the phone app (NAB Metadata) wait in a new
 3.0.63 - NAB_Setup.exe installer is now built with every release (installs the WebView2 runtime if missing, so NAB opens in its own window with the overlay).
 3.0.64 - Launcher black cover can no longer stay: ends after 20 s, Esc or a click closes it, and Edge mode signals it. Start-up errors now keep their full traceback in the log.
 3.0.65 - Telegram login back on (approval goes through the cloud bot, so several PCs can log in at once).
+3.0.66 - Update check no longer uses the rate-limited GitHub API; restored acct_is_owner_pc (login/account screen error); Telegram /sessionend locks NAB and asks approval again; block/unblock/log/broadcast commands from the cloud bot now work on the PC; quieter start-up log.

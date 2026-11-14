@@ -586,7 +586,8 @@ def run_webview():
 
     def boot():
         try:
-            import pyi_splash; pyi_splash.close()
+            if os.environ.get("_PYI_SPLASH_IPC"):
+                import pyi_splash; pyi_splash.close()
         except Exception:
             pass
         _signal_launcher()

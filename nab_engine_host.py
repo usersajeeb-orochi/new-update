@@ -1107,6 +1107,39 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         t = (_dt.datetime.now() + _dt.timedelta(days=days - 1)).replace(hour=23, minute=59, second=0, microsecond=0)
         return t.timestamp()
 
+    def acct_is_owner_pc(self):
+        try:
+            import nab_settings_sync as S
+            return S.get_role()["role"] == "owner"
+        except Exception:
+            return False
+
+    def lock_session(self, reason="session ended"):
+        """Session end from Telegram (or block): forget every remembered login, sign the account out and show the lock
+        screen again, so the next start needs a new approval. Work already saved stays saved."""
+        try:
+            self._session_init().clear()
+        except Exception as e:
+            logging.error(f"lock: clear session: {e}")
+        try:
+            import nab_accounts
+            nab_accounts.logout()
+        except Exception:
+            pass
+        try:
+            import nab_auth
+            nab_auth.TelegramAuth._access_deadline = None
+            nab_auth.TelegramAuth._remember_until = None
+        except Exception:
+            pass
+        self.authorized = False
+        try:
+            self.hub._last.pop("login", None)
+        except Exception:
+            pass
+        self.hub.emit("lock", sticky=False, reason=reason)
+        self.hub.emit("state_changed")
+
     def acct_can_manage(self):
         """Only the owner PC creates or changes accounts (other PCs download them). On that PC: an owner account,
         or nobody signed in with an account (the Telegram-approved owner PC), or no accounts yet."""

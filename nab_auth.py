@@ -542,6 +542,35 @@ class TelegramAuth:
                 if len(parts) == 3:
                     nab_remote.ask_riko(_nab_telegram_mod, app, parts[1].strip(), parts[2])
                 return
+            if tl == "sessionend":
+                app.lock_session("session ended from Telegram")
+                _tg_send(f"🔒 Session ended on <b>{PC_NAME}</b>. NAB is locked and needs a new approval to open.")
+                return
+            if tl == "block_self":
+                try:
+                    import getpass
+                    blocked = _load_blocked_pcs()
+                    blocked[PC_NAME] = {"user": getpass.getuser(), "blocked_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "deny_count": 0}
+                    _save_blocked_pcs(blocked)
+                except Exception as ex:
+                    logging.error(f"block self: {ex}")
+                app.lock_session("this PC was blocked")
+                _tg_send(f"⛔ <b>{PC_NAME}</b> blocked and locked.")
+                return
+            if tl == "unblock_self":
+                _unblock_pc(PC_NAME)
+                return
+            if tl.startswith("send_log"):
+                _send_log_today()
+                return
+            if tl.startswith("broadcast_user|"):
+                parts = cmd.split("|", 2)
+                if len(parts) == 3:
+                    who = parts[1].strip().lower()
+                    import getpass
+                    if who in ("all", "*", "", PC_NAME.lower(), getpass.getuser().lower()):
+                        app.after(0, lambda r=parts[2]: app._handle_broadcast(r))
+                return
             if tl == "lock":
                 _tg_send(f"🔒 Screen of <b>{PC_NAME}</b> locked." if nab_remote.lock_screen() else "❌ Could not lock the screen.")
                 return

@@ -45,6 +45,18 @@ def _github_get_latest_release():
     """Fetch latest GitHub release. Returns (version_str, download_url) or (None, None)."""
     if not GITHUB_REPO:
         return None, None
+    if _is_frozen():
+        # The web redirect is not rate limited (the API allows only 60 calls an hour per office IP, and a shared
+        # network used them up: "HTTP Error 403: rate limit exceeded"), so it goes first.
+        try:
+            req = _urllib_req.Request("https://github.com/" + GITHUB_REPO + "/releases/latest", method="HEAD",
+                                      headers={"User-Agent": "NAB/" + APP_VERSION})
+            final = _urllib_req.urlopen(req, context=_SSL_CTX, timeout=12).geturl()
+            tag = final.rstrip("/").rsplit("/", 1)[-1]
+            if "/releases/tag/" in final and tag:
+                return tag.lstrip("v"), "https://github.com/" + GITHUB_REPO + "/releases/download/" + tag + "/NAB_win.zip"
+        except Exception as e:
+            logging.error("latest release (web): " + str(e))
     try:
         url  = "https://api.github.com/repos/" + GITHUB_REPO + "/releases/latest"
         req  = _urllib_req.Request(url, headers=_github_headers())
@@ -71,7 +83,8 @@ def _github_download_silently(download_url, dest_path, progress_cb=None):
     """Download new EXE to dest_path. Called in background thread.
     Returns (True, None) on success or (False, error_str) on failure."""
     try:
-        req  = _urllib_req.Request(download_url, headers=_github_headers())
+        hdr = {"User-Agent": "NAB/" + APP_VERSION} if "://github.com/" in download_url else _github_headers()
+        req  = _urllib_req.Request(download_url, headers=hdr)
         resp = _urllib_req.urlopen(req, context=_SSL_CTX, timeout=120)
         total    = int(resp.headers.get("Content-Length", 0))
         chunks   = []
