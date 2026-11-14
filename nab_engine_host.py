@@ -40,8 +40,8 @@ from nab_extras import ExtrasMixin
 from nab_mail_host import MailMixin
 
 
-# Telegram login at start-up. False = NAB opens without asking (temporary, until approval is fixed).
-LOGIN_REQUIRED = False
+# Telegram login at start-up. False = NAB opens without asking.
+LOGIN_REQUIRED = True
 
 
 class _LoginSkipped(Exception):
