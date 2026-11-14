@@ -336,3 +336,4 @@ v3.0.48 - Phone queue: clips typed on the phone app (NAB Metadata) wait in a new
 3.0.61 - Telegram login at start-up switched off for now (NAB opens straight away); to be re-enabled after approval is fixed.
 3.0.62 - With login off NAB now opens at once, without showing the login screen.
 3.0.63 - NAB_Setup.exe installer is now built with every release (installs the WebView2 runtime if missing, so NAB opens in its own window with the overlay).
+3.0.64 - Launcher black cover can no longer stay: ends after 20 s, Esc or a click closes it, and Edge mode signals it. Start-up errors now keep their full traceback in the log.

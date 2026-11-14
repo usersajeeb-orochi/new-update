@@ -649,6 +649,15 @@ def run_edge(engine, srv):
         raise RuntimeError("no Edge")
     sh = Shell(engine, srv)
     prof = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "NAB", "edge")
+    try:                                              # the launcher's cover waits for this signal; Edge mode never sent it
+        import ctypes
+        k = ctypes.windll.kernel32
+        k.OpenEventW.restype = ctypes.c_void_p
+        h = k.OpenEventW(0x0002, False, "Local\\NAB_Splash_Ready")
+        if h:
+            k.SetEvent(ctypes.c_void_p(h)); k.CloseHandle(ctypes.c_void_p(h))
+    except Exception:
+        pass
     subprocess.Popen([edge, f"--app={srv.url('')}", f"--user-data-dir={prof}", "--window-size=1366,820",
                       "--no-first-run", "--disable-features=Translate"])
     sh.start_background()
@@ -745,7 +754,7 @@ def main():
             import webview  # noqa: F401
             return run_webview()
         except Exception as e:
-            logging.error(f"pywebview failed: {e}")
+            logging.error(f"pywebview failed: {e}", exc_info=True)
             errs.append(e)
     try:
         engine, srv = build()

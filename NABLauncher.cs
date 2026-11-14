@@ -26,6 +26,7 @@ namespace NabLauncher
         [StructLayout(LayoutKind.Sequential)] struct SZ { public int cx, cy; }
         [StructLayout(LayoutKind.Sequential, Pack = 1)] struct BLEND { public byte Op, Flags, Alpha, Format; }
         [DllImport("user32.dll", SetLastError = true)] static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref PT pptDst, ref SZ psize, IntPtr hdcSrc, ref PT pprSrc, int crKey, ref BLEND pblend, int dwFlags);
+        [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vKey);
         [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr hWnd);
         [DllImport("user32.dll")] static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
         [DllImport("gdi32.dll")] static extern IntPtr CreateCompatibleDC(IntPtr hDC);
@@ -48,6 +49,7 @@ namespace NabLauncher
             tick.Tick += delegate
             {
                 angle = (angle + 8f) % 360f;
+                if (!closing && (GetAsyncKeyState(0x1B) & 0x8000) != 0) FadeAndClose();     // Esc always dismisses the cover
                 fade = closing ? fade : 1;
                 Present();
             };
@@ -57,6 +59,7 @@ namespace NabLauncher
         {
             get { CreateParams cp = base.CreateParams; cp.ExStyle |= 0x80000 | 0x80; return cp; }   // WS_EX_LAYERED | WS_EX_TOOLWINDOW
         }
+        protected override void OnMouseDown(MouseEventArgs e) { base.OnMouseDown(e); FadeAndClose(); }   // a click dismisses it too
         protected override bool ShowWithoutActivation { get { return true; } }
 
         protected override void OnShown(EventArgs e) { base.OnShown(e); fade = 1; Present(); }
@@ -151,8 +154,8 @@ namespace NabLauncher
             {
                 try
                 {
-                    // wait until NAB says its window is up, or the process ends, or 2 minutes pass
-                    DateTime end = DateTime.UtcNow.AddSeconds(120);
+                    // wait until NAB says its window is up, or the process ends, or 20 seconds pass (never a long blackout)
+                    DateTime end = DateTime.UtcNow.AddSeconds(20);
                     while (DateTime.UtcNow < end)
                     {
                         if (ready.WaitOne(150)) { Thread.Sleep(700); break; }   // short pause so the window is really on screen
