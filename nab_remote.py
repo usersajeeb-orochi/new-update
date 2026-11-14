@@ -30,6 +30,20 @@ def sign_headers(pc):
     return {"X-NAB-Ts": ts, "X-NAB-Sig": hmac.new(key, f"{pc}|{ts}".encode(), hashlib.sha256).hexdigest()} if key else {}
 
 
+def is_blocked(pc):
+    """Ask the cloud bot whether this PC is on its block list. True / False, or None when the cloud cannot be reached."""
+    base = cloud_url()
+    if not base:
+        return None
+    try:
+        import urllib.request, urllib.parse, json as _json
+        req = urllib.request.Request(base + "/pc/check?pc=" + urllib.parse.quote(pc), headers=dict(sign_headers(pc), **{"User-Agent": "NAB/3"}))
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return bool(_json.loads(r.read().decode()).get("blocked"))
+    except Exception:
+        return None
+
+
 def available():
     return bool(cloud_url())
 

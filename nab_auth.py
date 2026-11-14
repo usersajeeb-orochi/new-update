@@ -159,6 +159,14 @@ class TelegramAuth:
             )
             if mid:
                 sent_msgs[cid] = mid
+        if not sent_msgs and TG_CHAT_ID not in targets:          # the group could not be reached (bot not in it / wrong id): do not leave the request unseen
+            logging.error(f"login request: group {targets} unreachable, sending to the owner chat instead")
+            mid = _tg_send_callback_buttons(request_text + "\n\n⚠️ <i>The approval group could not be reached.</i>",
+                                            buttons=[("Allow", _cb("allow")), ("2 Hours", _cb("allow2")), ("Remember today", _cb("today")), ("Deny", _cb("deny"))],
+                                            chat_id=TG_CHAT_ID)
+            if mid:
+                sent_msgs[TG_CHAT_ID] = mid
+                targets = targets + [TG_CHAT_ID]
 
         def _clear_request_buttons(outcome_line):
             for cid, mid in sent_msgs.items():
@@ -542,6 +550,13 @@ class TelegramAuth:
                 if len(parts) == 3:
                     nab_remote.ask_riko(_nab_telegram_mod, app, parts[1].strip(), parts[2])
                 return
+            if tl.startswith("acct|"):                       # an account change made on the web dashboard; only the owner PC acts on it
+                try:
+                    r = app.acct_remote(json.loads(cmd.split("|", 1)[1]))
+                    _tg_send(("✅ " if r.get("ok") else "⚠️ ") + f"Web dashboard account change on <b>{PC_NAME}</b>: " + (r.get("msg") or r.get("error") or "done"))
+                except Exception as ex:
+                    logging.error(f"acct remote: {ex}")
+                return
             if tl == "sessionend":
                 app.lock_session("session ended from Telegram")
                 _tg_send(f"🔒 Session ended on <b>{PC_NAME}</b>. NAB is locked and needs a new approval to open.")
@@ -715,6 +730,11 @@ class TelegramAuth:
                 if now - last_heartbeat_time >= (3 if relay else 30):
                     last_heartbeat_time = now
                     try:
+                        try:
+                            _nab_update_mod._hb_extra.update({"owner": "1" if app.acct_is_owner_pc() else "0",
+                                                              "authorized": "1" if app.authorized else "0"})
+                        except Exception:
+                            pass
                         cloud_commands = _cloud_heartbeat_post(APP_VERSION)
                         for cmd in cloud_commands:
                             _handle_cloud_command(cmd)

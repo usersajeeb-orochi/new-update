@@ -162,7 +162,16 @@ class Api:
         import nab_accounts
         r = nab_accounts.status()
         r["owner_pc"] = self.e.acct_is_owner_pc()
+        r["tampered"] = nab_accounts.tampered()
+        try:
+            import nab_remote
+            r["dashboard"] = (nab_remote.cloud_url() or "").rstrip("/") + "/admin" if nab_remote.cloud_url() else ""
+        except Exception:
+            r["dashboard"] = ""
         return r
+
+    def acct_repair(self, a):
+        return self.e.acct_repair()
 
     def acct_login(self, a):
         return self.e.acct_login(a.get("name", ""), a.get("password", ""))

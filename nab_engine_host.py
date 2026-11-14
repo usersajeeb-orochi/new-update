@@ -1107,12 +1107,76 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         t = (_dt.datetime.now() + _dt.timedelta(days=days - 1)).replace(hour=23, minute=59, second=0, microsecond=0)
         return t.timestamp()
 
+    def _blocked_now(self):
+        """Is this PC blocked? The cloud bot's list is the master when it can be reached; the signed local copy is the fallback."""
+        try:
+            import nab_access, nab_remote
+            from nab_telegram import PC_NAME
+            local = PC_NAME in (nab_access._load_blocked_pcs() or {})
+            cloud = nab_remote.is_blocked(PC_NAME)                      # True / False / None (unreachable)
+            if cloud is True and not local:
+                b = nab_access._load_blocked_pcs() or {}
+                b[PC_NAME] = {"user": "?", "blocked_at": time.strftime("%Y-%m-%d %H:%M:%S"), "deny_count": 0}
+                nab_access._save_blocked_pcs(b)
+                return True
+            if cloud is False and local:
+                b = nab_access._load_blocked_pcs() or {}
+                b.pop(PC_NAME, None)
+                nab_access._save_blocked_pcs(b)
+                return False
+            return local if cloud is None else bool(cloud)
+        except Exception as e:
+            logging.error(f"blocked check: {e}")
+            return False
+
     def acct_is_owner_pc(self):
         try:
             import nab_settings_sync as S
             return S.get_role()["role"] == "owner"
         except Exception:
             return False
+
+    def acct_remote(self, p):
+        """An account change sent from the web dashboard (admin sign-in there). Only the owner PC carries it out; accounts then sync to the others."""
+        import nab_accounts
+        if not self.acct_is_owner_pc():
+            return {"ok": False, "error": "not the owner PC"}
+        act, n = str(p.get("act", "")), p.get("name", "")
+        f = {"add": lambda: nab_accounts.add_user(n, p.get("password", ""), p.get("role", "staff"), p.get("display", ""), actor_ok=True),
+             "role": lambda: nab_accounts.set_role(n, p.get("role", ""), actor_ok=True),
+             "disable": lambda: nab_accounts.set_disabled(n, bool(p.get("disabled", True)), actor_ok=True),
+             "delete": lambda: nab_accounts.delete_user(n, actor_ok=True),
+             "reset": lambda: nab_accounts.reset_password(n, p.get("password", ""), actor_ok=True),
+             "email": lambda: nab_accounts.set_email(n, p.get("email", ""), actor_ok=True),
+             "block_email": lambda: nab_accounts.block_email(p.get("email", ""), bool(p.get("blocked", True)), actor_ok=True),
+             "google_cfg": lambda: (__import__("nab_google").save_config(p.get("client_id", ""), p.get("client_secret") or None), {"ok": True})[1]}.get(act)
+        if not f:
+            return {"ok": False, "error": "unknown action"}
+        r = f()
+        if r.get("ok"):
+            self.sync_now()
+            r["msg"] = f"{act} {n or p.get('email', '')}"
+        return r
+
+    def acct_repair(self):
+        """The accounts file fails its signature (typically the build's signing key changed): after the admin approves on
+        Telegram the old file is kept as a backup and a clean one is started, so accounts can be added again."""
+        import shutil, nab_accounts, nab_auth
+        if not nab_accounts.tampered():
+            return {"ok": True, "msg": "Nothing to repair."}
+        ok = nab_auth.TelegramAuth.request_sync_approval("Repair the accounts file on this PC (it fails its signature; the old file is kept as a backup and accounts start empty)")
+        if not ok:
+            return {"ok": False, "error": "Not approved on Telegram." if ok is False else "Could not reach Telegram."}
+        try:
+            src = nab_accounts.USERS_FILE
+            if os.path.exists(src):
+                shutil.move(src, src + ".untrusted-" + time.strftime("%Y%m%d-%H%M%S"))
+            import nab_secrets
+            nab_secrets.reg_set("AccountsSigned", "")
+            nab_accounts.audit("repair accounts file (approved on Telegram)")
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+        return {"ok": True, "msg": "Repaired. Add the owner account again."}
 
     def lock_session(self, reason="session ended"):
         """Session end from Telegram (or block): forget every remembered login, sign the account out and show the lock
@@ -1133,6 +1197,11 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         except Exception:
             pass
         self.authorized = False
+        self._touch_gen = getattr(self, "_touch_gen", 0) + 1
+        try:
+            self._session_init().clear()                              # again, after the touch loop has stopped
+        except Exception:
+            pass
         try:
             self.hub._last.pop("login", None)
         except Exception:
@@ -1198,6 +1267,10 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
                     raise _LoginSkipped()
                 import nab_auth
                 import nab_telegram
+                if self._blocked_now():
+                    self.hub.emit("login", sticky=True, stage="denied", reason="blocked")
+                    self.after(2200, self.destroy)
+                    return
                 sess = self._session_init()
                 kind = None
                 if auto:
@@ -1234,11 +1307,14 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         threading.Thread(target=run, daemon=True, name="NAB-Login").start()
 
     def _start_session_touch(self):
+        self._touch_gen = getattr(self, "_touch_gen", 0) + 1
+        gen = self._touch_gen
+
         def loop():
             try:
                 import nab_auth
                 sess = self._session_init()
-                while True:
+                while self.authorized and gen == self._touch_gen:        # stops at lock/end: a locked PC must not keep its grace window alive
                     sess.touch(getattr(nab_auth.TelegramAuth, "_access_deadline", None))
                     time.sleep(30)
             except Exception as e:

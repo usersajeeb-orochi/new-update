@@ -233,12 +233,15 @@
   S.r_accounts = async function (b) {
     hd(b, "Accounts", "Named logins with roles. Owner: everything. Staff: clip, save and send. Viewer: look only. Accounts are made on the owner PC and every other PC downloads them. Telegram approval still works as a way in.");
     const stt = await api("acct_status"), r = await api("acct_list"), cur = stt.current || {};
+    const mgmt = false;                      // account management moved to the web dashboard; this screen is read-only
     const info = card(b, "", `<div class="row"><span class="tag">${cur.name ? "Signed in as " + esc(cur.display || cur.name) + " (" + esc(cur.role) + ")" : "Not signed in with an account"}</span>${cur.name ? '<button class="btn" id="acOut">Sign out</button>' : ""}</div>
-      ${stt.owner_pc ? "" : '<p class="sub">This PC only downloads accounts. To add or change accounts, use the owner PC (Settings, Sync).</p>'}`);
+      <p class="sub">Accounts are managed on the web dashboard: <b>${esc(stt.dashboard || "the cloud bot address + /admin")}</b>. Add people, change roles, reset passwords and block Google emails there.</p>`);
+    if (stt.tampered) { const rp = card(b, "Accounts file needs repair", `<p class="sub">The accounts file fails its signature check (this happens when the build's signing key changed), so accounts are locked. Repair keeps the old file as a backup and starts a clean one. You approve it on Telegram.</p><div class="row"><button class="btn pri" id="acFix">Repair accounts file</button></div>`);
+      $("#acFix", rp).onclick = async () => { toast("Approve the repair on Telegram…", "", 4000); const x = await api("acct_repair"); toast(x.ok ? (x.msg || "Repaired") : x.error, x.ok ? "ok" : "bad", 5000); if (x.ok) setTimeout(render, 600); }; }
     if ($("#acOut", info)) $("#acOut", info).onclick = async () => { await api("acct_logout"); toast("Signed out. Restart NAB to sign in as someone else."); setTimeout(render, 500); };
     const lst = card(b, "People", `<table class="t"><thead><tr><td>Name</td><td>Role</td><td>Google email</td><td>Last sign-in</td><td></td></tr></thead><tbody>${(r.users || []).map(u => `<tr data-n="${esc(u.name)}"><td><b>${esc(u.display)}</b>${u.disabled ? " (off)" : ""}${u.must_change ? " (must change password)" : ""}</td>
-      <td><select data-a="role" ${stt.owner_pc ? "" : "disabled"}>${["owner", "staff", "viewer"].map(x => `<option ${u.role === x ? "selected" : ""}>${x}</option>`).join("")}</select></td><td><input data-a="email" type="email" maxlength="80" value="${esc(u.email || "")}" placeholder="name@gmail.com" ${stt.owner_pc ? "" : "disabled"} aria-label="Google email for ${esc(u.display)}"></td><td>${esc(u.last_login || "never")}</td>
-      <td>${stt.owner_pc ? `<button class="btn mini" data-a="reset">Reset password</button> <button class="btn mini" data-a="off">${u.disabled ? "Turn on" : "Turn off"}</button> <button class="btn mini" data-a="del">Delete</button>` : ""}</td></tr>`).join("") || '<tr><td colspan="5">No accounts yet. The first one you add becomes the owner.</td></tr>'}</tbody></table>`);
+      <td><select data-a="role" ${mgmt ? "" : "disabled"}>${["owner", "staff", "viewer"].map(x => `<option ${u.role === x ? "selected" : ""}>${x}</option>`).join("")}</select></td><td><input data-a="email" type="email" maxlength="80" value="${esc(u.email || "")}" placeholder="name@gmail.com" ${mgmt ? "" : "disabled"} aria-label="Google email for ${esc(u.display)}"></td><td>${esc(u.last_login || "never")}</td>
+      <td>${mgmt ? `<button class="btn mini" data-a="reset">Reset password</button> <button class="btn mini" data-a="off">${u.disabled ? "Turn on" : "Turn off"}</button> <button class="btn mini" data-a="del">Delete</button>` : ""}</td></tr>`).join("") || '<tr><td colspan="5">No accounts yet. The first one you add becomes the owner.</td></tr>'}</tbody></table>`);
     const msg = (x, ok) => { toast(x.ok ? (ok || "Done") : x.error, x.ok ? "ok" : "bad", x.ok ? 2500 : 6000); if (x.ok) setTimeout(render, 600); };
     lst.querySelectorAll("tr[data-n]").forEach(tr => { const n = tr.dataset.n;
       const em = tr.querySelector("input[data-a=email]"); if (em) em.onchange = async () => msg(await api("acct_email", { name: n, email: em.value }), "Email saved");
@@ -248,7 +251,7 @@
         else if (bt.dataset.a === "off") { const u = (r.users || []).find(x => x.name === n); msg(await api("acct_disable", { name: n, disabled: !(u && u.disabled) })); }
         else if (bt.dataset.a === "del") { C.modal(`<h3>Delete the account ${esc(n)}?</h3><p class="sub">They will no longer be able to sign in.</p><div class="modal-actions"><button class="btn" id="dlNo">Cancel</button><button class="btn pri" id="dlYes">Delete</button></div>`, (cd, close) => { $("#dlNo").onclick = close; $("#dlYes").onclick = async () => { close(); msg(await api("acct_delete", { name: n }), "Deleted"); }; }); }
       }); });
-    if (stt.owner_pc) {
+    if (mgmt) {
       const gc = await api("acct_google_cfg");
       const g = card(b, "Google sign-in", `<p class="sub">Anyone with a Gmail can sign in with Google. A first sign-in makes a viewer account (look only); change its role above. Turn a person off in the table, or block an email below. Needs a free Google Cloud Desktop-app client ID (see GOOGLE_SIGNIN_SETUP.md).</p>
         <div class="kv"><span>Client ID</span><input id="gcI" value="${esc(gc.client_id || "")}" placeholder="123456-abc.apps.googleusercontent.com"></div><div class="kv"><span>Client secret</span><input id="gcS" type="password" placeholder="${gc.has_secret ? "saved (type to replace)" : "paste it here"}"></div>
@@ -257,7 +260,7 @@
       $("#gcBb", g).onclick = async () => msg(await api("acct_block", { email: $("#gcB", g).value, blocked: true }), "Blocked");
       $("#gcGo", g).onclick = async () => { const x = await api("acct_google_cfg", { client_id: $("#gcI", g).value, client_secret: $("#gcS", g).value || undefined }); msg({ ok: x.ok, error: x.error }, "Saved"); };
     }
-    if (stt.owner_pc) {
+    if (mgmt) {
       const add = card(b, "Add a person", `<div class="kv"><span>Name</span><input id="anN" maxlength="32" placeholder="for example sajeeb"></div><div class="kv"><span>Password</span><input id="anP" type="password" maxlength="80" placeholder="at least 6 characters"></div>
         <div class="kv"><span>Role</span><select id="anR"><option>staff</option><option>viewer</option><option>owner</option></select></div><div class="row"><button class="btn pri" id="anGo">Add account</button></div>`);
       $("#anGo", add).onclick = async () => { const x = await api("acct_add", { name: $("#anN", add).value, password: $("#anP", add).value, role: $("#anR", add).value }); msg(x, "Account added"); };

@@ -164,13 +164,16 @@ def _apply_update_and_restart(current_exe, new_path):
         return False
 
 
+_hb_extra = {}      # filled by the running app: {"owner": "1", "user": "...", "authorized": "1"}
+
+
 def _cloud_heartbeat_post(app_version):
     """POST heartbeat to cloud bot (kept for Telegram bot commands)."""
     cloud_url = _get_cloud_url()
     if not cloud_url:
         return []
     try:
-        data = _urllib_parse.urlencode({"pc": PC_NAME, "version": app_version}).encode()
+        data = _urllib_parse.urlencode(dict({"pc": PC_NAME, "version": app_version}, **_hb_extra)).encode()
         try:
             import nab_remote
             hdr = nab_remote.sign_headers(PC_NAME)
