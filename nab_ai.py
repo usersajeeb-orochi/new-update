@@ -180,7 +180,7 @@ class AI:
                 usable = [k for k in order if self.cool.get(k, 0) <= time.time()]
             for k in usable:
                 req = urllib.request.Request(BASE + path, data=data, method=method or ("POST" if data is not None else "GET"),
-                                             headers={"Authorization": "Bearer " + k, "Content-Type": ctype, "User-Agent": "NAB/3"})
+                                             headers={"Authorization": "Bearer " + k, "Content-Type": "application/json", "User-Agent": "NAB/3"})
                 try:
                     with urllib.request.urlopen(req, timeout=timeout) as r:
                         return json.loads(r.read().decode("utf-8")), ""
