@@ -1,3 +1,6 @@
+v3.0.69
+  * "Sign in with Google" now has its Google client built in: NAB fetches it from the NAB cloud by itself, so nothing has to be entered on each PC.
+
 v3.0.68
   * Google sign-in: anyone with a Google account may try. A new Google account gets 24 hours of access and the admin gets a Telegram message with Whitelist (staff), Viewer only, +24 hours and Block buttons. When the 24 hours end, NAB locks and the account is refused unless it was whitelisted. The same list is on the web dashboard.
 

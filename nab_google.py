@@ -28,6 +28,33 @@ _state = {"s": "idle", "email": "", "name": "", "error": "", "ts": 0}
 _lock = threading.Lock()
 
 
+_cloud = {"t": 0, "d": None}
+
+
+def _from_cloud():
+    """The Desktop client ID/secret live on the NAB cloud server (not in the public repository). Cached; retried every 5 minutes."""
+    now = time.time()
+    if _cloud["d"] is not None or now - _cloud["t"] < 300:
+        return _cloud["d"] or {}
+    _cloud["t"] = now
+    try:
+        import nab_remote
+        import urllib.request
+        from nab_telegram import PC_NAME
+        base = nab_remote.cloud_url()
+        if not base:
+            return {}
+        req = urllib.request.Request(base + "/pc/googlecfg?pc=" + PC_NAME, headers=dict(nab_remote.sign_headers(PC_NAME), **{"User-Agent": "NAB/3"}))
+        with urllib.request.urlopen(req, timeout=6) as r:
+            j = json.loads(r.read().decode())
+        if j.get("client_id"):
+            _cloud["d"] = {"client_id": str(j["client_id"]).strip(), "client_secret": str(j.get("client_secret") or "").strip()}
+            return _cloud["d"]
+    except Exception:
+        pass
+    return {}
+
+
 def config():
     d = dict(BUILTIN)
     try:
@@ -38,6 +65,9 @@ def config():
                 d[k] = str(j[k]).strip()
     except Exception:
         pass
+    if not d["client_id"]:
+        for k, v in _from_cloud().items():
+            d[k] = v
     return d
 
 
