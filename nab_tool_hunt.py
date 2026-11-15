@@ -1,5 +1,5 @@
 # nab_tool_hunt.py — News Hunter inside NAB: per-client keyword sets, Bangladesh-only filtering (from NewsBot),
-# Groq checks, scheduler with Telegram / txt digests, and hand-off of found links to the Screenshot Bot.
+# AI checks, scheduler with Telegram / txt digests, and hand-off of found links to the Screenshot Bot.
 import os
 import re
 import json

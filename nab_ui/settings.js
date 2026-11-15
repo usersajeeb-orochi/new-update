@@ -370,23 +370,24 @@
 
   // ───── About ─────
   S.r_ai = async function (b) {
-    hd(b, "AI", "Groq (with a free Gemini or anonymous backup) powers Riko's chat, the PR calculator's media detection and the research helpers. Every feature still works without it.");
+    hd(b, "AI", "The NAB cloud (Google Gemini, then OpenRouter) powers Riko's chat, the PR calculator's media detection and the research helpers. Your own Groq or Gemini key is the backup. Every feature still works without AI.");
     const st = await api("ai_status");
-    const d = card(b, "Connection", `${chk("ai_on", "Use AI features", st.enabled)}${chk("ai_bi", "Also use the built-in keys", st.use_builtin)}
-      <div class="field"><label>Your own Groq keys (one per line; the next one is used when one hits its limit)</label><textarea id="ai_keys" rows="4" style="width:100%" placeholder="gsk_..."></textarea></div>
+    const d = card(b, "Connection", `${chk("ai_on", "Use AI features", st.enabled)}${chk("ai_cl", "Use the NAB cloud AI first (no key needed on this PC)", st.use_cloud)}${chk("ai_bi", "Also use the built-in Groq keys", st.use_builtin)}
+      <div class="kv"><span>NAB cloud AI</span><b>${st.cloud ? "available" : (st.use_cloud ? "not reachable right now" : "off")}</b><span></span></div>
+      <div class="kv"><span>Last answer from</span><b id="ai_lu">${esc(st.last_used || "-")}</b><span></span></div>
+      <div class="field"><label>Your own Groq keys (backup; one per line, the next one is used when one hits its limit)</label><textarea id="ai_keys" rows="4" style="width:100%" placeholder="gsk_..."></textarea></div>
       <div class="kv"><span>Keys available</span><b id="ai_n">${st.keys}</b><span></span></div>
       <div class="kv"><span>Resting (rate-limited)</span><b>${st.resting}</b><span></span></div>
       <div class="row" style="gap:8px"><button class="btn" id="ai_test">Test connection</button><button class="btn pri" id="ai_save">Save</button><span id="ai_msg" class="sub"></span></div>`);
-    const cfg = await api("ai_settings", {}); // no change, just echoes status
-    d.querySelector("#ai_save").onclick = async () => { const r = await api("ai_settings", { enabled: $("#ai_on").checked, use_builtin: $("#ai_bi").checked, keys: $("#ai_keys").value }); $("#ai_n").textContent = r.keys; toast("Saved", "ok", 1500); };
-    d.querySelector("#ai_test").onclick = async () => { $("#ai_msg").textContent = "Testing..."; const r = await api("ai_test"); $("#ai_msg").textContent = r.ok ? "Connected" : (r.error || "Failed"); };
-    const bk = card(b, "Free backup", `<p class="sub">Used when Groq has no key or is down. Get a free Gemini key at aistudio.google.com/apikey and paste it here. It stays on this PC.</p>
+    d.querySelector("#ai_save").onclick = async () => { const r = await api("ai_settings", { enabled: $("#ai_on").checked, use_cloud: $("#ai_cl").checked, use_builtin: $("#ai_bi").checked, keys: $("#ai_keys").value }); $("#ai_n").textContent = r.keys; toast("Saved", "ok", 1500); };
+    d.querySelector("#ai_test").onclick = async () => { $("#ai_msg").textContent = "Testing..."; const r = await api("ai_test"); $("#ai_msg").textContent = r.ok ? "Connected (" + (r.used || "ok") + ")" : (r.error || "Failed"); if (r.used) $("#ai_lu").textContent = r.used; };
+    const bk = card(b, "Free backup", `<p class="sub">Used when the NAB cloud and Groq are both unavailable. Get a free Gemini key at aistudio.google.com/apikey and paste it here. It stays on this PC.</p>
       <div class="field"><label>Gemini key${st.alt_key ? " (saved; paste a new one to replace)" : ""}</label><input id="ai_ak" type="password" style="width:100%" placeholder="AIza..."></div>
       ${chk("ai_af", "If nothing else works, use the anonymous free service (Pollinations). Your question and any clip details in it leave this PC to an unknown third party.", st.alt_free)}
       <div class="row" style="gap:8px"><button class="btn pri" id="ai_asave">Save backup</button><span id="ai_amsg" class="sub"></span></div>`);
     bk.querySelector("#ai_asave").onclick = async () => { const o = { alt_free: $("#ai_af").checked }; if ($("#ai_ak").value.trim()) o.alt_key = $("#ai_ak").value.trim(); await api("ai_settings", o); $("#ai_ak").value = ""; $("#ai_amsg").textContent = "Saved"; };
     card(b, "Models", `<div class="kv"><span>Chat model</span><input id="ai_tm" value="${esc(st.text_model)}"><span></span></div><div class="kv"><span>Fast model</span><input id="ai_fm" value="${esc(st.fast_model)}"><span></span></div>
-      <div class="kv"><span>Vision model (empty = auto)</span><input id="ai_vm" value="${esc(st.vision_model)}"><span></span></div><p class="sub">Change only if Groq retires a model. Riko remembers what you tell her; see her right-click menu > What have you learned.</p>`)
+      <div class="kv"><span>Vision model (empty = auto)</span><input id="ai_vm" value="${esc(st.vision_model)}"><span></span></div><p class="sub">These are the Groq (backup) models. Change only if Groq retires one; NAB already replaces retired names by itself. Riko remembers what you tell her; see her right-click menu > What have you learned.</p>`)
       .querySelectorAll("input").forEach(i => i.onchange = () => api("ai_settings", { text_model: $("#ai_tm").value, fast_model: $("#ai_fm").value, vision_model: $("#ai_vm").value }));
   };
   S.r_about = async function (b) {

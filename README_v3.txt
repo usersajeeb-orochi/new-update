@@ -1,3 +1,9 @@
+v3.0.70
+  * AI fixed. Groq switched off llama-3.3-70b, llama-3.1-8b and Llama 4 Scout in 2026, so Riko, the PR calculator's media detection and the headline checks had stopped answering. NAB now asks the NAB cloud first: Google Gemini, then OpenRouter free models. The API keys live only on the server (not in the app, not on any PC), and the server finds the current model names by itself.
+  * Groq is now the backup (your own keys in Settings > AI) with the new models (gpt-oss); an old saved model name is replaced automatically.
+  * Big screenshots are shrunk before the AI reads them (faster). The unused speech-to-text code was removed.
+  * Web dashboard: an AI card with a "Test now" button shows which provider answers.
+
 v3.0.69
   * "Sign in with Google" now has its Google client built in: NAB fetches it from the NAB cloud by itself, so nothing has to be entered on each PC.
 

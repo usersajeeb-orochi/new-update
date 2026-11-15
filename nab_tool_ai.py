@@ -15,12 +15,13 @@ class Tool:
         return s
 
     def api_settings(self, a):
-        nab_ai.get().save(**{k: a[k] for k in ("enabled", "keys", "use_builtin", "text_model", "fast_model", "vision_model", "whisper_model", "alt_key", "alt_model", "alt_free") if k in a})
+        nab_ai.get().save(**{k: a[k] for k in ("enabled", "use_cloud", "keys", "use_builtin", "text_model", "fast_model", "vision_model", "alt_key", "alt_model", "alt_free") if k in a})
         return self.api_status({})
 
     def api_test(self, a):
-        out, why = nab_ai.get().chat([{"role": "user", "content": "Reply with the single word: ready"}], model=nab_ai.get().cfg["fast_model"], max_tokens=8)
-        return {"ok": out is not None, "reply": out, "error": why}
+        ai = nab_ai.get()
+        out, why = ai.chat([{"role": "user", "content": "Reply with the single word: ready"}], model=ai.cfg["fast_model"], max_tokens=20)
+        return {"ok": out is not None, "reply": out, "error": why, "used": ai.last_used}
 
     def api_chat(self, a):
         return self.brain.chat(a.get("history"), a.get("text"))

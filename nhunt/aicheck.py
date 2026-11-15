@@ -1,4 +1,4 @@
-"""Optional AI helpers (Groq through NAB): drop borderline off-topic headlines, merge the same story told in Bangla and English.
+"""Optional AI helpers (through NAB AI): drop borderline off-topic headlines, merge the same story told in Bangla and English.
 `ai` is an object with ask_json(system, user, fast=True, max_tokens=..) -> (dict|None, reason). Everything fails soft."""
 import json
 
