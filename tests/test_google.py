@@ -8,6 +8,7 @@ import nab_google as G
 @pytest.fixture(autouse=True)
 def tmp(tmp_path, monkeypatch):
     monkeypatch.setattr(A, "USERS_FILE", str(tmp_path / "u.json")); monkeypatch.setattr(A, "AUDIT_FILE", str(tmp_path / "a.jsonl"))
+    monkeypatch.setattr(G, "_from_cloud", lambda: {})      # the real cloud now serves a client id; tests must not depend on the network
     monkeypatch.setattr(G, "CFG", str(tmp_path / "g.json")); monkeypatch.setattr(G, "DOC", str(tmp_path))
     A._fails.clear()
 
