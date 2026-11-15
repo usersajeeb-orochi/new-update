@@ -44,6 +44,25 @@ def is_blocked(pc):
         return None
 
 
+def google_gate(email, name=""):
+    """May this Google email in? The cloud decides: a new email gets 24 hours and the admin is told on Telegram.
+    -> {"ok", "role", "until", "status", "error"} or None when the cloud cannot be reached."""
+    base = cloud_url()
+    if not base:
+        return None
+    try:
+        from nab_telegram import PC_NAME
+        import urllib.request, urllib.parse, json as _json
+        q = urllib.parse.urlencode({"pc": PC_NAME, "email": email, "name": name})
+        req = urllib.request.Request(base + "/pc/google?" + q, headers=dict(sign_headers(PC_NAME), **{"User-Agent": "NAB/3"}))
+        with urllib.request.urlopen(req, timeout=15) as r:
+            j = _json.loads(r.read().decode())
+        return j if "ok" in j else None
+    except Exception as e:
+        logging.error(f"google_gate: {e}")
+        return None
+
+
 def available():
     return bool(cloud_url())
 

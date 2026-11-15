@@ -12,7 +12,19 @@ def tmp(tmp_path, monkeypatch):
     A._fails.clear()
 
 
+OPEN = lambda e, n="": {"ok": True, "role": "viewer", "until": None, "status": "approved", "error": ""}
+
+
 def test_anyone_joins_then_block():
+    _real = A.login_google
+    A.login_google = lambda email, name="", gate=None: _real(email, name, gate=OPEN)
+    try:
+        _anyone_joins_then_block()
+    finally:
+        A.login_google = _real
+
+
+def _anyone_joins_then_block():
     assert A.add_user("sajeeb", "secret1", actor_ok=True)["ok"]
     r = A.login_google("New.Person@Gmail.com", "New Person")
     assert r["ok"] and r["user"]["role"] == "viewer"                       # first sign-in creates a viewer
@@ -53,3 +65,21 @@ def test_config_keeps_secret_and_begin_needs_client_id():
 def test_poll_consumes_result():
     G._state.update(s="ok", email="x@y.com", error="")
     assert G.poll()["email"] == "x@y.com" and G.poll()["state"] == "idle"
+
+
+def test_google_gate_trial_refusal_and_roles():
+    A.add_user("sajeeb", "secret1", actor_ok=True)
+    assert not A.login_google("a@gmail.com", "A")["ok"]                                   # cloud unreachable: new emails are refused, not let in
+    trial = lambda e, n="": {"ok": True, "role": "viewer", "until": 9999999999, "status": "trial", "error": ""}
+    r = A.login_google("a@gmail.com", "A", gate=trial)
+    assert r["ok"] and r["until"] == 9999999999 and r["user"]["role"] == "viewer"
+    staff = lambda e, n="": {"ok": True, "role": "staff", "until": None, "status": "approved", "error": ""}
+    r = A.login_google("a@gmail.com", "A", gate=staff)
+    assert r["ok"] and r["user"]["role"] == "staff" and r["until"] is None            # the admin's Telegram choice sets the role
+    own = lambda e, n="": {"ok": True, "role": "owner", "until": None, "status": "approved", "error": ""}
+    assert A.login_google("a@gmail.com", "A", gate=own)["user"]["role"] == "staff"     # never owner
+    no = lambda e, n="": {"ok": False, "role": "viewer", "until": 1, "status": "expired", "error": "Your 24-hour trial has ended."}
+    r = A.login_google("a@gmail.com", "A", gate=no)
+    assert not r["ok"] and "24-hour" in r["error"]
+    A.set_email("sajeeb", "sajeeb@gmail.com", actor_ok=True)
+    assert A.login_google("sajeeb@gmail.com", gate=no)["ok"]                           # an admin-linked account skips the gate

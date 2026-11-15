@@ -1,3 +1,6 @@
+v3.0.68
+  * Google sign-in: anyone with a Google account may try. A new Google account gets 24 hours of access and the admin gets a Telegram message with Whitelist (staff), Viewer only, +24 hours and Block buttons. When the 24 hours end, NAB locks and the account is refused unless it was whitelisted. The same list is on the web dashboard.
+
 v3.0.54
   * Phone clips know which day's paper they are for. When you press Use on a clip from another day, NAB switches its date to that day and tells you. Older-day clips are listed first and tagged "Paper of <date>".
   * A paper or category typed on the phone that NAB does not have yet is tagged "New paper" / "New category". Pressing Use asks to add it to NAB first.

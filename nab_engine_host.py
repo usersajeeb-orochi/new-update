@@ -1230,7 +1230,22 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
             pass
         return None
 
+    def _trial_watch(self, until):
+        """A 24-hour Google trial: lock NAB when it ends (the cloud refuses the next sign-in unless the admin whitelisted it)."""
+        gen = self._trial_gen = getattr(self, "_trial_gen", 0) + 1
+
+        def end():
+            if self.authorized and gen == self._trial_gen:
+                self.lock_session("Your 24-hour trial ended. Ask the admin to whitelist your Google account.")
+        t = threading.Timer(max(1.0, float(until) - time.time()), end)
+        t.daemon = True
+        t.start()
+
     def _acct_granted(self, r):
+        if r.get("ok") and r.get("until"):
+            self._trial_watch(r["until"])
+        elif r.get("ok"):
+            self._trial_gen = getattr(self, "_trial_gen", 0) + 1       # a whitelisted or password sign-in cancels any trial timer
         if r.get("ok") and not self.authorized:
             self.authorized = True
             self._login_started = True
@@ -1254,7 +1269,8 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         p = nab_google.poll()
         if p["state"] == "ok":
             bad = self._acct_precheck()
-            return bad or dict(self._acct_granted(nab_accounts.login_google(p["email"], p.get("name", ""))), state="done")
+            import nab_remote
+            return bad or dict(self._acct_granted(nab_accounts.login_google(p["email"], p.get("name", ""), gate=nab_remote.google_gate)), state="done")
         return {"ok": p["state"] != "error", "state": p["state"], "error": p["error"]}
 
     def begin_login(self, mode="group", reason="", auto=False):

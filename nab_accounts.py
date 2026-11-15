@@ -193,24 +193,39 @@ def login(name, password):
     return {"ok": True, "user": current(), "must_change": bool(u.get("must_change"))}
 
 
-def login_google(email, name=""):
-    """Any Google email may join. A first sign-in creates a viewer account (promote it in Settings); a switched-off or blocked email is refused."""
+def login_google(email, name="", gate=None):
+    """Anyone with a Google account may try. An account an admin linked to a person (Google email on their row) just signs in.
+    Any other email goes through the cloud gate: a new one gets 24 hours and the admin is told on Telegram to whitelist or block it;
+    when the 24 hours end it is refused unless whitelisted. `gate(email, name)` -> {"ok","role","until","error"} or None (cloud unreachable)."""
     email = str(email or "").strip().lower()
     if not email:
         return {"ok": False, "error": "Google did not give an email."}
     with _lock:
+        hit = [(k, u) for k, u in _load()["users"].items() if str(u.get("email", "")).strip().lower() == email]
+    if hit and hit[0][1].get("disabled"):
+        audit("login_failed", "google blocked " + email, user=email)
+        return {"ok": False, "error": "This Google account is blocked in NAB."}
+    linked = bool(hit) and not hit[0][1].get("google")
+    g = None
+    if not linked:
+        g = gate(email, name) if gate else None
+        if g is None:
+            return {"ok": False, "error": "NAB could not reach the cloud to check this Google account. Try again in a minute."}
+        if not g.get("ok"):
+            audit("login_failed", "google refused " + email + ": " + str(g.get("status")), user=email)
+            return {"ok": False, "error": g.get("error") or "This Google account is not allowed."}
+    with _lock:
         d = _load()
         hit = [(k, u) for k, u in d["users"].items() if str(u.get("email", "")).strip().lower() == email]
-        if hit and hit[0][1].get("disabled"):
-            audit("login_failed", "google blocked " + email, user=email)
-            return {"ok": False, "error": "This Google account is blocked in NAB."}
         if hit:
             k, u = hit[0]
         else:
             k = _key(email)
             u = d["users"][k] = {"role": "viewer", "display": (name or email.split("@")[0])[:40], "email": email, "google": True,
                                  "created": time.strftime("%Y-%m-%d %H:%M:%S"), "disabled": False, "must_change": False}
-            audit("account_add", f"{k} (viewer, joined with Google)", user=k)
+            audit("account_add", f"{k} (joined with Google)", user=k)
+        if g and g.get("role") in ("staff", "viewer"):      # the admin's choice in Telegram decides the role; never owner
+            u["role"] = g["role"]
         u["last_login"] = time.strftime("%Y-%m-%d %H:%M:%S")
         try:
             _save(d)
@@ -218,7 +233,7 @@ def login_google(email, name=""):
             pass
         _current.update({"name": k, "role": u.get("role", "staff"), "display": u.get("display") or k})
     audit("login", "google")
-    return {"ok": True, "user": current(), "must_change": False}
+    return {"ok": True, "user": current(), "must_change": False, "until": (g or {}).get("until")}
 
 
 def block_email(email, blocked=True, actor_ok=False):
