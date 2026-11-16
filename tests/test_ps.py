@@ -84,3 +84,14 @@ def test_scan_flow(tmp_path, monkeypatch):
     assert e.ps_scan().get("cancel")
     monkeypatch.setattr(nab_ps.nab_winutil, "scan_image", lambda base, **k: ("", "No scanner found."))
     assert "scanner" in e.ps_scan()["error"]
+
+
+def test_brand_toggle_default_per_mode(tmp_path):
+    e = Eng()
+    assert e.ps_state()["brand"] is True
+    e.ps_open([img(tmp_path / "a.png", "red")])
+    assert e.ps_state()["brand"] is False
+    assert e.brand_set(True)["brand"] is True
+    e.ps_set(False)
+    assert e.ps_state()["brand"] is True
+    assert e.brand_set(False)["brand"] is False

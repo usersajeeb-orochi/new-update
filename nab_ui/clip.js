@@ -579,7 +579,8 @@
   S.ps = { on: false, cur: 0, docs: [] };
   function psApply(r) {
     if (!r || r.on === undefined) return;
-    S.ps = { on: !!r.on, cur: r.cur, docs: r.docs || [] };
+    S.ps = { on: !!r.on, cur: r.cur, docs: r.docs || [], brand: r.brand !== false };
+    $("#brandBtn").classList.toggle("active", S.ps.brand); $("#brandBtn").textContent = S.ps.brand ? "Logo ✓" : "Logo ✗";
     document.body.classList.toggle("ps", S.ps.on); $("#psBtn").classList.toggle("active", S.ps.on);
     const bar = $("#psTabs"); bar.classList.toggle("hidden", !S.ps.on);
     if (!S.ps.on) { bar.innerHTML = ""; return; }
@@ -605,6 +606,8 @@
     psApply(await api("ps_close", { i })); S.V = { z: 1, cx: .5, cy: .5 }; onClips();
   }
   $("#psBtn").onclick = () => psToggle();
+  $("#brandBtn").onclick = async () => { psApply(await api("brand_set", { on: !S.ps.brand })); await onClips(); toast(S.ps.brand ? "Logo + header ON" : "Logo + header OFF", "ok", 1400); };
+  psSync();
   let scanning = false;
   async function scanPaper() {
     if (scanning) return; scanning = true; $("#scanBtn").disabled = true; toast("Opening the scanner… (use the Windows scan window)", "", 2500);
@@ -639,6 +642,7 @@
     if (ctrl && !e.shiftKey && k === "Enter") { e.preventDefault(); repeatLast(true); return; }
     if (ctrl && !e.altKey && k.toLowerCase() === "s" && S.ps.on) { e.preventDefault(); psSave(e.shiftKey); return; }
     if (ctrl && e.shiftKey && !e.altKey && k.toLowerCase() === "a") { e.preventDefault(); scanPaper(); return; }
+    if (ctrl && e.shiftKey && !e.altKey && k.toLowerCase() === "l") { e.preventDefault(); $("#brandBtn").click(); return; }
     if (ctrl && e.altKey && k.toLowerCase() === "p") { e.preventDefault(); psToggle(); return; }
     if (ctrl && !e.shiftKey && !e.altKey && k.toLowerCase() === "e") { e.preventDefault(); layerCmd("merge_down"); return; }
     if (S.ps.on && ctrl && !e.shiftKey && !e.altKey && k.toLowerCase() === "w" && !tp) { e.preventDefault(); psClose(S.ps.cur); return; }

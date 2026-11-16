@@ -770,7 +770,7 @@ class EngineBase:
             htxt = self.header_text(page or self.last_page, cols or self.last_pos)
             # page height at k=1 (approx) to choose a scale
             logo_small = self.get_logo(paper, small=True)
-            ps = bool(getattr(self, "ps_on", False))
+            ps = not getattr(self, "brand", True)            # logo + header switched off (Photoshop mode starts that way)
             est_full_h = full_h + (0 if ps else 160)
             target_h = max(200, min(int(target_h or 1000), 4200))
             k = min(1.0, target_h / float(max(est_full_h, 1)))
@@ -785,7 +785,7 @@ class EngineBase:
                 frozen = doc.frozen_copy()       # the heavy resize/paste work then runs without blocking other calls
                 for fl, l in zip(frozen.layers, [x for x in doc.layers if x.visible]):
                     fl.id = l.id
-            if ps:                                    # Photoshop mode: only the layers, no logo and no header line
+            if ps:                                    # brand off: only the layers, no logo and no header line
                 canvas = frozen.stitched(k)
                 hh, pw = 0, canvas.width
             else:
@@ -879,8 +879,12 @@ class EngineBase:
         def canvas_for(sh):
             if sh not in pages:
                 htxt = f"Page-{ctx['page']}, Pos-{ctx['cols']}, Date-{date_s}"
-                cv, hh_, _pw = frozen.compose(1.0, logo_full, ctx["logo_scale"], ctx["text_scale"], sh, htxt)
-                hh_of[sh] = (hh_, 10)
+                if getattr(self, "brand", True):
+                    cv, hh_, _pw = frozen.compose(1.0, logo_full, ctx["logo_scale"], ctx["text_scale"], sh, htxt)
+                    hh_of[sh] = (hh_, 10)
+                else:
+                    cv = frozen.stitched(1.0)
+                    hh_of[sh] = (0, 0)
                 ow = ctx.get("out_w") or 0
                 if ow and 200 <= ow != cv.width:
                     cv = cv.resize((ow, max(1, int(round(cv.height * ow / float(cv.width))))), Image.Resampling.LANCZOS)

@@ -65,6 +65,7 @@ class PSMixin:
         P = self._psd()
         if P["docs"]:
             return
+        self.brand = False                                    # Photoshop mode starts clean; the Logo toggle brings logo + header back
         self.doc.freeze()
         P["n"] += 1
         e = self._ps_entry(self.doc, "Untitled-%d" % P["n"])
@@ -91,7 +92,13 @@ class PSMixin:
                 w = h = 0
             docs.append({"i": i, "id": e["id"], "name": e["name"], "path": e["path"], "dirty": d.rev != e["saved_rev"] and bool(d.layers),
                          "layers": len(d.layers), "w": w, "h": h})
-        return {"ok": True, "on": self.ps_on, "cur": P["cur"], "docs": docs, "dir": P["dir"]}
+        return {"ok": True, "on": self.ps_on, "brand": getattr(self, "brand", True), "cur": P["cur"], "docs": docs, "dir": P["dir"]}
+
+    def brand_set(self, on):
+        """The logo + header toggle: works the same in newspaper mode and in Photoshop mode."""
+        self.brand = bool(on)
+        self._ps_refresh()
+        return self.ps_state()
 
     def ps_set(self, on):
         P = self._psd()
@@ -101,9 +108,11 @@ class PSMixin:
                 return self.ps_state()
             if on:
                 self.ps_on = True
+                self.brand = False                            # Photoshop mode starts clean; the toggle brings logo + header back
                 self._ps_register_current()
             else:                                             # back to the normal newspaper flow with the document you are looking at
                 self.ps_on = False
+                self.brand = True
                 keep = self.doc
                 P["docs"], P["cur"] = [], -1
                 keep.restack() if keep.free else None
@@ -259,6 +268,10 @@ class PSMixin:
             if not self.doc.visible_layers():
                 return None
             fr = self.doc.frozen_copy()
+        if getattr(self, "brand", True):
+            htxt = self.header_text(self.last_page, self.last_pos)
+            return fr.compose(1.0, self.get_logo(self.paper_clean, small=False), self.logo_scale, self.text_scale,
+                              self.show_header, htxt)[0]
         return fr.stitched(1.0)
 
     def ps_save(self, save_as=False, path=None):

@@ -402,6 +402,9 @@ class Api:
     def ps_open_data(self, a):
         return self.e.ps_open_data(a.get("images", []), a.get("names", []))
 
+    def brand_set(self, a):
+        return self.e.brand_set(a.get("on", True))
+
     def ps_scan(self, a):
         return self.e.ps_scan()
 

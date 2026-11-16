@@ -408,4 +408,4 @@ body.ps #view-clip.clip{grid-template-columns:1fr 276px}
 .ps-tab .x{border:0;background:transparent;color:inherit;font-size:13px;line-height:1;padding:1px 4px;border-radius:4px;cursor:pointer;opacity:.6}
 .ps-tab .x:hover{opacity:1;background:#ffffff18}
 .ps-tab.add{padding:5px 10px;font-weight:700}
-#psBtn.active{background:var(--acc,#3b82f6);color:#fff}
+#psBtn.active,#brandBtn.active{background:var(--acc,#3b82f6);color:#fff}

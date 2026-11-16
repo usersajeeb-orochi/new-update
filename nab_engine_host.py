@@ -281,8 +281,11 @@ class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
                 return {"ok": False, "error": "Nothing to measure."}
             d = self.doc.frozen_copy()
         htxt = self.header_text(page or self.last_page or "·", cols or "·")
-        cv = d.compose(1.0, self.get_logo(self.paper_clean, small=False), self.logo_scale, self.text_scale,
-                       self.show_header, htxt)[0]
+        if getattr(self, "brand", True):
+            cv = d.compose(1.0, self.get_logo(self.paper_clean, small=False), self.logo_scale, self.text_scale,
+                           self.show_header, htxt)[0]
+        else:
+            cv = d.stitched(1.0)
         ow = int(self.extra_settings.get("out_width", 0) or 0)
         if ow and 200 <= ow != cv.width:
             cv = cv.resize((ow, max(1, int(round(cv.height * ow / float(cv.width))))), Image.Resampling.LANCZOS)
@@ -313,7 +316,8 @@ class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
             "date": self.current_date.strftime("%Y-%m-%d"),
             "categories": self.categories, "quick_saves": qs,
             "layers": d.info(), "free": d.free, "canvas": list(d.canvas_size()), "rev": d.rev, "undo": d.history_depth()[0], "redo": d.history_depth()[1],
-            "ps": self.ps_state() if self.ps_on else {"on": False, "docs": [], "cur": -1},
+            "ps": self.ps_state(),
+            "brand": getattr(self, "brand", True),
             "settings": {
                 "logo_scale": self.logo_scale, "text_scale": self.text_scale, "quality": self.quality,
                 "hd_mode": self.hd_mode, "out_width": self.extra_settings.get("out_width", 0), "auto_snatch": self.auto_snatch, "auto_polish": self.auto_polish,

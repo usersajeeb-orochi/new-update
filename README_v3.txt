@@ -1,3 +1,6 @@
+v3.0.75
+  * New "Logo" toggle button on the Clip toolbar (or Ctrl+Shift+L): switches the paper logo + Page/Pos/Date header on or off, in newspaper mode AND in Photoshop mode. It controls the preview, the saved file and the size measure. Photoshop mode starts with it off; turn it on to get the logo and header on a Photoshop-mode save. The Header panel (logo size, header line, text size) stays available in both modes.
+
 v3.0.74
   * Scan from a scanner: the new printer button on the Clip toolbar (or Ctrl+Shift+A) opens Windows' own scan window (preview, colour, DPI, like Photoshop's WIA import). The scan opens on its own canvas in Photoshop mode; Ctrl+S saves it. Every scan is also kept in Documents\NAB_Scans.
 
