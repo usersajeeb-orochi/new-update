@@ -1,3 +1,6 @@
+v3.0.76
+  * Photoshop mode now keeps everything from your normal workflow: the logo, the Page/Pos/Date header (both ON by default, the Logo button can still switch them off), the category bar and the Page / Position / Size line. Enter (or Save) saves the canvas into its category exactly like newspaper mode, with logo and header, and then closes that canvas so the next screenshot is ready. Ctrl+S / Ctrl+Shift+S additionally save a free file anywhere (also with logo and header when the toggle is on).
+
 v3.0.75
   * New "Logo" toggle button on the Clip toolbar (or Ctrl+Shift+L): switches the paper logo + Page/Pos/Date header on or off, in newspaper mode AND in Photoshop mode. It controls the preview, the saved file and the size measure. Photoshop mode starts with it off; turn it on to get the logo and header on a Photoshop-mode save. The Header panel (logo size, header line, text size) stays available in both modes.
 

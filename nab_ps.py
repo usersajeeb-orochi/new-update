@@ -65,7 +65,6 @@ class PSMixin:
         P = self._psd()
         if P["docs"]:
             return
-        self.brand = False                                    # Photoshop mode starts clean; the Logo toggle brings logo + header back
         self.doc.freeze()
         P["n"] += 1
         e = self._ps_entry(self.doc, "Untitled-%d" % P["n"])
@@ -108,11 +107,9 @@ class PSMixin:
                 return self.ps_state()
             if on:
                 self.ps_on = True
-                self.brand = False                            # Photoshop mode starts clean; the toggle brings logo + header back
                 self._ps_register_current()
             else:                                             # back to the normal newspaper flow with the document you are looking at
                 self.ps_on = False
-                self.brand = True
                 keep = self.doc
                 P["docs"], P["cur"] = [], -1
                 keep.restack() if keep.free else None

@@ -557,7 +557,6 @@
   });
 
   async function doSave() {
-    if (S.ps && S.ps.on) return psSave(false);
     if (!S.layers.length) { toast(t("nothing"), "warn", 2200); return; }
     if (!S.armed.length) { toast(t("need_cat"), "warn", 2400); return; }
     for (const k of FORDER) { F[k].value = C.normField(k, F[k].value); S.touched[k] = true; }
@@ -569,6 +568,7 @@
     updateDock(); S.sel = null; renderCats(); stage.focus();
     const label = cats.map(p => p.split("/").join(" › ")).join(", ");
     toast(t("saved_to") + " " + label + " ✓", "ok", 10000, { label: t("undo") + " (Ctrl+Z)", fn: undoSave });
+    if (S.ps && S.ps.on && S.ps.docs.length > 1) { const cur = S.ps.cur; psApply(await api("ps_close", { i: cur })); S.V = { z: 1, cx: .5, cy: .5 }; onClips(); }   // this canvas is finished: next screenshot
   }
   async function undoSave() { const r = await api("undo_save"); if (r.ok) toast("Save undone", "ok", 1800); else toast(r.error || "Can't undo", "warn", 2000); }
 
@@ -591,7 +591,7 @@
     if (on === undefined) on = !S.ps.on;
     if (!on && S.ps.docs.some(d => d.dirty) && !confirm("Leave Photoshop mode? Unsaved canvases will be closed (the one you are on stays).")) return;
     psApply(await api("ps_set", { on })); S.V = { z: 1, cx: .5, cy: .5 }; await onClips();
-    toast(S.ps.on ? "Photoshop mode — Ctrl+S save · Ctrl+Shift+S save as · Ctrl+E merge down" : "Newspaper mode", "ok", 2600);
+    toast(S.ps.on ? "Photoshop mode — Enter saves to the category · Ctrl+S saves a file · Ctrl+E merges down" : "Newspaper mode", "ok", 2600);
   }
   async function psSave(saveAs) {
     if (!S.layers.length) return toast("The canvas is empty", "warn", 1600);
@@ -671,7 +671,7 @@
     if (M("paste")) { e.preventDefault(); return paste(); }
     if (M("undo")) { e.preventDefault(); if (!S.layers.length && Date.now() - (S.lastSaveAt || 0) < 10000) return undoSave(); return layerCmd("undo"); }
     if (M("redo")) { e.preventDefault(); return layerCmd("redo"); }
-    if (M("generate")) { e.preventDefault(); return S.ps.on ? psSave(false) : doSave(); }
+    if (M("generate")) { e.preventDefault(); return doSave(); }
     if (M("trim")) { e.preventDefault(); return filter("trim"); }
     if (M("clean")) { e.preventDefault(); return filter("clean"); }
     if (M("pad")) { e.preventDefault(); return filter("pad"); }

@@ -16,6 +16,16 @@ class Eng(nab_ps.PSMixin):
         self.doc = nab_core.Document()
         self.hub = Hub()
         self._preview_cache = None
+        self.last_page = self.last_pos = ""
+        self.paper_clean = ""
+        self.logo_scale = self.text_scale = 0.5
+        self.show_header = True
+
+    def header_text(self, p, c):
+        return "Page-%s, Pos-%s" % (p, c)
+
+    def get_logo(self, paper, small=False):
+        return None
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +55,7 @@ def test_save_first_asks_then_overwrites(tmp_path, monkeypatch):
     monkeypatch.setattr(nab_ps.nab_winutil, "save_dialog", lambda *a, **k: str(out))
     r = e.ps_save()
     assert r["ok"] and out.is_file()
-    assert Image.open(out).size == (80, 50)
+    assert Image.open(out).width >= 80          # logo + header are on by default (page may be padded)
     monkeypatch.setattr(nab_ps.nab_winutil, "save_dialog", lambda *a, **k: pytest.fail("must not ask again"))
     assert e.ps_save()["ok"]
     monkeypatch.setattr(nab_ps.nab_winutil, "save_dialog", lambda *a, **k: "")
@@ -86,12 +96,11 @@ def test_scan_flow(tmp_path, monkeypatch):
     assert "scanner" in e.ps_scan()["error"]
 
 
-def test_brand_toggle_default_per_mode(tmp_path):
+def test_brand_stays_on_in_ps_mode(tmp_path):
     e = Eng()
     assert e.ps_state()["brand"] is True
     e.ps_open([img(tmp_path / "a.png", "red")])
-    assert e.ps_state()["brand"] is False
-    assert e.brand_set(True)["brand"] is True
-    e.ps_set(False)
-    assert e.ps_state()["brand"] is True
+    assert e.ps_state()["brand"] is True          # logo + header stay on in Photoshop mode
     assert e.brand_set(False)["brand"] is False
+    e.ps_set(False)
+    assert e.brand_set(True)["brand"] is True
