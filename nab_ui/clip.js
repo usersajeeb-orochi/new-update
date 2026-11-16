@@ -557,6 +557,7 @@
   });
 
   async function doSave() {
+    if (S.ps && S.ps.on) return psSave(false);
     if (!S.layers.length) { toast(t("nothing"), "warn", 2200); return; }
     if (!S.armed.length) { toast(t("need_cat"), "warn", 2400); return; }
     for (const k of FORDER) { F[k].value = C.normField(k, F[k].value); S.touched[k] = true; }
@@ -573,6 +574,45 @@
 
   // ───────────────────────── keyboard ─────────────────────────
   const KEYTOOL = { m: "marquee", w: "wand", l: "lasso", v: "move", b: "brush", s: "clone", t: "text" };
+
+  // ───────── Photoshop mode: tabs (one canvas per image), Ctrl+S / Ctrl+Shift+S / Ctrl+E ─────────
+  S.ps = { on: false, cur: 0, docs: [] };
+  function psApply(r) {
+    if (!r || r.on === undefined) return;
+    S.ps = { on: !!r.on, cur: r.cur, docs: r.docs || [] };
+    document.body.classList.toggle("ps", S.ps.on); $("#psBtn").classList.toggle("active", S.ps.on);
+    const bar = $("#psTabs"); bar.classList.toggle("hidden", !S.ps.on);
+    if (!S.ps.on) { bar.innerHTML = ""; return; }
+    bar.innerHTML = S.ps.docs.map(d => `<div class="ps-tab${d.i === S.ps.cur ? " on" : ""}" data-i="${d.i}" title="${C.esc(d.path || "Not saved yet")}">${d.dirty ? '<span class="dot"></span>' : ""}<span class="nm">${C.esc(d.name)}</span><button class="x" data-x="${d.i}" title="Close (Ctrl+W)">×</button></div>`).join("") + '<div class="ps-tab add" id="psAdd" title="New blank canvas (Ctrl+N)">+</div>';
+  }
+  async function psSync() { psApply(await api("ps_state")); }
+  async function psToggle(on) {
+    if (on === undefined) on = !S.ps.on;
+    if (!on && S.ps.docs.some(d => d.dirty) && !confirm("Leave Photoshop mode? Unsaved canvases will be closed (the one you are on stays).")) return;
+    psApply(await api("ps_set", { on })); S.V = { z: 1, cx: .5, cy: .5 }; await onClips();
+    toast(S.ps.on ? "Photoshop mode — Ctrl+S save · Ctrl+Shift+S save as · Ctrl+E merge down" : "Newspaper mode", "ok", 2600);
+  }
+  async function psSave(saveAs) {
+    if (!S.layers.length) return toast("The canvas is empty", "warn", 1600);
+    const r = await api("ps_save", { save_as: !!saveAs });
+    if (r.cancel) return;
+    if (!r.ok) return toast(r.error || "Could not save", "warn", 3200);
+    toast("Saved " + r.name + " · " + r.kb + " KB ✓", "ok", 4200, { label: "Open folder", fn: () => api("reveal", { path: r.path }) });
+    psSync();
+  }
+  async function psClose(i) {
+    const d = S.ps.docs[i]; if (d && d.dirty && !confirm("“" + d.name + "” has unsaved changes. Close it anyway?")) return;
+    psApply(await api("ps_close", { i })); S.V = { z: 1, cx: .5, cy: .5 }; onClips();
+  }
+  $("#psBtn").onclick = () => psToggle();
+  $("#psTabs").addEventListener("click", async (e) => {
+    const x = e.target.closest("[data-x]"); if (x) { e.stopPropagation(); return psClose(+x.dataset.x); }
+    if (e.target.closest("#psAdd")) { psApply(await api("ps_new", { w: 1600, h: 1000 })); S.V = { z: 1, cx: .5, cy: .5 }; return onClips(); }
+    const t2 = e.target.closest("[data-i]"); if (t2 && +t2.dataset.i !== S.ps.cur) { psApply(await api("ps_switch", { i: +t2.dataset.i })); S.V = { z: 1, cx: .5, cy: .5 }; onClips(); }
+  });
+  C.on("ps", () => psSync());
+  // a document edit marks its tab "unsaved" — refresh the dots after the layer list reloads
+  const _onClips = onClips; onClips = async function () { await _onClips(); if (S.ps.on) psSync(); };
   function typing(e) { const t2 = e.target; return t2 && (t2.tagName === "INPUT" || t2.tagName === "TEXTAREA" || t2.isContentEditable); }
   document.addEventListener("keydown", async (e) => {
     if (!S.st || document.body.classList.contains("locked")) return;
@@ -585,6 +625,11 @@
     if (e.altKey && !ctrl && /^[0-9]$/.test(k) && S.st.quick_saves[k]) { e.preventDefault(); flashChip(k); armAdd(S.st.quick_saves[k]); return; }
     if (e.altKey && !ctrl && (k === "[" || k === "]")) { e.preventDefault(); switchCat(k === "]" ? 1 : -1); return; }
     if (ctrl && !e.shiftKey && k === "Enter") { e.preventDefault(); repeatLast(true); return; }
+    if (ctrl && !e.altKey && k.toLowerCase() === "s" && S.ps.on) { e.preventDefault(); psSave(e.shiftKey); return; }
+    if (ctrl && e.altKey && k.toLowerCase() === "p") { e.preventDefault(); psToggle(); return; }
+    if (ctrl && !e.shiftKey && !e.altKey && k.toLowerCase() === "e") { e.preventDefault(); layerCmd("merge_down"); return; }
+    if (S.ps.on && ctrl && !e.shiftKey && !e.altKey && k.toLowerCase() === "w" && !tp) { e.preventDefault(); psClose(S.ps.cur); return; }
+    if (S.ps.on && ctrl && !e.shiftKey && !e.altKey && k.toLowerCase() === "n" && !tp) { e.preventDefault(); $("#psAdd") && $("#psAdd").click(); return; }
     const q = C.qsKey(e);
     if (q && S.st.quick_saves[q] && (!tp || q.startsWith("Ctrl+")) && !e.shiftKey) { e.preventDefault(); flashChip(q); arm([S.st.quick_saves[q]], true); return; }
     if (tp) { if (ctrl && k.toLowerCase() === "s") { e.preventDefault(); doSave(); } return; }
@@ -609,7 +654,7 @@
     if (M("paste")) { e.preventDefault(); return paste(); }
     if (M("undo")) { e.preventDefault(); if (!S.layers.length && Date.now() - (S.lastSaveAt || 0) < 10000) return undoSave(); return layerCmd("undo"); }
     if (M("redo")) { e.preventDefault(); return layerCmd("redo"); }
-    if (M("generate")) { e.preventDefault(); return doSave(); }
+    if (M("generate")) { e.preventDefault(); return S.ps.on ? psSave(false) : doSave(); }
     if (M("trim")) { e.preventDefault(); return filter("trim"); }
     if (M("clean")) { e.preventDefault(); return filter("clean"); }
     if (M("pad")) { e.preventDefault(); return filter("pad"); }
@@ -645,6 +690,7 @@
   async function openFiles(files) {
     files = Array.from(files).filter(f => f.type.startsWith("image/")); if (!files.length) return;
     const imgs = await Promise.all(files.map(f => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); })));
+    if (S.ps.on) { const r2 = await api("ps_open_data", { images: imgs, names: files.map(f => f.name) }); psApply(r2); S.V = { z: 1, cx: .5, cy: .5 }; return onClips(); }
     const r = await api("paste_data", { images: imgs }); if (!r.ok) toast("Could not read that image", "warn", 2000);
   }
   function openDialog() { $("#fileIn").value = ""; $("#fileIn").click(); }
@@ -690,7 +736,7 @@
   window.CLIPUI = {
     init(st) { S.st = st; prefillMeta(); measure(); syncOptions(); renderCats(); onClips(); },
     setState(st) { S.st = st; syncOptions(); renderCats(); updateDock(); },
-    onClips, refresh, measure, applyView, paste, doSave, undoSave, arm, filter, layerCmd, setTool, applySuggest,
+    onClips, psSync, psToggle, psSave, refresh, measure, applyView, paste, doSave, undoSave, arm, filter, layerCmd, setTool, applySuggest,
     layerMove(id, pos) { const idx = S.layers.length - 1 - pos; return layerCmdFor(id, "reorder", { index: idx }); },
     focusMeta, renderCats, updateDock,
     onShow() { measure(); applyView(); },

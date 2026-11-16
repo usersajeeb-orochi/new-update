@@ -386,6 +386,37 @@ class Api:
         a = dict(a)
         return self.e.layer_cmd(a.pop("cmd"), a.pop("layer", None), **a)
 
+    # ---- Photoshop mode ----
+    def ps_state(self, a):
+        return self.e.ps_state()
+
+    def ps_set(self, a):
+        return self.e.ps_set(a.get("on", True))
+
+    def ps_new(self, a):
+        return self.e.ps_new(a.get("w", 1200), a.get("h", 800), a.get("name", ""))
+
+    def ps_open(self, a):
+        return self.e.ps_open(a.get("paths", []))
+
+    def ps_open_data(self, a):
+        return self.e.ps_open_data(a.get("images", []), a.get("names", []))
+
+    def ps_switch(self, a):
+        return self.e.ps_switch(a.get("i", 0))
+
+    def ps_close(self, a):
+        return self.e.ps_close(a.get("i", 0))
+
+    def ps_save(self, a):
+        import nab_accounts
+        if not nab_accounts.can("save"):
+            return {"ok": False, "error": "Your account can only view. Ask the owner for a staff account to save."}
+        r = self.e.ps_save(bool(a.get("save_as")), a.get("path"))
+        if r.get("ok"):
+            nab_accounts.audit("save", "Photoshop mode | " + r.get("path", ""))
+        return r
+
     def suggest_crop(self, a):
         return self.e.suggest_crop()
 

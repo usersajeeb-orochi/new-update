@@ -27,7 +27,7 @@ from urllib.parse import urlparse
 import nab_engine
 
 SETTINGS_FILE = os.path.join(nab_engine.DOC_DIR, "nab_shot_settings.json")
-DEFAULTS = {"out_dir": "", "live": False, "conc": 3, "crop": "auto", "quality": 70, "width": 1366, "pad": 20}
+DEFAULTS = {"out_dir": "", "live": False, "conc": 3, "crop": "auto", "quality": 70, "width": 1366, "pad": 20, "auto_canvas": False}
 AD_HOSTS = ("googleads", "doubleclick", "googlesyndication", "google-analytics", "googletagmanager", "taboola", "outbrain",
             "adsystem", "adnxs", "facebook.net/tr", "hotjar", "scorecardresearch", "quantserve")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -115,6 +115,10 @@ class Tool:
             logging.error(f"shot settings: {e}")
 
     def _emit(self, **kw):
+        if kw.get("ev") == "begin":
+            self.last_files = []
+        elif kw.get("ev") == "item" and kw.get("ok") and kw.get("file"):
+            self.last_files = getattr(self, "last_files", []) + [os.path.join(self._cur_out or self._out_dir(), kw["file"])]
         self.e.hub.emit("tool", tool="shot", **kw)
 
     def _log(self, msg, kind=""):
@@ -131,7 +135,7 @@ class Tool:
         for k in DEFAULTS:
             if k in a:
                 v = a[k]
-                if k in ("live",):
+                if k in ("live", "auto_canvas"):
                     v = bool(v)
                 elif k in ("conc", "quality", "width", "pad"):
                     try:
@@ -144,6 +148,33 @@ class Tool:
                 self.set[k] = v
         self._save()
         return {"ok": True, "settings": self.set, "out": self._out_dir()}
+
+    _cur_out = ""
+    last_files = []
+
+    def _canvas_files(self, a):
+        """Files for 'Send to canvas': the ones given, else the last run, else every image in today's folder."""
+        ps = [p for p in (a.get("paths") or []) if isinstance(p, str)]
+        if not ps:
+            ps = [p for p in self.last_files if os.path.isfile(p)]
+        if not ps:
+            d = a.get("dir") or self._out_dir()
+            try:
+                ps = sorted((os.path.join(d, f) for f in os.listdir(d) if f.lower().endswith((".jpg", ".jpeg", ".png"))), key=os.path.getmtime)
+            except OSError:
+                ps = []
+        return ps
+
+    def api_to_canvas(self, a):
+        """Every screenshot opens on its own canvas in Photoshop mode (cut ads / noise, Ctrl+S saves it on its own)."""
+        ps = self._canvas_files(a)
+        if not ps:
+            return {"ok": False, "error": "No screenshots yet. Run the bot first."}
+        r = self.e.ps_open(ps[:40])
+        r["ok"] = bool(r.get("opened"))
+        if not r["ok"]:
+            r["error"] = "Could not open the screenshots on the canvas."
+        return r
 
     def api_stop(self, a):
         self.stop = True
@@ -182,6 +213,7 @@ class Tool:
         res = {"ok": 0, "fail": 0, "out": self._out_dir()}
         try:
             os.makedirs(res["out"], exist_ok=True)
+            self._cur_out = res["out"]
             self._emit(ev="begin", total=len(urls))
             asyncio.run(self._main(urls, res))
         except Exception as e:
@@ -190,6 +222,12 @@ class Tool:
         finally:
             self.running = False
             self._emit(ev="done", ok_n=res["ok"], fail_n=res["fail"], out=res["out"], secs=round(time.time() - t0, 1), stopped=self.stop)
+            if self.set.get("auto_canvas") and res["ok"]:
+                try:
+                    r = self.api_to_canvas({"paths": list(self.last_files)})
+                    self._emit(ev="canvas", n=r.get("opened", 0), ok=bool(r.get("ok")))
+                except Exception:
+                    logging.exception("shot auto canvas")
 
     # ---- pre-flight: drop only links that are certainly dead
     @staticmethod

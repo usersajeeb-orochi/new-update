@@ -1,0 +1,71 @@
+import os
+import pytest
+from PIL import Image
+
+import nab_core
+import nab_ps
+
+
+class Hub:
+    def emit(self, *a, **k):
+        pass
+
+
+class Eng(nab_ps.PSMixin):
+    def __init__(self):
+        self.doc = nab_core.Document()
+        self.hub = Hub()
+        self._preview_cache = None
+
+
+@pytest.fixture(autouse=True)
+def home(tmp_path, monkeypatch):
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "la"))
+
+
+def img(path, color, size=(80, 50)):
+    Image.new("RGB", size, color).save(path)
+    return str(path)
+
+
+def test_open_many_each_own_canvas(tmp_path):
+    e = Eng()
+    r = e.ps_open([img(tmp_path / "a.png", "red"), img(tmp_path / "b.jpg", "blue"), str(tmp_path / "x.txt")])
+    assert r["opened"] == 2 and len(r["skipped"]) == 1
+    assert e.ps_on and [d["name"] for d in r["docs"]] == ["a", "b"]
+    assert r["cur"] == 0 and e.doc is e._psd()["docs"][0]["doc"]
+    e.ps_switch(1)
+    assert e.doc is e._psd()["docs"][1]["doc"]
+
+
+def test_save_first_asks_then_overwrites(tmp_path, monkeypatch):
+    e = Eng()
+    e.ps_open([img(tmp_path / "a.png", "red")])
+    out = tmp_path / "out" / "edited.png"
+    monkeypatch.setattr(nab_ps.nab_winutil, "save_dialog", lambda *a, **k: str(out))
+    r = e.ps_save()
+    assert r["ok"] and out.is_file()
+    assert Image.open(out).size == (80, 50)
+    monkeypatch.setattr(nab_ps.nab_winutil, "save_dialog", lambda *a, **k: pytest.fail("must not ask again"))
+    assert e.ps_save()["ok"]
+    monkeypatch.setattr(nab_ps.nab_winutil, "save_dialog", lambda *a, **k: "")
+    assert e.ps_save(save_as=True).get("cancel")
+
+
+def test_merge_down_and_dirty(tmp_path):
+    e = Eng()
+    e.ps_open([img(tmp_path / "a.png", "red")])
+    e.doc.add(Image.new("RGB", (30, 30), "green"), "L2")
+    assert len(e.doc.layers) == 2
+    e.doc.merge_down(e.doc.layers[-1].id)
+    assert len(e.doc.layers) == 1
+    assert e.ps_state()["docs"][0]["dirty"]
+
+
+def test_close_and_off(tmp_path):
+    e = Eng()
+    e.ps_open([img(tmp_path / "a.png", "red"), img(tmp_path / "b.png", "blue")])
+    r = e.ps_close(0)
+    assert len(r["docs"]) == 1
+    r = e.ps_set(False)
+    assert not r["on"] and e.doc.layers

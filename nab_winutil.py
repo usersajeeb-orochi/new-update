@@ -280,3 +280,39 @@ def theme_titlebar(hwnd, bg_hex):
     except Exception as e:
         logging.error(f"titlebar: {e}")
         return False
+
+
+def save_dialog(title="Save As", initial_dir="", initial_name="", filters=(("PNG image", "*.png"), ("JPEG image", "*.jpg;*.jpeg")), default_ext="png"):
+    """The real Windows 'Save As' box (name + location + type). -> full path, or "" when cancelled. Returns None where there is no Windows
+    (the caller then falls back to a default folder)."""
+    if not IS_WIN:
+        return None
+    try:
+        class OFN(ctypes.Structure):
+            _fields_ = [("lStructSize", wintypes.DWORD), ("hwndOwner", wintypes.HWND), ("hInstance", wintypes.HINSTANCE),
+                        ("lpstrFilter", wintypes.LPCWSTR), ("lpstrCustomFilter", wintypes.LPWSTR), ("nMaxCustFilter", wintypes.DWORD),
+                        ("nFilterIndex", wintypes.DWORD), ("lpstrFile", wintypes.LPWSTR), ("nMaxFile", wintypes.DWORD),
+                        ("lpstrFileTitle", wintypes.LPWSTR), ("nMaxFileTitle", wintypes.DWORD), ("lpstrInitialDir", wintypes.LPCWSTR),
+                        ("lpstrTitle", wintypes.LPCWSTR), ("Flags", wintypes.DWORD), ("nFileOffset", wintypes.WORD),
+                        ("nFileExtension", wintypes.WORD), ("lpstrDefExt", wintypes.LPCWSTR), ("lCustData", wintypes.LPARAM),
+                        ("lpfnHook", ctypes.c_void_p), ("lpTemplateName", wintypes.LPCWSTR), ("pvReserved", ctypes.c_void_p),
+                        ("dwReserved", wintypes.DWORD), ("FlagsEx", wintypes.DWORD)]
+        buf = ctypes.create_unicode_buffer(initial_name or "", 1024)
+        flt = "\0".join(f"{n} ({p})\0{p}" for n, p in filters) + "\0\0"
+        o = OFN()
+        o.lStructSize = ctypes.sizeof(OFN)
+        o.hwndOwner = user32.GetForegroundWindow()
+        o.lpstrFilter = flt
+        o.nFilterIndex = 1
+        o.lpstrFile = ctypes.cast(buf, wintypes.LPWSTR)
+        o.nMaxFile = 1024
+        o.lpstrInitialDir = initial_dir or None
+        o.lpstrTitle = title
+        o.lpstrDefExt = default_ext
+        o.Flags = 0x00000002 | 0x00000800 | 0x00080000 | 0x00000008        # OVERWRITEPROMPT | PATHMUSTEXIST | EXPLORER | NOCHANGEDIR
+        if ctypes.windll.comdlg32.GetSaveFileNameW(ctypes.byref(o)):
+            return buf.value
+        return ""
+    except Exception as e:
+        logging.error(f"save_dialog: {e}")
+        return None

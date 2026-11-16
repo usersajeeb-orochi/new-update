@@ -1,3 +1,9 @@
+v3.0.73
+  * Photoshop mode on the Clip canvas (the "Ps" button, or Ctrl+Alt+P). No logo, no Page/Pos/Date line, no category bar: just your layers, free to move anywhere.
+  * Every image gets its own canvas (tabs on top). Ctrl+S saves: the first time it opens the Windows "Save As" box (name, folder, PNG/JPG); after that it saves in place. Ctrl+Shift+S always asks. Ctrl+E merges the layer down, Ctrl+Shift+E merges all visible layers, Ctrl+W closes a canvas, Ctrl+N makes a blank one. A dot on a tab means unsaved changes.
+  * Screenshot Bot: "Send to canvas" opens every capture on its own canvas to cut out ads and noise. An option sends them automatically when a run ends.
+  * Layers are RGB on a white background (no transparency yet).
+
 v3.0.72
   * AI fixed. Groq switched off llama-3.3-70b, llama-3.1-8b and Llama 4 Scout in 2026, so Riko, the PR calculator's media detection and the headline checks had stopped answering. NAB now asks the NAB cloud first: Google Gemini, then OpenRouter free models. The API keys live only on the server (not in the app, not on any PC), and the server finds the current model names by itself.
   * Groq is now the backup (your own keys in Settings > AI) with the new models (gpt-oss); an old saved model name is replaced automatically.

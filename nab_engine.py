@@ -770,13 +770,14 @@ class EngineBase:
             htxt = self.header_text(page or self.last_page, cols or self.last_pos)
             # page height at k=1 (approx) to choose a scale
             logo_small = self.get_logo(paper, small=True)
-            est_full_h = full_h + 160
+            ps = bool(getattr(self, "ps_on", False))
+            est_full_h = full_h + (0 if ps else 160)
             target_h = max(200, min(int(target_h or 1000), 4200))
             k = min(1.0, target_h / float(max(est_full_h, 1)))
             k = max(k, 0.05)
             k = round(k, 3)
             key = (rev, paper, sh, htxt, k, round(self.logo_scale, 3), round(self.text_scale, 3),
-                   self.logo_path(paper))
+                   self.logo_path(paper), ps, id(doc))
             c = self._preview_cache
             if c and c["key"] == key and not force:
                 return c
@@ -784,7 +785,11 @@ class EngineBase:
                 frozen = doc.frozen_copy()       # the heavy resize/paste work then runs without blocking other calls
                 for fl, l in zip(frozen.layers, [x for x in doc.layers if x.visible]):
                     fl.id = l.id
-            canvas, hh, pw = frozen.compose(k, logo_small, self.logo_scale, self.text_scale, sh, htxt)
+            if ps:                                    # Photoshop mode: only the layers, no logo and no header line
+                canvas = frozen.stitched(k)
+                hh, pw = 0, canvas.width
+            else:
+                canvas, hh, pw = frozen.compose(k, logo_small, self.logo_scale, self.text_scale, sh, htxt)
             layout = frozen.layout(k, hh, pw)
             jpg = nab_core.jpeg_bytes(canvas, 80 if k < 0.6 else 86)
             out = {"key": key, "jpeg": jpg, "w": canvas.width, "h": canvas.height, "k": k,

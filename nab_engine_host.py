@@ -37,6 +37,7 @@ def _app_version():
 
 
 from nab_extras import ExtrasMixin
+from nab_ps import PSMixin
 from nab_mail_host import MailMixin
 
 
@@ -48,7 +49,7 @@ class _LoginSkipped(Exception):
     pass
 
 
-class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
+class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
     """Everything NAB does, window-less. One instance per process."""
 
     def __init__(self):
@@ -312,6 +313,7 @@ class Engine(MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
             "date": self.current_date.strftime("%Y-%m-%d"),
             "categories": self.categories, "quick_saves": qs,
             "layers": d.info(), "free": d.free, "canvas": list(d.canvas_size()), "rev": d.rev, "undo": d.history_depth()[0], "redo": d.history_depth()[1],
+            "ps": self.ps_state() if self.ps_on else {"on": False, "docs": [], "cur": -1},
             "settings": {
                 "logo_scale": self.logo_scale, "text_scale": self.text_scale, "quality": self.quality,
                 "hd_mode": self.hd_mode, "out_width": self.extra_settings.get("out_width", 0), "auto_snatch": self.auto_snatch, "auto_polish": self.auto_polish,
