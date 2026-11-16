@@ -402,6 +402,9 @@ class Api:
     def ps_open_data(self, a):
         return self.e.ps_open_data(a.get("images", []), a.get("names", []))
 
+    def ps_scan(self, a):
+        return self.e.ps_scan()
+
     def ps_switch(self, a):
         return self.e.ps_switch(a.get("i", 0))
 

@@ -316,3 +316,47 @@ def save_dialog(title="Save As", initial_dir="", initial_name="", filters=(("PNG
     except Exception as e:
         logging.error(f"save_dialog: {e}")
         return None
+
+
+_WIA_PS = r"""
+$ErrorActionPreference = 'Stop'
+try {
+  $dlg = New-Object -ComObject WIA.CommonDialog
+  $img = $dlg.ShowAcquireImage(1, 1, 131072, '{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}', $true, $true, $false)
+  if ($img -eq $null) { Write-Output 'CANCEL'; exit 0 }
+  $base = $env:NAB_SCAN_BASE
+  $f = $base + '.' + $img.FileExtension
+  $img.SaveFile($f)
+  Write-Output ('OK:' + $f)
+} catch { Write-Output ('ERR:' + $_.Exception.Message) }
+"""
+
+
+def scan_image(base_path, timeout=600):
+    """Scanner import through Windows' own scan dialog (WIA, like Photoshop's WIA Support).
+    Returns (path, "") on success, ("", "") if the person cancelled, ("", "message") on error."""
+    if not IS_WIN:
+        return "", "Scanning needs Windows."
+    import os
+    import base64
+    import subprocess
+    enc = base64.b64encode(_WIA_PS.encode("utf-16-le")).decode("ascii")
+    env = dict(os.environ, NAB_SCAN_BASE=base_path)
+    try:
+        p = subprocess.run(["powershell", "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-EncodedCommand", enc],
+                           capture_output=True, text=True, timeout=timeout, env=env, creationflags=0x08000000)
+    except subprocess.TimeoutExpired:
+        return "", "The scanner did not answer in time."
+    except Exception as ex:
+        logging.error(f"scan_image: {ex}")
+        return "", "Could not start the Windows scan service."
+    out = (p.stdout or "").strip().splitlines()
+    line = out[-1].strip() if out else ""
+    if line.startswith("OK:") and os.path.isfile(line[3:]):
+        return line[3:], ""
+    if line == "CANCEL":
+        return "", ""
+    msg = line[4:] if line.startswith("ERR:") else (p.stderr or "no answer").strip()
+    if "0x80210015" in msg or "No scanner" in msg or "not found" in msg.lower():
+        msg = "No scanner found. Connect and switch on the scanner (its Windows driver must be installed), then try again."
+    return "", msg[:300]

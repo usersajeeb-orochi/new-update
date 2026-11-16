@@ -308,3 +308,33 @@ class PSMixin:
         self._ps_remember_dir(os.path.dirname(target))
         self._ps_refresh()
         return {"ok": True, "path": target, "name": os.path.basename(target), "kb": round(os.path.getsize(target) / 1024.0, 1)}
+
+    # ---- scanner (Windows WIA dialog) ----
+    def ps_scan(self):
+        """Scan a paper: Windows' scan dialog (preview, DPI, colour) -> the result opens on its own canvas."""
+        import time
+        from PIL import Image as _I
+        d = os.path.join(os.path.expanduser("~"), "Documents", "NAB_Scans")
+        try:
+            os.makedirs(d, exist_ok=True)
+        except OSError:
+            d = os.environ.get("TEMP") or os.path.expanduser("~")
+        stamp = time.strftime("Scan-%d-%m-%Y_%H%M%S")
+        raw, err = nab_winutil.scan_image(os.path.join(d, stamp + "_raw"))
+        if err:
+            return {"ok": False, "error": err}
+        if not raw:
+            return {"ok": False, "cancel": True}
+        final = os.path.join(d, stamp + ".png")
+        try:
+            with _I.open(raw) as im:
+                im.load()
+                im.convert("RGB").save(final, "PNG")
+            os.remove(raw)
+        except Exception as ex:
+            logging.error(f"ps_scan: {ex}")
+            return {"ok": False, "error": "The scanned image could not be read."}
+        r = self.ps_open([final])
+        r["ok"] = bool(r.get("opened"))
+        r["file"] = final
+        return r

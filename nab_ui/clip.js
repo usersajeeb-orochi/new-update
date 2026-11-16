@@ -605,6 +605,18 @@
     psApply(await api("ps_close", { i })); S.V = { z: 1, cx: .5, cy: .5 }; onClips();
   }
   $("#psBtn").onclick = () => psToggle();
+  let scanning = false;
+  async function scanPaper() {
+    if (scanning) return; scanning = true; $("#scanBtn").disabled = true; toast("Opening the scanner… (use the Windows scan window)", "", 2500);
+    try {
+      const r = await api("ps_scan", {});
+      if (r.cancel) return;
+      if (!r.ok) return toast(r.error || "Scan failed", "warn", 6000);
+      psApply(r); S.V = { z: 1, cx: .5, cy: .5 }; await onClips();
+      toast("Scan opened on its own canvas — Ctrl+S saves it", "ok", 3500);
+    } finally { scanning = false; $("#scanBtn").disabled = false; }
+  }
+  $("#scanBtn").onclick = scanPaper;
   $("#psTabs").addEventListener("click", async (e) => {
     const x = e.target.closest("[data-x]"); if (x) { e.stopPropagation(); return psClose(+x.dataset.x); }
     if (e.target.closest("#psAdd")) { psApply(await api("ps_new", { w: 1600, h: 1000 })); S.V = { z: 1, cx: .5, cy: .5 }; return onClips(); }
@@ -626,6 +638,7 @@
     if (e.altKey && !ctrl && (k === "[" || k === "]")) { e.preventDefault(); switchCat(k === "]" ? 1 : -1); return; }
     if (ctrl && !e.shiftKey && k === "Enter") { e.preventDefault(); repeatLast(true); return; }
     if (ctrl && !e.altKey && k.toLowerCase() === "s" && S.ps.on) { e.preventDefault(); psSave(e.shiftKey); return; }
+    if (ctrl && e.shiftKey && !e.altKey && k.toLowerCase() === "a") { e.preventDefault(); scanPaper(); return; }
     if (ctrl && e.altKey && k.toLowerCase() === "p") { e.preventDefault(); psToggle(); return; }
     if (ctrl && !e.shiftKey && !e.altKey && k.toLowerCase() === "e") { e.preventDefault(); layerCmd("merge_down"); return; }
     if (S.ps.on && ctrl && !e.shiftKey && !e.altKey && k.toLowerCase() === "w" && !tp) { e.preventDefault(); psClose(S.ps.cur); return; }

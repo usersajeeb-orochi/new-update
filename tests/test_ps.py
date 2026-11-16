@@ -69,3 +69,18 @@ def test_close_and_off(tmp_path):
     assert len(r["docs"]) == 1
     r = e.ps_set(False)
     assert not r["on"] and e.doc.layers
+
+
+def test_scan_flow(tmp_path, monkeypatch):
+    e = Eng()
+    raw = tmp_path / "raw.bmp"
+    Image.new("RGB", (60, 90), "white").save(raw)
+    monkeypatch.setattr(nab_ps.nab_winutil, "scan_image", lambda base, **k: (str(raw), ""))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    r = e.ps_scan()
+    assert r["ok"] and e.ps_on and r["docs"][-1]["w"] == 60
+    monkeypatch.setattr(nab_ps.nab_winutil, "scan_image", lambda base, **k: ("", ""))
+    assert e.ps_scan().get("cancel")
+    monkeypatch.setattr(nab_ps.nab_winutil, "scan_image", lambda base, **k: ("", "No scanner found."))
+    assert "scanner" in e.ps_scan()["error"]

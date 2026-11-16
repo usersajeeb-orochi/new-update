@@ -1,3 +1,6 @@
+v3.0.74
+  * Scan from a scanner: the new printer button on the Clip toolbar (or Ctrl+Shift+A) opens Windows' own scan window (preview, colour, DPI, like Photoshop's WIA import). The scan opens on its own canvas in Photoshop mode; Ctrl+S saves it. Every scan is also kept in Documents\NAB_Scans.
+
 v3.0.73
   * Photoshop mode on the Clip canvas (the "Ps" button, or Ctrl+Alt+P). No logo, no Page/Pos/Date line, no category bar: just your layers, free to move anywhere.
   * Every image gets its own canvas (tabs on top). Ctrl+S saves: the first time it opens the Windows "Save As" box (name, folder, PNG/JPG); after that it saves in place. Ctrl+Shift+S always asks. Ctrl+E merges the layer down, Ctrl+Shift+E merges all visible layers, Ctrl+W closes a canvas, Ctrl+N makes a blank one. A dot on a tab means unsaved changes.
