@@ -1,3 +1,6 @@
+v3.0.78
+  * New: a glowing three.js particle swarm follows your mouse pointer on the Clip canvas (it trails behind when you move fast, fades while you draw a selection, and pauses on other screens). Settings > Start-up > "Mouse particles" turns it off. The start-up animations also react to the pointer now.
+
 v3.0.77
   * New start-up animation built with three.js (bundled inside NAB, works offline): "Particle logo" (a spiral galaxy that snaps into the NAB logo), "Neon tunnel" (a warp flight through glowing rings and page frames) and "Aurora glass pages" (floating newspaper pages over a moving aurora). Settings > Start-up > Animation style picks one or "Surprise me" (random every launch). The launch screen is no longer a black screen: it starts at once, and PCs without WebGL get a soft animated aurora instead. Press any key to skip.
   * The name is now written "News Automation Bot" everywhere (window title, intro, About).

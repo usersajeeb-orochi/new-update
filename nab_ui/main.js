@@ -74,11 +74,37 @@
   }
   on("login", onLogin);
 
+  /* mouse swarm: a transparent three.js layer on the Clip stage (loaded on demand, bundle shared with the start-up scenes) */
+  let mfx = null, mfxLoading = false;
+  function mfxMove(e) { if (mfx) mfx.move(e.clientX, e.clientY); }
+  function mfxDim(v) { const c = $("#mfx"); if (c) c.style.opacity = v; }
+  function mouseFx(on) {
+    const stage = $("#stage");
+    if (!on || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+      if (mfx) { mfx.dispose(); mfx = null; stage.removeEventListener("pointermove", mfxMove); }
+      const c = $("#mfx"); if (c) c.remove(); return;
+    }
+    if (mfx || mfxLoading || !stage) return;
+    const go = () => {
+      mfxLoading = false; if (mfx || !window.NAB3D || !NAB3D.supported()) return;
+      let cv = $("#mfx"); if (!cv) { cv = document.createElement("canvas"); cv.id = "mfx"; stage.appendChild(cv); }
+      try { mfx = NAB3D.pointerFx(cv, { accent: getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#5b8cff", count: (navigator.hardwareConcurrency || 4) <= 4 ? 90 : 150 }); }
+      catch (e) { cv.remove(); return; }
+      stage.addEventListener("pointermove", mfxMove, { passive: true });
+      stage.addEventListener("pointerdown", () => mfxDim(0), true);
+      window.addEventListener("pointerup", () => mfxDim(1), true);
+      mfx.active(M.view === "clip");
+    };
+    if (window.NAB3D) return go();
+    mfxLoading = true; const sc = document.createElement("script"); sc.src = "/s/intro_3d.js"; sc.onload = go; sc.onerror = () => { mfxLoading = false; }; document.head.appendChild(sc);
+  }
+  M.mouseFx = mouseFx;
   let started = false;
   async function start() {
     if (started) return; started = true;
     $("#gate").classList.add("hidden"); document.body.classList.remove("locked");
     const st = await api("state"); M.st = st; CLIP.st = st;
+    mouseFx(st.ui.mouse_fx !== false);
     if (st.ui.theme) C.theme(st.ui.theme); if (st.ui.lang) { LANG = st.ui.lang; applyI18n(); }
     $("#stVer").textContent = "v" + st.version + " · " + st.pc;
     setTimeout(() => { try { if (window.TOOLS && TOOLS.subs) { if (!TOOLS.subs._m) { TOOLS.subs._m = true; TOOLS.subs.mount($("#view-subs")); } TOOLS.subs.remind && TOOLS.subs.remind(); } } catch (e) {} }, 2500);
@@ -301,7 +327,7 @@
 
   // ───────────────────────── nav / views ─────────────────────────
   M.show = function (v) {
-    M.view = v; $$(".view").forEach(n => n.classList.add("hidden")); $("#view-" + v).classList.remove("hidden");
+    M.view = v; if (mfx) mfx.active(v === "clip"); $$(".view").forEach(n => n.classList.add("hidden")); $("#view-" + v).classList.remove("hidden");
     $$("#rail .rb[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === v));
     $("#dock").classList.toggle("hidden", v !== "clip"); if (v === "clip") setTimeout(() => CLIPUI.onShow(), 0); if (v === "settings") SETTINGS.render();
     if (window.TOOLS && TOOLS[v]) { const T = TOOLS[v]; if (!T._m) { T._m = true; T.mount($("#view-" + v)); } T.show && T.show(); }

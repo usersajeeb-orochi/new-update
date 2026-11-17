@@ -4,7 +4,7 @@
 //   opts: { accent:"#5b8cff", bg:"#0b0c13", onLogo(), onBeat(name), logoAt }
 import {
   WebGLRenderer, Scene, PerspectiveCamera, BufferGeometry, Float32BufferAttribute, Points, ShaderMaterial, AdditiveBlending,
-  Color, Mesh, PlaneGeometry, TorusGeometry, MeshBasicMaterial, CanvasTexture, DoubleSide, Group, Vector2, LineSegments, FrontSide
+  Color, Mesh, PlaneGeometry, TorusGeometry, MeshBasicMaterial, CanvasTexture, DoubleSide, Group, Vector2, Vector3, LineSegments, FrontSide
 } from "three";
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -48,8 +48,8 @@ function particlesScene(ctx) {
   geo.setAttribute("aR", new Float32BufferAttribute(rr, 1)); geo.setAttribute("aS", new Float32BufferAttribute(sz, 1));
   const mat = new ShaderMaterial({
     transparent: true, depthWrite: false, blending: AdditiveBlending,
-    uniforms: { uT: { value: 0 }, uPx: { value: ctx.px }, uC1: { value: acc }, uC2: { value: hsl(acc, .12, .1, .22) }, uBoom: { value: 0 } },
-    vertexShader: `uniform float uT,uPx,uBoom;attribute vec3 aTarget;attribute float aR,aS;varying float vM;varying float vA;
+    uniforms: { uT: { value: 0 }, uPx: { value: ctx.px }, uC1: { value: acc }, uC2: { value: hsl(acc, .12, .1, .22) }, uBoom: { value: 0 }, uM: { value: new Vector2(99, 99) } },
+    vertexShader: `uniform float uT,uPx,uBoom;uniform vec2 uM;attribute vec3 aTarget;attribute float aR,aS;varying float vM;varying float vA;
       void main(){
         float p=clamp((uT-.35-aR*.75)/1.9,0.,1.);float e=p*p*(3.-2.*p);e=e*e*(3.-2.*e);
         float ang=uT*(.7+aR*.6)*(1.-e);float c=cos(ang),s=sin(ang);
@@ -57,6 +57,7 @@ function particlesScene(ctx) {
         vec3 tp=aTarget+vec3(sin(uT*1.7+aR*40.),cos(uT*1.4+aR*33.),sin(uT*1.1+aR*17.))*.025;
         tp.xy*=1.+uBoom*.10; tp.z+=uBoom*(aR-.5)*1.4;
         vec3 pos=mix(sp,tp,e);
+        vec2 dm=pos.xy-uM;float fm=exp(-dot(dm,dm)*.55);pos.xy+=normalize(dm+vec2(.0001))*fm*(.7+aR)*.9;pos.z+=fm*(1.+aR)*1.6;
         vec4 mv=modelViewMatrix*vec4(pos,1.);gl_Position=projectionMatrix*mv;
         gl_PointSize=aS*(1.+(1.-e)*.8+uBoom*.9)*uPx*(28./-mv.z);
         vM=aR;vA=.55+.45*e;
@@ -79,8 +80,9 @@ function particlesScene(ctx) {
     logoAt: 2.55, hideLetters: true,
     update(t) {
       mat.uniforms.uT.value = t;
+      if (ctx.pointerWorld) { const m = ctx.pointerWorld(0); mat.uniforms.uM.value.set(m.x, m.y); }
       camera.position.z = lerp(13, 10.2, eout(clamp(t / 3.4)));
-      camera.position.x = Math.sin(t * .35) * .5; camera.position.y = Math.cos(t * .3) * .25; camera.lookAt(0, 0, 0);
+      camera.position.x = Math.sin(t * .35) * .5 + ctx.ptr.x * .8; camera.position.y = Math.cos(t * .3) * .25 + ctx.ptr.y * .5; camera.lookAt(0, 0, 0);
       dust.rotation.z = t * .02;
       const b = t > 2.45 ? Math.exp(-(t - 2.45) * 3.2) * clamp((t - 2.45) * 14) : 0; mat.uniforms.uBoom.value = b;
       if (!boomed && t > 2.45) { boomed = true; opts.onBeat && opts.onBeat("boom"); }
@@ -132,7 +134,7 @@ function tunnelScene(ctx) {
       sm.uniforms.uZ.value = z; sm.uniforms.uL.value = 1 + speed * .09;
       camera.fov = 62 + sstep(.4, 2, t) * 22 - sstep(2.5, 3.4, t) * 20; camera.updateProjectionMatrix();
       camera.rotation.z = Math.sin(t * 1.1) * .12 * (1 - sstep(2.6, 3.4, t)) + t * .02;
-      camera.position.x = Math.sin(t * 2.1) * .25 * (1 - sstep(2.5, 3.2, t)); camera.position.y = Math.cos(t * 1.7) * .2 * (1 - sstep(2.5, 3.2, t));
+      camera.position.x = Math.sin(t * 2.1) * .25 * (1 - sstep(2.5, 3.2, t)) + ctx.ptr.x * .9; camera.position.y = Math.cos(t * 1.7) * .2 * (1 - sstep(2.5, 3.2, t)) + ctx.ptr.y * .6;
       if (!flashed && t > 2.7) { flashed = true; opts.onBeat && opts.onBeat("boom"); }
     }
   };
@@ -204,7 +206,7 @@ function auroraScene(ctx) {
         const s = lerp(.6, 1, e) * (1 - conv * .8); P.m.scale.set(s, s, s);
         P.m.material.opacity = clamp(p * 1.6) * (1 - sstep(2.5, 3.0, t)) * .95;
       });
-      camera.position.x = Math.sin(t * .3) * .8; camera.position.y = Math.sin(t * .22) * .3; camera.lookAt(0, 0, -1);
+      camera.position.x = Math.sin(t * .3) * .8 + ctx.ptr.x * 1.2; camera.position.y = Math.sin(t * .22) * .3 + ctx.ptr.y * .8; camera.lookAt(0, 0, -1);
       if (!boomed && t > 2.7) { boomed = true; opts.onBeat && opts.onBeat("boom"); }
     }
   };
@@ -218,7 +220,10 @@ export function create(canvas, style, opts) {
   let px = Math.min(window.devicePixelRatio || 1, cap), low = !!opts.low;
   renderer.setPixelRatio(px); renderer.setClearColor(new Color(opts.bg || "#0b0c13"), 1);
   const scene = new Scene(), camera = new PerspectiveCamera(50, 1, .1, 200), acc = new Color(opts.accent || "#5b8cff");
-  const ctx = { scene, camera, acc, opts, px, low };
+  const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+  const ctx = { scene, camera, acc, opts, px, low, ptr, pointerWorld(z) { const h = Math.tan(camera.fov * Math.PI / 360) * (camera.position.z - z); return { x: ptr.x * h * camera.aspect, y: ptr.y * h }; } };
+  const onMove = (e) => { ptr.tx = (e.clientX / Math.max(1, innerWidth)) * 2 - 1; ptr.ty = -((e.clientY / Math.max(1, innerHeight)) * 2 - 1); };
+  window.addEventListener("pointermove", onMove, { passive: true });
   const S = (style === "tunnel" ? tunnelScene : style === "aurora" ? auroraScene : particlesScene)(ctx);
   let raf = 0, t0 = 0, slow = 0, last = 0, idle = false, logoDone = false, W = 0, H = 0, dead = false;
   function size() {
@@ -238,6 +243,7 @@ export function create(canvas, style, opts) {
     last = now;
     if (dt > 40) { if (++slow > 8 && px > 1) { px = 1; renderer.setPixelRatio(px); size(); } } else if (slow > 0) slow -= .3;
     const t = (now - t0) / 1000;
+    ptr.x += (ptr.tx - ptr.x) * .08; ptr.y += (ptr.ty - ptr.y) * .08;
     S.update(t);
     if (!logoDone && t >= S.logoAt) { logoDone = true; opts.onLogo && opts.onLogo(); }
     renderer.render(scene, camera);
@@ -247,6 +253,57 @@ export function create(canvas, style, opts) {
     hideLetters: S.hideLetters, logoAt: S.logoAt,
     idle() { idle = true; },
     t() { return t0 ? (performance.now() - t0) / 1000 : 0; },
+    dispose() { dead = true; cancelAnimationFrame(raf); window.removeEventListener("resize", size); window.removeEventListener("pointermove", onMove); try { renderer.dispose(); renderer.forceContextLoss(); } catch (e) { } }
+  };
+}
+
+/* ------------------------------------------------------------------------------------------------------------ mouse swarm (app canvas) */
+// A transparent layer: a swarm of soft particles follows the pointer in 3D (each one has its own spring, orbit and depth), so the cursor leaves a living comet tail.
+//   const fx = NAB3D.pointerFx(canvas, { accent:"#5b8cff", count:150 });  fx.move(clientX, clientY); fx.active(false); fx.dispose();
+export function pointerFx(canvas, o) {
+  o = o || {};
+  const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: "low-power" });
+  renderer.setClearColor(0x000000, 0);
+  let px = Math.min(window.devicePixelRatio || 1, 1.5); renderer.setPixelRatio(px);
+  const scene = new Scene(), camera = new PerspectiveCamera(50, 1, .1, 100); camera.position.z = 10;
+  const acc = new Color(o.accent || "#5b8cff"), N = o.count || 150;
+  const pos = new Float32Array(N * 3), vel = new Float32Array(N * 3), seed = new Float32Array(N), lag = new Float32Array(N), rad = new Float32Array(N);
+  for (let i = 0; i < N; i++) { seed[i] = Math.random(); lag[i] = rnd(.5, 3.2); rad[i] = i === 0 ? 0 : rnd(.25, 2.4) * (.35 + (i / N)); pos[i * 3 + 2] = rnd(-1, 1); }
+  const geo = new BufferGeometry(); const pa = new Float32Array(pos.length);
+  geo.setAttribute("position", new Float32BufferAttribute(pa, 3)); geo.setAttribute("aS", new Float32BufferAttribute(seed, 1));
+  const mat = new ShaderMaterial({ transparent: true, depthWrite: false, blending: AdditiveBlending,
+    uniforms: { uPx: { value: px }, uC1: { value: acc }, uC2: { value: hsl(acc, .14, .1, .25) } },
+    vertexShader: `uniform float uPx;attribute float aS;varying float vS;varying float vD;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;vS=aS;vD=clamp((position.z+2.)/4.,0.,1.);gl_PointSize=(3.5+aS*8.)*uPx*(10./-mv.z)*(.75+vD*.7);}`,
+    fragmentShader: `uniform vec3 uC1,uC2;varying float vS;varying float vD;void main(){float d=length(gl_PointCoord-.5);float a=1.-smoothstep(0.,.5,d);vec3 c=mix(uC1,uC2,vS)*1.4+vec3(.3)*(1.-smoothstep(0.,.2,d));gl_FragColor=vec4(c,a*(.45+.55*vD)*(.6+.4*vS));}` });
+  const pts = new Points(geo, mat); pts.frustumCulled = false; scene.add(pts);
+  let W = 1, H = 1, tx = 0, ty = 0, raf = 0, last = 0, on = true, dead = false, seen = false, slow = 0;
+  const wh = () => { const h = Math.tan(camera.fov * Math.PI / 360) * 10; return [h * camera.aspect, h]; };
+  function size() { const r = canvas.getBoundingClientRect(); W = Math.max(2, Math.round(r.width)); H = Math.max(2, Math.round(r.height)); renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix(); }
+  size();
+  function frame(now) {
+    if (dead) return; raf = requestAnimationFrame(frame);
+    if (!on || document.hidden) { last = now; return; }
+    const dt = Math.min(.05, (now - last) / 1000 || .016); last = now;
+    if (dt > .035) { if (++slow > 12 && px > 1) { px = 1; renderer.setPixelRatio(1); mat.uniforms.uPx.value = 1; size(); } } else if (slow > 0) slow -= .3;
+    const [hw, hh] = wh(), mx = tx * hw, my = ty * hh, t = now / 1000;
+    for (let i = 0; i < N; i++) {
+      const k = i * 3, a = t * (.6 + seed[i] * 1.4) + seed[i] * 40, r = rad[i];
+      const gx = mx + Math.cos(a) * r, gy = my + Math.sin(a * 1.3) * r * .8, gz = Math.sin(a * .8 + seed[i] * 9) * 1.6;
+      const sp = lag[i] * (i === 0 ? 5 : 1);
+      vel[k] += (gx - pos[k]) * sp * dt * 6; vel[k + 1] += (gy - pos[k + 1]) * sp * dt * 6; vel[k + 2] += (gz - pos[k + 2]) * sp * dt * 3;
+      const damp = Math.pow(.18 + seed[i] * .22, dt);                        // different drag per particle -> the swarm stretches into a tail when the pointer moves fast
+      vel[k] *= damp; vel[k + 1] *= damp; vel[k + 2] *= damp;
+      pos[k] += vel[k] * dt; pos[k + 1] += vel[k + 1] * dt; pos[k + 2] += vel[k + 2] * dt;
+    }
+    geo.attributes.position.array.set(pos); geo.attributes.position.needsUpdate = true;
+    renderer.render(scene, camera);
+  }
+  raf = requestAnimationFrame(frame);
+  window.addEventListener("resize", size);
+  return {
+    move(cx, cy) { const r = canvas.getBoundingClientRect(); tx = ((cx - r.left) / Math.max(1, r.width)) * 2 - 1; ty = -(((cy - r.top) / Math.max(1, r.height)) * 2 - 1); if (!seen) { seen = true; const [hw, hh] = wh(); for (let i = 0; i < N; i++) { pos[i * 3] = tx * hw; pos[i * 3 + 1] = ty * hh; } } },
+    active(v) { on = !!v; if (!on) { renderer.clear(); } },
+    resize: size,
     dispose() { dead = true; cancelAnimationFrame(raf); window.removeEventListener("resize", size); try { renderer.dispose(); renderer.forceContextLoss(); } catch (e) { } }
   };
 }
