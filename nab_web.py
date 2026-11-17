@@ -639,7 +639,7 @@ class Api:
             try:
                 from nab_main import TITLE
             except Exception:
-                TITLE = "News Automation Pro"
+                TITLE = "News Automation Bot"
             hw = W.MAIN_HWND or W.find_window(TITLE)
             ok = bool(W.theme_titlebar(hw, bg))
             logging.info(f"titlebar {bg} hwnd={hw} ok={ok}")

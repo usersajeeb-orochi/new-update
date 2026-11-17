@@ -8,7 +8,7 @@ import subprocess
 
 import nab_winutil as W
 
-TITLE = "News Automation Pro"
+TITLE = "News Automation Bot"
 OVERLAY_TITLE = "NAB Overlay"
 
 
@@ -438,7 +438,7 @@ class Shell:
             threading.Thread(target=self.hotkey_loop, daemon=True, name="NAB-Hotkey").start()
 
 
-SPLASH = """<!doctype html><html><head><meta charset="utf-8"><title>News Automation Pro</title><style>
+SPLASH = """<!doctype html><html><head><meta charset="utf-8"><title>News Automation Bot</title><style>
 html,body{margin:0;height:100%;background:#0b0d12;color:#c9cde4;font:14px 'Segoe UI',system-ui,sans-serif;overflow:hidden}
 .top{height:54px;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #1f2336}
 .dot{width:12px;height:12px;border-radius:50%;background:#6c6cf0}.b{font-weight:700;color:#f3f4fa}
@@ -494,8 +494,15 @@ def _intro_page():
         with open(os.path.join(nab_web.ui_dir(), "intro.html"), encoding="utf-8") as f:
             html = f.read()
         import json as _j
-        inject = ("<script>window.NAB_THEME=%s;window.NAB_SOUND=%s;window.NAB_HOLD=true;</script>"
-                  % (_j.dumps(_early_ui("theme", "dark")), "true" if _early_ui("intro_sound", True) else "false"))
+        style = _early_ui("intro_style", "random")
+        inject = ("<script>window.NAB_THEME=%s;window.NAB_SOUND=%s;window.NAB_STYLE=%s;</script>"
+                  % (_j.dumps(_early_ui("theme", "dark")), "true" if _early_ui("intro_sound", True) else "false", _j.dumps(style)))
+        try:    # the page is loaded from a string (no address to fetch files from), so the 3D scenes go in inline
+            with open(os.path.join(nab_web.ui_dir(), "intro_3d.js"), encoding="utf-8") as f:
+                js3d = f.read().replace("</script", "<\\/script")
+        except Exception:
+            js3d = ""      # the page falls back to its CSS aurora
+        html = html.replace('<script id="n3d" src="/s/intro_3d.js"></script>', "<script>" + js3d + "</script>", 1)
         return html.replace("</head>", inject + "</head>", 1)
     except Exception as e:
         logging.error(f"intro page: {e}")

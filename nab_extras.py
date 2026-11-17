@@ -628,6 +628,6 @@ class ExtrasMixin:
             self.hub.emit("missed_save", n=n, secs=wait)
             try:
                 import nab_winutil as W
-                W.flash_window(W.find_window("News Automation Pro"))
+                W.flash_window(W.find_window("News Automation Bot"))
             except Exception:
                 pass

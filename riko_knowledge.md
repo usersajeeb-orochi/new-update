@@ -1,4 +1,4 @@
-# NAB (News Automation Pro) — guide for the helper character
+# NAB (News Automation Bot) — guide for the helper character
 
 NAB is a Windows desktop app for clipping newspaper items from ePapers, tagging them, saving them in dated category folders, then making PDFs and mailing them.
 

@@ -407,3 +407,22 @@ html.bg-hidden *,html.bg-hidden *::before,html.bg-hidden *::after{animation-play
 .ps-tab .x:hover{opacity:1;background:#ffffff18}
 .ps-tab.add{padding:5px 10px;font-weight:700}
 #psBtn.active,#brandBtn.active{background:var(--acc,#3b82f6);color:#fff}
+
+/* ── small / scaled screens (1366x768 at 125-150% Windows scaling is only ~910x512 CSS px): nothing may be cut off, everything scrolls ── */
+.gate{overflow-y:auto;justify-content:safe center;padding:12px}
+.gate .card{max-width:100%}
+.rail{overflow-y:auto;overflow-x:hidden;scrollbar-width:none;min-height:0}
+.rail::-webkit-scrollbar{display:none}
+@media (max-height:760px){.rb{padding:5px 0}.rail{gap:2px}.gate .card{padding:22px 26px}.gate .big{font-size:32px}}
+@media (max-height:600px){.rb{padding:3px 0;font-size:10px}.gate .card{padding:14px 20px}.gate h2{font-size:18px}.gate .big{display:none}}
+.settings{grid-template-rows:minmax(0,1fr);height:100%}
+.s-nav{overflow-y:auto;min-height:0;scrollbar-width:thin}
+@media (max-width:1000px){.settings{grid-template-columns:150px 1fr}.s-body{padding:14px 16px}}
+/* short windows: a tool screen scrolls as a whole instead of clipping its lower half */
+@media (max-height:680px){
+  .view.tool{overflow-y:auto;overflow-x:hidden}
+  .view.tool>.tk,.view.tool>div{height:auto;min-height:100%;overflow:visible}
+  .view.tool>.tk>*{flex-shrink:0;min-height:min-content}
+  .view.tool .sh-wrap,.view.tool .sh-col{min-height:min-content}
+  .sh-links{min-height:110px;height:24vh}
+}

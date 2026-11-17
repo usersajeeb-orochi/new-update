@@ -1,3 +1,8 @@
+v3.0.77
+  * New start-up animation built with three.js (bundled inside NAB, works offline): "Particle logo" (a spiral galaxy that snaps into the NAB logo), "Neon tunnel" (a warp flight through glowing rings and page frames) and "Aurora glass pages" (floating newspaper pages over a moving aurora). Settings > Start-up > Animation style picks one or "Surprise me" (random every launch). The launch screen is no longer a black screen: it starts at once, and PCs without WebGL get a soft animated aurora instead. Press any key to skip.
+  * The name is now written "News Automation Bot" everywhere (window title, intro, About).
+  * Small and scaled screens (for example 1366x768 at 125-150% Windows scaling): the Telegram login card, the left tool rail, Settings and the tool screens (Screenshot Bot, PR, PDF ...) are no longer cut off; they scroll instead.
+
 v3.0.76
   * Photoshop mode now keeps everything from your normal workflow: the logo, the Page/Pos/Date header (both ON by default, the Logo button can still switch them off), the category bar and the Page / Position / Size line. Enter (or Save) saves the canvas into its category exactly like newspaper mode, with logo and header, and then closes that canvas so the next screenshot is ready. Ctrl+S / Ctrl+Shift+S additionally save a free file anywhere (also with logo and header when the toggle is on).
 
