@@ -59,7 +59,7 @@
     box.onmouseenter = () => clearTimeout(peekT); box.onmouseleave = peekClose; box.onclick = () => { box.remove(); peekEl = null; window.MAIN && MAIN.recent(); };
     document.body.appendChild(box); peekEl = box;
   }
-  function wirePeek() { const b = document.getElementById("savedBtn"); if (!b) return setTimeout(wirePeek, 500); b.addEventListener("mouseenter", () => peekOpen(b)); b.addEventListener("mouseleave", peekClose); }
+  function wirePeek() { const b = document.getElementById("recentBtn"); if (!b) return setTimeout(wirePeek, 500); b.addEventListener("mouseenter", () => peekOpen(b)); b.addEventListener("mouseleave", peekClose); }
   /* 3D bar chart (CSS 3D): drag to turn it */
   function bars(host, title, rows) {
     rows = (rows || []).filter((r) => r && r[1] > 0).slice(0, 8); if (!rows.length) return;
@@ -74,7 +74,40 @@
     d.addEventListener("pointermove", (e) => { if (!down) return; az = down[3] + (e.clientX - down[0]) * .4; ax = Math.max(20, Math.min(80, down[2] - (e.clientY - down[1]) * .3)); set(); });
     d.addEventListener("pointerup", () => { down = null; });
   }
-  window.DEPTH = { enable, fly, bars, isOn: () => on };
+
+  /* ───── quiet mode: every effect off at once (Ctrl+Shift+Q) ───── */
+  let quiet = false, pre = null;
+  function setQuiet(v) {
+    v = !!v; if (v === quiet) return; quiet = v; document.body.classList.toggle("quiet", v);
+    const qb = document.getElementById("quietBtn"); if (qb) qb.classList.toggle("on", v);
+    if (v) { pre = { d: on, m: !!(window.MAIN && MAIN.mouseFxOn && MAIN.mouseFxOn()) }; enable(false); if (window.MAIN && MAIN.mouseFx) MAIN.mouseFx(false); }
+    else if (pre) { enable(pre.d); if (pre.m && window.MAIN && MAIN.mouseFx) MAIN.mouseFx(true); }
+    try { localStorage.setItem("nab_quiet", v ? "1" : "0"); } catch (e) { }
+  }
+  document.addEventListener("keydown", (e) => { if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "q") { e.preventDefault(); setQuiet(!quiet); } });
+  document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("#quietBtn")) setQuiet(!quiet); });
+  /* ───── smart focus: while you work on the canvas the rest of the app steps back ───── */
+  let ft = 0;
+  function focusOn() { if (quiet || !on) return; clearTimeout(ft); document.body.classList.add("dfocus"); }
+  function focusOff() { clearTimeout(ft); ft = setTimeout(() => document.body.classList.remove("dfocus"), 500); }
+  function wireFocus() { const st = document.getElementById("stage"); if (!st) return setTimeout(wireFocus, 600); st.addEventListener("pointerdown", focusOn); st.addEventListener("pointerleave", focusOff); st.addEventListener("pointerenter", () => { if (document.body.classList.contains("dfocus")) clearTimeout(ft); }); }
+  /* ───── daily goal ring around the logo ───── */
+  let goal = 30; try { goal = +localStorage.getItem("nab_goal") || 30; } catch (e) { }
+  async function ring() {
+    const el = document.querySelector(".logo-dot"); if (!el || !window.C) return;
+    try { const r = await C.api("recent", { limit: 500 }); const n = (r.items || []).length, p = Math.min(1, n / goal);
+      el.style.setProperty("--p", (p * 360).toFixed(0) + "deg"); el.classList.toggle("gold", p >= 1); el.parentElement.title = n + " clips saved this session / goal " + goal; } catch (e) { }
+  }
+  /* ───── team online row ───── */
+  async function team() {
+    const b = document.getElementById("teamRow"); if (!b || !window.C) return;
+    try { const r = await C.api("team_online", {}); const l = (r.pcs || []).slice(0, 8);
+      b.innerHTML = l.map((n, i) => `<i class="dav" style="--i:${i};--h:${(n.split("").reduce((a, c) => a + c.charCodeAt(0), 0) * 37) % 360}" title="${C.esc(n)} is online">${C.esc(n.replace(/^DESKTOP-?/i, "").slice(0, 2).toUpperCase() || "PC")}</i>`).join("");
+      b.classList.toggle("hidden", !l.length); } catch (e) { }
+  }
+  function startExtras() { wireFocus(); ring(); team(); setInterval(ring, 20000); setInterval(team, 30000); document.addEventListener("clips", ring); if (window.C && C.on) { C.on("saved", () => setTimeout(ring, 600)); } try { if (localStorage.getItem("nab_quiet") === "1") setQuiet(true); } catch (e) { } }
+  setTimeout(startExtras, 1500);
+  window.DEPTH = { enable, fly, bars, isOn: () => on, quiet: setQuiet, isQuiet: () => quiet, goal: (n) => { goal = Math.max(1, +n || 30); try { localStorage.setItem("nab_goal", goal); } catch (e) { } ring(); }, getGoal: () => goal };
   wirePeek();
   let saved = "1"; try { saved = localStorage.getItem(KEY) || "1"; } catch (e) { }
   enable(saved !== "0");

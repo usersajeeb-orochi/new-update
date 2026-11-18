@@ -103,7 +103,7 @@
     if (window.NAB3D) return go();
     mfxLoading = true; const sc = document.createElement("script"); sc.src = "/s/intro_3d.js"; sc.onload = go; sc.onerror = () => { mfxLoading = false; }; document.head.appendChild(sc);
   }
-  M.mouseFx = mouseFx;
+  M.mouseFx = mouseFx; M.mouseFxOn = () => !!mfx;
   let started = false;
   async function start() {
     if (started) return; started = true;

@@ -1,3 +1,11 @@
+v3.0.83
+  * Overlay (mini window): new clips drop in with a 3D tilt, the clip follows the pointer with a glare, a stack of cards behind it shows how many clips are waiting, the category has a scroll wheel (mouse wheel changes it) with its neighbours shown above and below, a translucent page outline shows the typed size (W x H), and Save presses a green "SAVED" stamp and drops the card away.
+  * Glass command bar (Ctrl+K) with depth; recent-saves stack now opens from the Recent (clock) button.
+  * Smart focus: while you work on the canvas the side panels and rail step back (dim + soften).
+  * Daily goal ring around the NAB logo (Settings > Comfort > 3D & motion > Daily goal); it turns gold when reached.
+  * Team online row: small avatars of the PCs that are online (from the cloud server).
+  * Quiet mode: the moon button (or Ctrl+Shift+Q) turns every 3D effect off at once and back on.
+
 v3.0.82
   * Start-up: no more black wait. The first page is now tiny (12 KB instead of ~490 KB) and paints the moving aurora immediately; the 3D scene is loaded right after the first paint and takes over (falls back to the 2D intro if it is late).
 

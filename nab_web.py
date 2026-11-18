@@ -515,6 +515,27 @@ class Api:
     def recent(self, a):
         return {"items": self.e.recent(a.get("limit", 60))}
 
+    _team = {"t": 0, "pcs": []}
+
+    def team_online(self, a):
+        """PCs that are online right now, from the NAB cloud server (cached 20 s)."""
+        now = time.time()
+        if now - self._team["t"] < 20:
+            return {"pcs": self._team["pcs"]}
+        self._team["t"] = now
+        try:
+            import nab_remote
+            import urllib.request
+            from nab_telegram import PC_NAME
+            base = nab_remote.cloud_url()
+            if base:
+                req = urllib.request.Request(base + "/pc/online?pc=" + PC_NAME, headers=dict(nab_remote.sign_headers(PC_NAME), **{"User-Agent": "NAB/3"}))
+                with urllib.request.urlopen(req, timeout=6) as r:
+                    self._team["pcs"] = [str(x) for x in (json.loads(r.read().decode()).get("pcs") or [])][:30]
+        except Exception:
+            pass
+        return {"pcs": self._team["pcs"], "me": ""}
+
     def retag(self, a):
         return self.e.retag(a["i"], a.get("paper"), a.get("page"), a.get("pos"), a.get("size"))
 

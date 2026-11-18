@@ -1,0 +1,30 @@
+/* Overlay 3D: landing card, category wheel, save stamp, tilt, page ghost, queue stack */
+.ov-th{perspective:700px;transform-style:preserve-3d}
+.ov-th #ovImg{transition:transform .15s ease-out;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));box-shadow:0 10px 24px -10px rgba(0,0,0,.6);border-radius:6px;max-width:92%;max-height:92%;object-fit:contain;position:relative;z-index:3}
+.ov-th #ovImg.swap{animation:ovland .6s cubic-bezier(.2,1.25,.4,1)}
+@keyframes ovland{0%{transform:translate3d(0,-60px,120px) rotateX(55deg) scale(.8);opacity:0}60%{opacity:1}100%{transform:none}}
+.ov-th::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(160px circle at var(--gx,50%) var(--gy,40%),rgba(255,255,255,.13),transparent 65%);opacity:0;transition:opacity .25s;z-index:5;border-radius:inherit}
+.ov-th:hover::after{opacity:1}
+/* queue stack: more clips waiting = more cards peeking out behind */
+.ov-th::before{content:"";position:absolute;left:14%;right:14%;top:12%;bottom:8%;border-radius:8px;background:var(--surf2);border:1px solid var(--line);transform:translate3d(8px,6px,-30px) rotate(3deg);opacity:0;transition:opacity .3s;z-index:1}
+.ov-th[data-n="2"]::before,.ov-th[data-n="3"]::before,.ov-th[data-n="4"]::before,.ov-th[data-n="5"]::before,.ov-th.many::before{opacity:.85}
+.ov-th .qs2{position:absolute;left:14%;right:14%;top:12%;bottom:8%;border-radius:8px;background:var(--surf2);border:1px solid var(--line);transform:translate3d(-8px,10px,-60px) rotate(-4deg);opacity:0;transition:opacity .3s;z-index:0;pointer-events:none}
+.ov-th.deep .qs2{opacity:.7}
+/* category wheel: neighbours above and below, scroll the wheel to change */
+.ov-cat{position:relative;perspective:300px;margin:12px 0;transform-style:preserve-3d}
+.ov-cat::before,.ov-cat::after{position:absolute;left:12px;right:12px;font:600 11px system-ui;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.6;pointer-events:none}
+.ov-cat::before{content:attr(data-prev);top:-13px;transform:rotateX(55deg);transform-origin:bottom}
+.ov-cat::after{content:attr(data-next);bottom:-13px;transform:rotateX(-55deg);transform-origin:top}
+.ov-cat.spin{animation:ovspin .32s cubic-bezier(.3,1.3,.5,1)}
+@keyframes ovspin{from{transform:rotateX(var(--sp,-60deg))}}
+/* save stamp */
+.ov-stamp{position:absolute;left:50%;top:50%;z-index:9;pointer-events:none;font:900 22px system-ui;letter-spacing:.14em;color:#22c55e;border:4px solid #22c55e;border-radius:10px;padding:2px 12px;background:rgba(10,20,14,.55);transform:translate(-50%,-50%) rotate(-12deg);animation:ovstamp .95s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes ovstamp{0%{transform:translate(-50%,-50%) perspective(400px) translateZ(220px) rotate(-12deg) scale(2.4);opacity:0}30%{transform:translate(-50%,-50%) perspective(400px) translateZ(0) rotate(-12deg) scale(1);opacity:1}38%{transform:translate(-50%,-47%) rotate(-12deg) scale(1.06)}70%{opacity:1}100%{transform:translate(-50%,-50%) rotate(-12deg) scale(1);opacity:0}}
+.ov-th.shake{animation:ovshake .3s}@keyframes ovshake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.ov-th #ovImg.out{animation:ovout .55s .35s cubic-bezier(.5,0,.8,.4) forwards}
+@keyframes ovout{to{transform:translate3d(0,50px,-120px) rotateX(40deg) scale(.5);opacity:0}}
+/* page-size ghost */
+.ov-ghost{position:absolute;z-index:4;pointer-events:none;border:2px dashed color-mix(in srgb,var(--acc) 85%,#fff);background:color-mix(in srgb,var(--acc) 12%,transparent);border-radius:3px;transform:perspective(500px) rotateX(16deg) rotateY(-14deg);left:50%;top:50%;margin:0;box-shadow:0 8px 18px -8px var(--acc);opacity:0;transition:opacity .25s,width .25s,height .25s}
+.ov-ghost.on{opacity:1}
+.ov-ghost b{position:absolute;left:0;right:0;bottom:-16px;text-align:center;font:700 10px system-ui;color:var(--acc);white-space:nowrap}
+body.quiet .ov-th #ovImg,body.quiet .ov-cat{animation:none!important}

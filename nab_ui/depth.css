@@ -49,3 +49,27 @@ body.depth .rail .rb.active{box-shadow:0 10px 22px -10px var(--acc)}
 .gate[data-st=granted] .big{--rc:#22c55e}.gate[data-st=granted] .big::before{animation:dspin .6s linear 1}
 .gate[data-st=denied] .big{--rc:#ef4444;animation:dshake .45s}.gate[data-st=denied] .big::before{animation:none}
 @keyframes dspin{to{transform:rotate(360deg)}}@keyframes dshake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+/* quiet mode */
+body.quiet *,body.quiet *::before,body.quiet *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+#quietBtn.on{background:var(--acc);color:#fff}
+/* smart focus: panels step back while you work on the canvas */
+.rail,.side,.top,.dock{transition:opacity .35s,filter .35s,transform .35s}
+body.dfocus .rail,body.dfocus .side{opacity:.45;filter:blur(1.2px) saturate(.8);transform:scale(.985)}
+body.dfocus .top{opacity:.65}
+/* glass command bar */
+#cmdk .box,#cmdk>div{backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);background:color-mix(in srgb,var(--surf) 72%,transparent)!important;border:1px solid color-mix(in srgb,#fff 16%,transparent)!important;box-shadow:0 30px 80px -20px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.12)!important}
+#cmdk.open>div,#cmdk.open .box{animation:dglass .32s cubic-bezier(.2,1.2,.3,1)}
+@keyframes dglass{from{transform:perspective(900px) translateY(-18px) rotateX(10deg) scale(.96);opacity:0}}
+#cmdkList>*{transform-origin:left center}
+#cmdkList>*:hover,#cmdkList .on{transform:perspective(600px) translateZ(6px) translateX(4px)}
+/* daily goal ring around the logo dot */
+.brand{position:relative}
+.logo-dot{position:relative;border-radius:50%}
+.logo-dot::after{content:"";position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(var(--acc) var(--p,0deg),color-mix(in srgb,var(--line) 70%,transparent) 0);-webkit-mask:radial-gradient(circle,transparent 62%,#000 66%);mask:radial-gradient(circle,transparent 62%,#000 66%);transition:background .6s}
+.logo-dot.gold::after{background:conic-gradient(#fbbf24,#f59e0b,#fbbf24);animation:dgold 2.4s linear infinite}
+@keyframes dgold{to{transform:rotate(360deg)}}
+/* team row */
+#teamRow{display:flex;margin-right:6px}#teamRow.hidden{display:none}
+.dav{width:22px;height:22px;border-radius:50%;background:hsl(var(--h) 55% 45%);color:#fff;font:700 9px/22px system-ui;text-align:center;font-style:normal;margin-left:-6px;border:2px solid var(--bg);transform:perspective(200px) translateZ(calc(var(--i)*-1px));box-shadow:0 3px 8px rgba(0,0,0,.4);transition:transform .2s;animation:dpin .4s both;animation-delay:calc(var(--i)*50ms)}
+.dav:hover{transform:translateY(-3px) scale(1.15);z-index:2}
