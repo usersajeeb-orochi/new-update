@@ -1,3 +1,6 @@
+v3.0.79
+  * New 3D depth layer (pure CSS 3D, no WebGL, light on every PC): cards tilt toward the pointer with a soft light glare, the left rail swells like a dock around the pointer, and a saved clip flies in a 3D turn into its category button. Settings > Start-up > "3D depth" turns it off.
+
 v3.0.78
   * New: a glowing three.js particle swarm follows your mouse pointer on the Clip canvas (it trails behind when you move fast, fades while you draw a selection, and pauses on other screens). Settings > Start-up > "Mouse particles" turns it off. The start-up animations also react to the pointer now.
 

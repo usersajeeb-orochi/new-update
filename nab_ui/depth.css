@@ -1,0 +1,15 @@
+/* 3D depth layer: tilt cards, dock rail, fly-to-folder, clip stack (see depth.js) */
+body.depth .card,body.depth .dtilt{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(0);transform-style:preserve-3d;transition:transform .18s ease-out,box-shadow .25s,border-color .2s;will-change:transform}
+body.depth .card.dt-on,body.depth .dtilt.dt-on{transition:transform .06s linear,box-shadow .25s;box-shadow:0 18px 40px -14px rgba(0,0,0,.65),0 0 0 1px color-mix(in srgb,var(--acc) 40%,transparent)}
+body.depth .card::after,body.depth .dtilt::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .25s;background:radial-gradient(260px circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.10),transparent 60%)}
+body.depth .card,body.depth .dtilt{position:relative}
+body.depth .card.dt-on::after,body.depth .dtilt.dt-on::after{opacity:1}
+body.depth .card h4,body.depth .card .btn{transform:translateZ(14px)}
+/* dock rail: neighbours of the hovered button swell like a dock */
+body.depth .rail .rb{transition:transform .14s ease-out,background .2s;transform:translateX(var(--dx,0px)) scale(var(--ds,1));transform-origin:left center}
+body.depth .rail .rb.active{box-shadow:0 10px 22px -10px var(--acc)}
+/* fly-to-folder ghost */
+.dfly{position:fixed;z-index:9999;pointer-events:none;border-radius:8px;background:var(--grad,#5b8cff);box-shadow:0 14px 30px rgba(0,0,0,.5);will-change:transform,opacity}
+.dpulse{animation:dpulse .6s ease-out}
+@keyframes dpulse{0%{box-shadow:0 0 0 0 var(--acc)}100%{box-shadow:0 0 0 18px transparent}}
+@media (prefers-reduced-motion:reduce){body.depth .card,body.depth .dtilt,body.depth .rail .rb{transform:none!important}}

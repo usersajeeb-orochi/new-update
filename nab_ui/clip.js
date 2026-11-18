@@ -410,7 +410,7 @@
     const tree = $("#catTree"); tree.innerHTML = ""; if (!S._catIn) { S._catIn = true; tree.classList.add("enter"); setTimeout(() => tree.classList.remove("enter"), 900); } const R = roots();
     R.forEach((r) => {
       const subs = S.st.categories[r], col = catColor(r, R);
-      const row = document.createElement("div"); row.className = "cat-root" + (S.armed.includes(r) ? " sel" : ""); row.style.setProperty("--cc", col);
+      const row = document.createElement("div"); row.className = "cat-root" + (S.armed.includes(r) ? " sel" : ""); row.dataset.cat = r; row.style.setProperty("--cc", col);
       row.innerHTML = '<span class="fold">' + (subs.length ? "▾" : "") + '</span><span class="cat-dot"></span><span>' + esc(r) + '</span><span class="cat-key">' + esc(qsFor(r).join(" ")) + "</span>";
       row.onclick = (e) => armToggle(r, e.ctrlKey || e.metaKey); tree.appendChild(row);
       subs.forEach((s) => {
@@ -566,6 +566,7 @@
     { const sb = $("#saveBtn"); sb.classList.remove("ok"); void sb.offsetWidth; sb.classList.add("ok"); } S.armed = []; F.cols.value = ""; S.touched.cols = false; S.pageTyped = false; S.lastSaveAt = Date.now();
     if (S.st && r.meta) S.st.last_meta = { page: r.meta.page, cols: r.meta.cols, size: r.meta.size };
     updateDock(); S.sel = null; renderCats(); stage.focus();
+    if (window.DEPTH) { const k = cats[0], q = (x) => x.replace(/"/g, '\\"'); const to = document.querySelector('[data-cat="' + q(k) + '"]') || document.querySelector('[data-cat="' + q(k.split("/")[0]) + '"]'); DEPTH.fly(stage, to); }
     const label = cats.map(p => p.split("/").join(" › ")).join(", ");
     toast(t("saved_to") + " " + label + " ✓", "ok", 10000, { label: t("undo") + " (Ctrl+Z)", fn: undoSave });
     if (S.ps && S.ps.on && S.ps.docs.length > 1) { const cur = S.ps.cur; psApply(await api("ps_close", { i: cur })); S.V = { z: 1, cx: .5, cy: .5 }; onClips(); }   // this canvas is finished: next screenshot
