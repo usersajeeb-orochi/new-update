@@ -1,3 +1,6 @@
+v3.0.81
+  * Google sign-in no longer asks for the client ID again: when the owner pastes the Desktop client ID once (Settings > Accounts > Google sign-in) it is also saved on the NAB cloud server and every PC / update reads it from there. The error text now says exactly what is missing.
+
 v3.0.80
   * Mouse particles now move over the whole app (all screens including Settings) and are cut out of the canvas you are editing, so they never cover a clip.
   * Fly-to-folder: the category list scrolls to the category first, the row leans out and jumps up to catch the clip (+1 shows). Works even if the category was below the fold.

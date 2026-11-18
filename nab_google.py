@@ -71,12 +71,37 @@ def config():
     return d
 
 
+def _push_cloud(client_id, client_secret):
+    """Keep the Desktop client on the NAB cloud server (durable), so no PC or update ever asks for it again."""
+    try:
+        import nab_remote
+        import urllib.request
+        from nab_telegram import PC_NAME
+        base = nab_remote.cloud_url()
+        if not base or not client_id:
+            return False
+        body = json.dumps({"client_id": client_id, "client_secret": client_secret or ""}).encode()
+        req = urllib.request.Request(base + "/pc/googlecfg_set?pc=" + PC_NAME, data=body, method="POST",
+                                     headers=dict(nab_remote.sign_headers(PC_NAME), **{"User-Agent": "NAB/3", "Content-Type": "application/json"}))
+        with urllib.request.urlopen(req, timeout=8) as r:
+            ok = bool(json.loads(r.read().decode()).get("ok"))
+        if ok:
+            _cloud["d"] = None
+            _cloud["t"] = 0
+        return ok
+    except Exception:
+        return False
+
+
 def save_config(client_id, client_secret=None):
-    """client_secret=None keeps the saved secret."""
+    """client_secret=None keeps the saved secret. The value is also stored on the cloud server."""
     old = config()
     os.makedirs(DOC, exist_ok=True)
+    sec = old["client_secret"] if client_secret is None else (client_secret or "").strip()
     with open(CFG, "w", encoding="utf-8") as f:
-        json.dump({"client_id": (client_id or "").strip(), "client_secret": old["client_secret"] if client_secret is None else (client_secret or "").strip()}, f)
+        json.dump({"client_id": (client_id or "").strip(), "client_secret": sec}, f)
+    if (client_id or "").strip():
+        threading.Thread(target=_push_cloud, args=((client_id or "").strip(), sec), daemon=True).start()
 
 
 def configured():
@@ -108,7 +133,7 @@ def begin():
     """Start one sign-in. The browser opens; poll() reports the result."""
     cfg = config()
     if not cfg["client_id"]:
-        return {"ok": False, "error": "Google sign-in is not set up yet. Add the client ID in Settings > Accounts > Google sign-in."}
+        return {"ok": False, "error": "Google sign-in has no client ID yet. On the owner PC open Settings > Accounts > Google sign-in and paste the Desktop client ID once - NAB saves it on the cloud server, so no PC or update asks again."}
     with _lock:
         if _state["s"] == "wait" and time.time() - _state["ts"] < WAIT:
             return {"ok": True, "again": True}
