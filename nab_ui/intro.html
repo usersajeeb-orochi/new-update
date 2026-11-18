@@ -135,7 +135,10 @@ neon:{"--bg":"#080912","--surf":"#0f1020","--surf2":"#181a33","--line":"#2b2f5c"
       if(ac.state==="suspended")ac.resume()}catch(e){ac=null}
   }
   var t0=performance.now();
-  function start(){if(started)return;started=true;t0=performance.now();if(soundOn)boot();if(embedded)post({t:"intro-loaded"});run();
+  var ran=false;
+  function go(){if(ran)return;ran=true;t0=performance.now();run()}
+  function start(){if(started)return;started=true;t0=performance.now();if(soundOn)boot();if(embedded)post({t:"intro-loaded"});
+    if(window.NAB_DEFER&&!window.NAB3D){window.NAB3DLOADED=function(){clearTimeout(w);go()};var w=setTimeout(go,2600)}else go();   // 3D bundle arrives just after the first paint; the aurora shows meanwhile
     setTimeout(function(){$("#hint").animate([{opacity:0},{opacity:.8}],{duration:600,fill:"forwards"})},1200)}
   ["keydown","pointerdown"].forEach(function(ev){window.addEventListener(ev,function(){if(started&&performance.now()-t0>250)skip()},true)});
   var qs=new URLSearchParams(location.search);if(qs.get("s")==="0")soundOn=false;

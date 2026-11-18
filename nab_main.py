@@ -485,6 +485,9 @@ def _early_ui(key, default):
         return default
 
 
+_INTRO = {"js": ""}
+
+
 def _intro_page():
     """The start-up page: the intro animation itself, so the window shows it from its very first frame. None = intro switched off."""
     try:
@@ -502,7 +505,11 @@ def _intro_page():
                 js3d = f.read().replace("</script", "<\\/script")
         except Exception:
             js3d = ""      # the page falls back to its CSS aurora
-        html = html.replace('<script id="n3d" src="/s/intro_3d.js"></script>', "<script>" + js3d + "</script>", 1)
+        # the 480 KB scene bundle is NOT in the first page: the window paints the light aurora at once and the bundle is
+        # injected right after the first paint (see _on_shown), so there is no black wait while a big page is parsed
+        _INTRO["js"] = js3d
+        html = html.replace('<script id="n3d" src="/s/intro_3d.js"></script>', "", 1)
+        inject = inject.replace("</script>", "window.NAB_DEFER=%s;</script>" % ("true" if js3d else "false"), 1)
         return html.replace("</head>", inject + "</head>", 1)
     except Exception as e:
         logging.error(f"intro page: {e}")
@@ -572,6 +579,18 @@ def run_webview():
                 sh.main.maximize()
             except Exception as e:
                 logging.error(f"maximize: {e}")
+        if intro_html and _INTRO["js"]:                     # 3D scenes arrive after the first paint
+            def _load3d():
+                import json as _j2
+                code = ("(function(){try{var s=document.createElement('script');s.text=%s;document.head.appendChild(s)}catch(e){}"
+                        "window.NAB3DLOADED&&window.NAB3DLOADED()})()" % _j2.dumps(_INTRO["js"]))
+                for _ in range(40):
+                    try:
+                        sh.main.evaluate_js(code)
+                        break
+                    except Exception:
+                        time.sleep(.1)
+            threading.Thread(target=_load3d, daemon=True, name="NAB-Intro3D").start()
         if intro_html:                                      # the launcher screen holds ~0.7 s, then fades: begin the animation right after
             def _go():
                 for _ in range(40):

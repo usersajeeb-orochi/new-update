@@ -1,3 +1,6 @@
+v3.0.82
+  * Start-up: no more black wait. The first page is now tiny (12 KB instead of ~490 KB) and paints the moving aurora immediately; the 3D scene is loaded right after the first paint and takes over (falls back to the 2D intro if it is late).
+
 v3.0.81
   * Google sign-in no longer asks for the client ID again: when the owner pastes the Desktop client ID once (Settings > Accounts > Google sign-in) it is also saved on the NAB cloud server and every PC / update reads it from there. The error text now says exactly what is missing.
 
