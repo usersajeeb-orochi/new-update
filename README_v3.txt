@@ -1,3 +1,11 @@
+v3.0.80
+  * Mouse particles now move over the whole app (all screens including Settings) and are cut out of the canvas you are editing, so they never cover a clip.
+  * Fly-to-folder: the category list scrolls to the category first, the row leans out and jumps up to catch the clip (+1 shows). Works even if the category was below the fold.
+  * Hover the recent-saves button (clock) to see your last saves fan out as a 3D card stack; click opens the full list.
+  * Reports: the daily analysis now shows draggable 3D bar charts (clips by paper, clips by category).
+  * Login screen: soft moving aurora, a spinning ring that turns green when approved and shakes red when denied.
+  * Settings > Comfort > "3D & motion" holds the switches for 3D depth and Mouse particles. The dock rail effect is gentler so nothing is clipped.
+
 v3.0.79
   * New 3D depth layer (pure CSS 3D, no WebGL, light on every PC): cards tilt toward the pointer with a soft light glare, the left rail swells like a dock around the pointer, and a saved clip flies in a 3D turn into its category button. Settings > Start-up > "3D depth" turns it off.
 

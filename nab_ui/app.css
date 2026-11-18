@@ -427,4 +427,4 @@ html.bg-hidden *,html.bg-hidden *::before,html.bg-hidden *::after{animation-play
   .sh-links{min-height:110px;height:24vh}
 }
 
-#mfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:15;transition:opacity .25s}
+#mfx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:40;transition:opacity .25s}

@@ -425,7 +425,8 @@ def build_for_day(arch, day, out_dir=None, client=""):
         doc = build_doc(A, out_dir=out_dir)
     except Exception:
         doc = ""
-    return {"ok": True, "path": path, "doc": doc, "n": A["n"], "day": day, "insights": A["insights"]}
+    return {"ok": True, "path": path, "doc": doc, "n": A["n"], "day": day, "insights": A["insights"],
+            "chart": {"papers": A["by_paper"].most_common(8), "cats": A["by_cat"].most_common(8), "hours": sorted(A["by_hour"].items()), "trend": [[d, n] for d, n, _ in A["trend"][-14:]]}}
 
 
 # ------------------------------------------------------------------ Drive upload

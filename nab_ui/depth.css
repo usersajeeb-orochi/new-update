@@ -6,10 +6,46 @@ body.depth .card,body.depth .dtilt{position:relative}
 body.depth .card.dt-on::after,body.depth .dtilt.dt-on::after{opacity:1}
 body.depth .card h4,body.depth .card .btn{transform:translateZ(14px)}
 /* dock rail: neighbours of the hovered button swell like a dock */
-body.depth .rail .rb{transition:transform .14s ease-out,background .2s;transform:translateX(var(--dx,0px)) scale(var(--ds,1));transform-origin:left center}
+body.depth .rail .rb{transition:transform .14s ease-out,background .2s;transform:translateX(var(--dx,0px)) scale(var(--ds,1));transform-origin:center}
 body.depth .rail .rb.active{box-shadow:0 10px 22px -10px var(--acc)}
 /* fly-to-folder ghost */
 .dfly{position:fixed;z-index:9999;pointer-events:none;border-radius:8px;background:var(--grad,#5b8cff);box-shadow:0 14px 30px rgba(0,0,0,.5);will-change:transform,opacity}
 .dpulse{animation:dpulse .6s ease-out}
 @keyframes dpulse{0%{box-shadow:0 0 0 0 var(--acc)}100%{box-shadow:0 0 0 18px transparent}}
 @media (prefers-reduced-motion:reduce){body.depth .card,body.depth .dtilt,body.depth .rail .rb{transform:none!important}}
+
+/* category row leans out, then catches the clip */
+.cat-root.dreach,.cat-sub.dreach{transform:translateX(10px) scale(1.04);transition:transform .25s cubic-bezier(.3,1.6,.5,1);box-shadow:0 8px 20px -8px var(--acc);position:relative;z-index:2}
+.cat-root.dcatch,.cat-sub.dcatch{animation:dcatch .6s cubic-bezier(.3,1.6,.5,1);position:relative}
+@keyframes dcatch{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-9px) scale(1.07)}100%{transform:translateY(0) scale(1)}}
+.dplus{position:absolute;right:8px;top:2px;font:800 12px system-ui;color:var(--acc);animation:dplus .9s ease-out forwards;pointer-events:none}
+@keyframes dplus{0%{transform:translateY(6px);opacity:0}25%{opacity:1}100%{transform:translateY(-16px);opacity:0}}
+/* recent-saves stack peek */
+.dpeek{position:fixed;z-index:9000;width:240px;height:210px;perspective:900px;cursor:pointer}
+.dpeek .dp-c{position:absolute;left:0;top:0;width:220px;border-radius:12px;background:var(--surf);border:1px solid var(--line);padding:6px;box-shadow:0 14px 30px -12px rgba(0,0,0,.7);transform-origin:left center;transform:translate3d(calc(var(--i)*6px),calc(var(--i)*5px),calc(var(--i)*-24px)) rotateY(-8deg);transition:transform .35s cubic-bezier(.3,1.3,.5,1);display:flex;flex-direction:column;gap:2px;animation:dpin .35s both;animation-delay:calc(var(--i)*40ms)}
+.dpeek:hover .dp-c{transform:translate3d(calc(var(--i)*30px),calc(var(--i)*14px),calc(var(--i)*-10px)) rotateY(-16deg)}
+.dpeek img{width:100%;height:96px;object-fit:cover;object-position:top;border-radius:8px;background:#fff}
+.dpeek b{font-size:12px}.dpeek small{color:var(--dim);font-size:11px}
+@keyframes dpin{from{opacity:0;transform:translate3d(0,-14px,-60px)}}
+/* 3D bar chart */
+.d3b{margin-top:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surf2);padding:10px 14px;cursor:grab;user-select:none;touch-action:none}
+.d3b-t{font:700 12px system-ui;letter-spacing:.05em;text-transform:uppercase;color:var(--dim)}
+.d3b-s{height:230px;perspective:900px;display:flex;align-items:center;justify-content:center}
+.d3b-w{position:relative;width:var(--ww);height:46px;transform-style:preserve-3d;transition:transform .15s;margin-top:70px}
+.d3b-b{position:absolute;left:calc(var(--x)*54px);top:0;width:36px;height:36px;transform-style:preserve-3d;transform:translateZ(calc(var(--h)/2));animation:dbar .7s backwards;animation-delay:var(--d)}
+.d3b-b i{position:absolute;left:0;top:calc((36px - var(--h))/2);width:36px;height:var(--h);background:var(--c)}
+.d3b-b .t{top:0;height:36px;transform:translateZ(calc(var(--h)/2));background:color-mix(in srgb,var(--c) 65%,#fff)}
+.d3b-b .f{transform:rotateX(90deg) translateZ(18px);filter:brightness(.95)}
+.d3b-b .k{transform:rotateX(90deg) rotateY(180deg) translateZ(18px);filter:brightness(.75)}
+.d3b-b .r{transform:rotateX(90deg) rotateY(90deg) translateZ(18px);filter:brightness(.8)}
+.d3b-b .l{transform:rotateX(90deg) rotateY(-90deg) translateZ(18px);filter:brightness(.7)}
+@keyframes dbar{from{transform:translateZ(calc(var(--h)/2 + 90px))}}
+.d3b-lg{display:flex;flex-wrap:wrap;gap:6px 14px;font:12px system-ui;color:var(--dim)}.d3b-lg span{display:flex;align-items:center;gap:5px}.d3b-lg i{width:10px;height:10px;border-radius:3px;background:var(--c);display:inline-block}.d3b-lg b{color:var(--txt)}
+/* login: spinning ring + soft aurora behind the gate */
+.gate::before{content:"";position:absolute;inset:-20%;z-index:-1;background:radial-gradient(40% 40% at 25% 30%,rgba(91,140,255,.28),transparent 70%),radial-gradient(35% 35% at 75% 65%,rgba(167,139,250,.24),transparent 70%),radial-gradient(30% 30% at 50% 85%,rgba(34,211,238,.18),transparent 70%);filter:blur(30px);animation:daur 14s ease-in-out infinite alternate}
+@keyframes daur{to{transform:translate3d(4%,-3%,0) rotate(8deg) scale(1.1)}}
+.gate .big{position:relative;display:inline-block;--rc:var(--acc)}
+.gate .big::before{content:"";position:absolute;inset:-14px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 55%,var(--rc) 100%);-webkit-mask:radial-gradient(circle,transparent 62%,#000 64%);mask:radial-gradient(circle,transparent 62%,#000 64%);animation:dspin 1.4s linear infinite}
+.gate[data-st=granted] .big{--rc:#22c55e}.gate[data-st=granted] .big::before{animation:dspin .6s linear 1}
+.gate[data-st=denied] .big{--rc:#ef4444;animation:dshake .45s}.gate[data-st=denied] .big::before{animation:none}
+@keyframes dspin{to{transform:rotate(360deg)}}@keyframes dshake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}

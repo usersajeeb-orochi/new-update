@@ -22,7 +22,7 @@
   }
   function dock(e) {
     document.querySelectorAll(".rail .rb").forEach((b) => { const r = b.getBoundingClientRect(), d = Math.abs(e.clientY - (r.top + r.height / 2)), k = Math.max(0, 1 - d / 110);
-      b.style.setProperty("--ds", (1 + k * .16).toFixed(3)); b.style.setProperty("--dx", (k * 5).toFixed(1) + "px"); });
+      b.style.setProperty("--ds", (1 + k * .07).toFixed(3)); b.style.setProperty("--dx", "0px"); });
   }
   function undock() { document.querySelectorAll(".rail .rb").forEach((b) => { b.style.setProperty("--ds", 1); b.style.setProperty("--dx", "0px"); }); }
   function move(e) { ev = e; if (!raf) raf = requestAnimationFrame(tick); }
@@ -33,17 +33,49 @@
     else { document.removeEventListener("pointermove", move); document.removeEventListener("pointerleave", leave); leave(); }
     try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (e) { }
   }
-  /* a clip card "flies" from where it was saved into the category button, with a little 3D turn */
-  function fly(fromEl, toEl, label) {
+  /* a saved clip "flies" from the canvas into its category: the list scrolls to the row, the row jumps up to catch it */
+  function fly(fromEl, toEl) {
     if (!on || !fromEl || !toEl) return;
-    const a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect(); if (!a.width || !b.width) return;
-    const g = document.createElement("div"); g.className = "dfly"; const w = Math.min(a.width, 200), h = Math.min(a.height, 140); g.style.cssText = `left:${a.left + a.width / 2 - w / 2}px;top:${a.top + a.height / 2 - h / 2}px;width:${w}px;height:${h}px`;
-    document.body.appendChild(g);
-    const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
-    const an = g.animate([{ transform: "perspective(700px) translate3d(0,0,0) rotateY(0) scale(1)", opacity: .95 }, { transform: `perspective(700px) translate3d(${dx * .5}px,${dy * .5 - 60}px,120px) rotateY(160deg) scale(.7)`, opacity: .9, offset: .55 }, { transform: `perspective(700px) translate3d(${dx}px,${dy}px,0) rotateY(360deg) scale(.08)`, opacity: 0 }], { duration: 620, easing: "cubic-bezier(.5,.1,.3,1)" });
-    an.onfinish = () => { g.remove(); toEl.classList.add("dpulse"); setTimeout(() => toEl.classList.remove("dpulse"), 650); };
+    try { toEl.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { }
+    setTimeout(() => {
+      const a = fromEl.getBoundingClientRect(); let b = toEl.getBoundingClientRect(); if (!a.width || !b.width) return;
+      const w = Math.min(a.width, 200), h = Math.min(a.height, 140), g = document.createElement("div"); g.className = "dfly";
+      g.style.cssText = `left:${a.left + a.width / 2 - w / 2}px;top:${a.top + a.height / 2 - h / 2}px;width:${w}px;height:${h}px`; document.body.appendChild(g);
+      const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+      toEl.classList.add("dreach");                                              // the row leans out to meet the clip
+      const an = g.animate([{ transform: "perspective(700px) translate3d(0,0,0) rotateY(0) scale(1)", opacity: .95 }, { transform: `perspective(700px) translate3d(${dx * .5}px,${dy * .5 - 70}px,120px) rotateY(160deg) scale(.7)`, opacity: .9, offset: .55 }, { transform: `perspective(700px) translate3d(${dx}px,${dy}px,0) rotateY(360deg) scale(.1)`, opacity: .15 }], { duration: 640, easing: "cubic-bezier(.5,.1,.3,1)" });
+      an.onfinish = () => { g.remove(); toEl.classList.remove("dreach"); toEl.classList.add("dcatch"); const n = document.createElement("span"); n.className = "dplus"; n.textContent = "+1"; toEl.appendChild(n); setTimeout(() => { toEl.classList.remove("dcatch"); n.remove(); }, 900); };
+    }, 380);
   }
-  window.DEPTH = { enable, fly, isOn: () => on };
+  /* hover the recent-saves button: the last saves fan out as a 3D card stack, click opens the full list */
+  let peekEl = null, peekT = 0;
+  function peekClose() { clearTimeout(peekT); peekT = setTimeout(() => { if (peekEl) { peekEl.remove(); peekEl = null; } }, 220); }
+  async function peekOpen(btn) {
+    if (!on || !window.C) return; clearTimeout(peekT); if (peekEl) return;
+    let r; try { r = await C.api("recent", { limit: 6 }); } catch (e) { return; } if (!r || !r.items || !r.items.length || peekEl) return;
+    const box = document.createElement("div"); box.className = "dpeek"; const br = btn.getBoundingClientRect();
+    box.style.cssText = `left:${Math.max(8, Math.min(innerWidth - 300, br.left - 120))}px;top:${br.bottom + 8}px`;
+    box.innerHTML = r.items.slice(0, 6).map((it, i) => `<div class="dp-c" style="--i:${i}"><img src="${C.url("/thumb?w=220&p=" + encodeURIComponent(it.path))}"><b>${C.esc(it.category || "")}</b><small>${C.esc(it.time || "")}</small></div>`).join("");
+    box.onmouseenter = () => clearTimeout(peekT); box.onmouseleave = peekClose; box.onclick = () => { box.remove(); peekEl = null; window.MAIN && MAIN.recent(); };
+    document.body.appendChild(box); peekEl = box;
+  }
+  function wirePeek() { const b = document.getElementById("savedBtn"); if (!b) return setTimeout(wirePeek, 500); b.addEventListener("mouseenter", () => peekOpen(b)); b.addEventListener("mouseleave", peekClose); }
+  /* 3D bar chart (CSS 3D): drag to turn it */
+  function bars(host, title, rows) {
+    rows = (rows || []).filter((r) => r && r[1] > 0).slice(0, 8); if (!rows.length) return;
+    const mx = Math.max(...rows.map((r) => r[1])), C0 = ["#5b8cff", "#a78bfa", "#22d3ee", "#34d399", "#fbbf24", "#fb7185", "#60a5fa", "#c084fc"];
+    const d = document.createElement("div"); d.className = "d3b";
+    d.style.setProperty("--ww", rows.length * 54 + "px");
+    d.innerHTML = `<div class="d3b-t">${C.esc(title)}</div><div class="d3b-s"><div class="d3b-w">${rows.map((r, i) => `<div class="d3b-b" style="--x:${i};--h:${Math.max(8, r[1] / mx * 130)}px;--c:${C0[i % 8]};--d:${i * 80}ms"><i class="t"></i><i class="f"></i><i class="k"></i><i class="r"></i><i class="l"></i></div>`).join("")}</div></div><div class="d3b-lg">${rows.map((r, i) => `<span style="--c:${C0[i % 8]}"><i></i>${C.esc(String(r[0]))} <b>${r[1]}</b></span>`).join("")}</div>`;
+    host.appendChild(d);
+    const w = d.querySelector(".d3b-w"); let ax = 62, az = -32, down = null;
+    const set = () => { w.style.transform = `rotateX(${ax}deg) rotateZ(${az}deg)`; }; set();
+    d.addEventListener("pointerdown", (e) => { down = [e.clientX, e.clientY, ax, az]; d.setPointerCapture(e.pointerId); });
+    d.addEventListener("pointermove", (e) => { if (!down) return; az = down[3] + (e.clientX - down[0]) * .4; ax = Math.max(20, Math.min(80, down[2] - (e.clientY - down[1]) * .3)); set(); });
+    d.addEventListener("pointerup", () => { down = null; });
+  }
+  window.DEPTH = { enable, fly, bars, isOn: () => on };
+  wirePeek();
   let saved = "1"; try { saved = localStorage.getItem(KEY) || "1"; } catch (e) { }
   enable(saved !== "0");
 })();

@@ -63,7 +63,7 @@
   }
   let loginTimer = null;
   function onLogin(ev) {
-    const g = $("#gStatus"); if (!g) return;
+    const g = $("#gStatus"); if (!g) return; { const gt = $("#gate"); if (gt) gt.dataset.st = ev.stage || ""; }
     if (ev.stage === "waiting") {
       let left = ev.timeout || 120; clearInterval(loginTimer);
       const tick = () => { const el = $("#gTimer"); if (el) el.textContent = "Auto-denied in " + Math.max(0, left--) + "s"; };
@@ -76,24 +76,29 @@
 
   /* mouse swarm: a transparent three.js layer on the Clip stage (loaded on demand, bundle shared with the start-up scenes) */
   let mfx = null, mfxLoading = false;
+  let mfxT = 0, mfxBox = "";
   function mfxMove(e) { if (mfx) mfx.move(e.clientX, e.clientY); }
-  function mfxDim(v) { const c = $("#mfx"); if (c) c.style.opacity = v; }
+  function mfxCut() {                                   // the swarm never draws over the canvas you are editing: that rectangle is cut out of the layer
+    const c = $("#mfx"), st = $("#stage"); if (!c) return; let box = "";
+    if (st && st.offsetParent) { const r = st.getBoundingClientRect(); box = [r.left, r.top, r.right, r.bottom].map(Math.round).join(","); }
+    if (box === mfxBox) return; mfxBox = box;
+    if (!box) { c.style.clipPath = "none"; return; } const [l, t, rr, b] = box.split(",");
+    c.style.clipPath = `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${l}px ${t}px,${l}px ${b}px,${rr}px ${b}px,${rr}px ${t}px,${l}px ${t}px)`;
+  }
   function mouseFx(on) {
     const stage = $("#stage");
     if (!on || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
-      if (mfx) { mfx.dispose(); mfx = null; stage.removeEventListener("pointermove", mfxMove); }
+      if (mfx) { mfx.dispose(); mfx = null; clearInterval(mfxT); window.removeEventListener("pointermove", mfxMove); }
       const c = $("#mfx"); if (c) c.remove(); return;
     }
     if (mfx || mfxLoading || !stage) return;
     const go = () => {
       mfxLoading = false; if (mfx || !window.NAB3D || !NAB3D.supported()) return;
-      let cv = $("#mfx"); if (!cv) { cv = document.createElement("canvas"); cv.id = "mfx"; stage.appendChild(cv); }
+      let cv = $("#mfx"); if (!cv) { cv = document.createElement("canvas"); cv.id = "mfx"; document.body.appendChild(cv); }
       try { mfx = NAB3D.pointerFx(cv, { accent: getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#5b8cff", count: (navigator.hardwareConcurrency || 4) <= 4 ? 90 : 150 }); }
       catch (e) { cv.remove(); return; }
-      stage.addEventListener("pointermove", mfxMove, { passive: true });
-      stage.addEventListener("pointerdown", () => mfxDim(0), true);
-      window.addEventListener("pointerup", () => mfxDim(1), true);
-      mfx.active(M.view === "clip");
+      window.addEventListener("pointermove", mfxMove, { passive: true });
+      mfx.active(true); mfxT = setInterval(mfxCut, 250); mfxCut();
     };
     if (window.NAB3D) return go();
     mfxLoading = true; const sc = document.createElement("script"); sc.src = "/s/intro_3d.js"; sc.onload = go; sc.onerror = () => { mfxLoading = false; }; document.head.appendChild(sc);
