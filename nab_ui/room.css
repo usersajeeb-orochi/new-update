@@ -1,0 +1,16 @@
+/* spatial room: a floor and a map under the app, screens glide through it */
+#roomBg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:none}
+body.room #roomBg{display:block}
+#roomBg b{position:absolute;left:-50%;right:-50%;bottom:-8%;height:62%;transform:perspective(500px) rotateX(64deg);transform-origin:50% 100%;opacity:.5;transition:background-position .7s cubic-bezier(.3,.8,.25,1);
+ background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:64px 64px;
+ background-position:calc(var(--rx,0)*-128px) calc(var(--ry,0)*-128px);-webkit-mask-image:linear-gradient(to top,#000 20%,transparent 92%);mask-image:linear-gradient(to top,#000 20%,transparent 92%)}
+body.roomgo .view{backface-visibility:hidden}
+body.roomgo .app{overflow:hidden}
+.view.room-out{pointer-events:none;z-index:4}
+#roomMap{display:none;grid-template-columns:repeat(4,9px);grid-auto-rows:9px;gap:3px;padding:6px 8px;margin-right:8px;border:1px solid var(--line);border-radius:8px;background:var(--surf2);align-items:center}
+body.room #roomMap{display:grid}
+#roomMap i{width:9px;height:9px;border-radius:3px;background:var(--line);cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s}
+#roomMap i:hover{transform:scale(1.35);background:var(--dim)}
+#roomMap i.on{background:var(--acc);box-shadow:0 0 8px var(--acc);transform:scale(1.2)}
+body.quiet #roomBg,body.quiet #roomMap{display:none}
+body.room .rail,body.room .top{position:relative;z-index:6}
