@@ -42,7 +42,7 @@ window.TOOLS = window.TOOLS || {};
       $("#dInfo").textContent = r.n + " clips" + (upload ? (r.upload_error ? " - Drive failed: " + r.upload_error : " - sent to Drive") : "");
       $("#rOut").innerHTML = `<div class="card"><b>Analysis ready</b><div class="sub">${esc(r.path)}</div>${(r.insights || []).map(t => `<div class="sub">- ${esc(t)}</div>`).join("")}<div class="tk-bar" style="margin-top:8px"><button class="btn" id="rOpen">Open folder</button></div></div>`;
       $("#rOpen").onclick = () => api("reports_open", { path: r.path.replace(/[\\/][^\\/]*$/, "") });
-      if (r.chart && window.DEPTH) { const o = $("#rOut"); DEPTH.bars(o, "Clips by paper (drag to turn)", r.chart.papers); DEPTH.bars(o, "Clips by category", r.chart.cats); }
+      if (r.chart && window.DEPTH) DEPTH.report($("#rOut"), r.chart);
     };
     $("#dGo").onclick = () => daily(true); $("#dLocal").onclick = () => daily(false);
     $("#rGo").onclick = async () => {

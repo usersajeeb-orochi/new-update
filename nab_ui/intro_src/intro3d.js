@@ -4,7 +4,7 @@
 //   opts: { accent:"#5b8cff", bg:"#0b0c13", onLogo(), onBeat(name), logoAt }
 import {
   WebGLRenderer, Scene, PerspectiveCamera, BufferGeometry, Float32BufferAttribute, Points, ShaderMaterial, AdditiveBlending,
-  Color, Mesh, PlaneGeometry, TorusGeometry, MeshBasicMaterial, CanvasTexture, DoubleSide, Group, Vector2, Vector3, LineSegments, FrontSide
+  Color, Mesh, PlaneGeometry, TorusGeometry, SphereGeometry, RingGeometry, MeshBasicMaterial, CanvasTexture, DoubleSide, Group, Vector2, Vector3, LineSegments, FrontSide
 } from "three";
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -244,6 +244,7 @@ export function create(canvas, style, opts) {
     if (dt > 40) { if (++slow > 8 && px > 1) { px = 1; renderer.setPixelRatio(px); size(); } } else if (slow > 0) slow -= .3;
     const t = (now - t0) / 1000;
     ptr.x += (ptr.tx - ptr.x) * .08; ptr.y += (ptr.ty - ptr.y) * .08;
+    if (opts.getLevel) { try { const L = opts.getLevel() || 0; camera.zoom += (1 + L * .07 - camera.zoom) * .35; camera.updateProjectionMatrix(); } catch (e) { } }   // the picture breathes with the start-up sound
     S.update(t);
     if (!logoDone && t >= S.logoAt) { logoDone = true; opts.onLogo && opts.onLogo(); }
     renderer.render(scene, camera);
@@ -302,8 +303,49 @@ export function pointerFx(canvas, o) {
   window.addEventListener("resize", size);
   return {
     move(cx, cy) { const r = canvas.getBoundingClientRect(); tx = ((cx - r.left) / Math.max(1, r.width)) * 2 - 1; ty = -(((cy - r.top) / Math.max(1, r.height)) * 2 - 1); if (!seen) { seen = true; const [hw, hh] = wh(); for (let i = 0; i < N; i++) { pos[i * 3] = tx * hw; pos[i * 3 + 1] = ty * hh; } } },
+    pulse(power) { const p = power || 1; for (let i = 0; i < N; i++) { const k = i * 3, a = Math.random() * 6.283, f = (2 + Math.random() * 5) * p; vel[k] += Math.cos(a) * f; vel[k + 1] += Math.sin(a) * f; vel[k + 2] += (Math.random() - .5) * 3 * p; } },
     active(v) { on = !!v; if (!on) { renderer.clear(); } },
     resize: size,
     dispose() { dead = true; cancelAnimationFrame(raf); window.removeEventListener("resize", size); try { renderer.dispose(); renderer.forceContextLoss(); } catch (e) { } }
   };
+}
+
+/* ------------------------------------------------------------------------------------------------------------ activity globe (Reports) */
+// A dot globe that turns by itself (drag to turn it). Each item {name,count} becomes a glowing, pulsing marker; bigger count = bigger marker.
+//   const g = NAB3D.globe(canvas, { accent:"#5b8cff", items:[{name:"Daily Star",count:12}] });  g.dispose();
+export function globe(canvas, o) {
+  o = o || {};
+  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "low-power" });
+  renderer.setClearColor(0x000000, 0); let px = Math.min(window.devicePixelRatio || 1, 1.5); renderer.setPixelRatio(px);
+  const scene = new Scene(), camera = new PerspectiveCamera(40, 1, .1, 100); camera.position.z = 6.2;
+  const acc = new Color(o.accent || "#5b8cff"), root = new Group(); scene.add(root);
+  const N = 1500, g = new BufferGeometry(), p = new Float32Array(N * 3), sd = new Float32Array(N);
+  for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963; p[i * 3] = Math.cos(th) * r * 2; p[i * 3 + 1] = y * 2; p[i * 3 + 2] = Math.sin(th) * r * 2; sd[i] = Math.random(); }
+  g.setAttribute("position", new Float32BufferAttribute(p, 3)); g.setAttribute("aS", new Float32BufferAttribute(sd, 1));
+  const dm = new ShaderMaterial({ transparent: true, depthWrite: false, blending: AdditiveBlending, uniforms: { uPx: { value: px }, uC: { value: acc } },
+    vertexShader: "uniform float uPx;attribute float aS;varying float vF;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;vF=clamp((-mv.z-4.)/4.5,0.,1.);gl_PointSize=(1.4+aS*1.4)*uPx*(6./-mv.z);}",
+    fragmentShader: "uniform vec3 uC;varying float vF;void main(){float d=length(gl_PointCoord-.5);float a=1.-smoothstep(0.,.5,d);gl_FragColor=vec4(uC*(1.1-vF*.8),a*(.9-vF*.7));}" });
+  root.add(new Points(g, dm));
+  const items = (o.items || []).slice(0, 10), mx = Math.max(1, ...items.map((i) => i.count || 0)), marks = [];
+  items.forEach((it, i) => {
+    const y = 0.75 - (i / Math.max(1, items.length - 1)) * 1.5, r = Math.sqrt(1 - y * y), th = i * 2.4 + .6, v = new Vector3(Math.cos(th) * r, y, Math.sin(th) * r).multiplyScalar(2.04);
+    const sz = .07 + .13 * ((it.count || 0) / mx), m = new Mesh(new SphereGeometry(sz, 14, 14), new MeshBasicMaterial({ color: hsl(acc, .08, .1, .22) }));
+    m.position.copy(v); root.add(m);
+    const ring = new Mesh(new RingGeometry(sz * 1.6, sz * 1.9, 32), new MeshBasicMaterial({ color: hsl(acc, .08, .1, .22), transparent: true, opacity: .6, side: DoubleSide }));
+    ring.position.copy(v); ring.lookAt(v.clone().multiplyScalar(2)); root.add(ring); marks.push({ m, ring, i });
+  });
+  let W = 1, H = 1, rx = .35, ry = 0, drag = null, vy = .003, raf = 0, dead = false;
+  function size() { const r = canvas.getBoundingClientRect(); W = Math.max(2, r.width | 0); H = Math.max(2, r.height | 0); renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix(); }
+  size();
+  const down = (e) => { drag = { x: e.clientX, y: e.clientY, ry, rx }; canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); };
+  const move = (e) => { if (!drag) return; ry = drag.ry + (e.clientX - drag.x) * .01; rx = Math.max(-1.1, Math.min(1.1, drag.rx + (e.clientY - drag.y) * .008)); };
+  const up = () => { drag = null; };
+  canvas.addEventListener("pointerdown", down); canvas.addEventListener("pointermove", move); canvas.addEventListener("pointerup", up);
+  function frame(now) { if (dead) return; raf = requestAnimationFrame(frame); if (document.hidden) return; const t = now / 1000;
+    if (canvas.clientWidth && (Math.abs(canvas.clientWidth - W) > 2 || Math.abs(canvas.clientHeight - H) > 2)) size();
+    if (!drag) ry += vy; root.rotation.set(rx, ry, 0);
+    marks.forEach((k) => { const s = 1 + .25 * Math.sin(t * 2.2 + k.i); k.ring.scale.set(s, s, s); k.ring.material.opacity = .65 - .35 * ((Math.sin(t * 2.2 + k.i) + 1) / 2); });
+    renderer.render(scene, camera); }
+  raf = requestAnimationFrame(frame); window.addEventListener("resize", size);
+  return { resize: size, dispose() { dead = true; cancelAnimationFrame(raf); window.removeEventListener("resize", size); canvas.removeEventListener("pointerdown", down); canvas.removeEventListener("pointermove", move); canvas.removeEventListener("pointerup", up); try { renderer.dispose(); renderer.forceContextLoss(); } catch (e) { } } };
 }

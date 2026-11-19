@@ -128,7 +128,7 @@ class TelegramAuth:
         reason = _html.escape((reason or "").strip()[:140])
 
         request_text = (
-            f"🔐 <b>NAB Login Request</b>" + (" — <i>owner only</i>" if owner_only else "") + "\n\n"
+            "🔐 <b>NAB Login Request</b>" + (" — <i>owner only</i>" if owner_only else "") + "\n\n"
             f"💻 PC: <code>{PC_NAME}</code>\n"
             f"👤 User: <code>{user}</code>\n"
             f"🕐 Time: {now.strftime('%H:%M:%S')}\n"
@@ -756,7 +756,7 @@ def _send_log_today():
     for e in today_entries[-20:]:
         icon = "✅" if "granted" in e["result"] else "⛔"
         lines.append(f"{icon} {e['time'][11:]} — {e['pc']} ({e['user']}) — {e['result']}")
-    _tg_send(f"📋 <b>Access Log Today</b>\n\n" + "\n".join(lines))
+    _tg_send("📋 <b>Access Log Today</b>\n\n" + "\n".join(lines))
 
 
 

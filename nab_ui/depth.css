@@ -73,3 +73,30 @@ body.dfocus .top{opacity:.65}
 #teamRow{display:flex;margin-right:6px}#teamRow.hidden{display:none}
 .dav{width:22px;height:22px;border-radius:50%;background:hsl(var(--h) 55% 45%);color:#fff;font:700 9px/22px system-ui;text-align:center;font-style:normal;margin-left:-6px;border:2px solid var(--bg);transform:perspective(200px) translateZ(calc(var(--i)*-1px));box-shadow:0 3px 8px rgba(0,0,0,.4);transition:transform .2s;animation:dpin .4s both;animation-delay:calc(var(--i)*50ms)}
 .dav:hover{transform:translateY(-3px) scale(1.15);z-index:2}
+
+/* paper wall (Tracker): received papers rise toward you and glow, missing ones sink back */
+body.depth .tk-grid{perspective:1300px;transform-style:preserve-3d}
+body.depth .tk-card{--tz:-10px;transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(var(--tz));transition:transform .2s ease-out,box-shadow .3s,opacity .3s;position:relative}
+body.depth .tk-card.on{--tz:22px;box-shadow:0 16px 30px -14px rgba(34,197,94,.55),0 0 0 1px rgba(34,197,94,.45)}
+body.depth .tk-card:not(.on){opacity:.82}
+/* glass cards over a slow moving colour field */
+body.depth::before{content:"";position:fixed;inset:-10%;z-index:0;pointer-events:none;background:radial-gradient(35% 35% at 20% 30%,rgba(var(--accrgb),.16),transparent 70%),radial-gradient(30% 30% at 80% 70%,rgba(167,139,250,.12),transparent 70%),radial-gradient(28% 28% at 60% 15%,rgba(34,211,238,.09),transparent 70%);animation:daur 18s ease-in-out infinite alternate;opacity:.9}
+body.depth.bgpulse::before{animation:daur 18s ease-in-out infinite alternate,dflash .9s ease-out}
+@keyframes dflash{0%{filter:brightness(2.2) saturate(1.5)}100%{filter:none}}
+body.depth .card{background:color-mix(in srgb,var(--surf) 78%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border-color:color-mix(in srgb,#fff 10%,var(--line))}
+/* 3D rail icons: extruded look, spin on hover */
+body.depth .rail .rb svg,body.depth .rail .rb .ic{filter:drop-shadow(1px 1px 0 color-mix(in srgb,var(--acc) 55%,#000)) drop-shadow(2px 2px 0 color-mix(in srgb,var(--acc) 40%,#000)) drop-shadow(3px 4px 5px rgba(0,0,0,.55));transition:transform .5s cubic-bezier(.3,1.4,.5,1);transform-style:preserve-3d}
+body.depth .rail .rb:hover svg,body.depth .rail .rb:hover .ic{transform:perspective(200px) rotateY(360deg) translateZ(8px)}
+body.depth .rail .rb.active svg,body.depth .rail .rb.active .ic{animation:dfloat 2.6s ease-in-out infinite}
+@keyframes dfloat{50%{transform:translateY(-2px) perspective(200px) rotateY(14deg)}}
+/* canvas corner peel */
+.dpeel{position:absolute;right:0;bottom:0;width:calc(26px + var(--k,0)*90px);height:calc(26px + var(--k,0)*90px);pointer-events:none;z-index:18;opacity:calc(var(--k,0)*1.4);transition:width .12s,height .12s,opacity .2s;background:linear-gradient(315deg,transparent 50%,color-mix(in srgb,#fff 28%,var(--surf2)) 50%,var(--surf2) 62%);border-top-left-radius:100% 100%;box-shadow:-6px -6px 14px -6px rgba(0,0,0,.55)}
+.dpeel b{position:absolute;right:10px;bottom:6px;font:700 11px system-ui;color:var(--acc);white-space:nowrap;transform:rotate(-45deg);transform-origin:right bottom}
+/* page-turn book + globe */
+.dbook{margin-top:12px}.dbook-s{position:relative;perspective:1600px;transform-style:preserve-3d}
+.dbook .dpage{margin-top:0;transform-origin:left center;backface-visibility:hidden}
+.dbook .dpage.turn-out{animation:dturn .65s cubic-bezier(.5,0,.3,1) forwards;position:relative;z-index:9}
+.dbook .dpage.turn-in{animation:dturn .65s cubic-bezier(.5,0,.3,1) reverse}
+@keyframes dturn{to{transform:rotateY(-105deg);opacity:0}}
+.dbook-n{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px;font:12px system-ui;color:var(--dim)}
+.d3g canvas{width:100%;height:260px;display:block;cursor:grab}.d3b-no{padding:40px 10px;text-align:center;color:var(--dim)}

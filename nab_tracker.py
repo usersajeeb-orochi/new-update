@@ -553,7 +553,6 @@ class NewspaperTracker(ctk.CTkToplevel):
         """Switch the checklist to show a specific date, pre-filling from log if exists."""
         self.editing_date = d
         is_today = (d == datetime.date.today())
-        is_past  = (d < datetime.date.today())
 
         # Update date label
         label = d.strftime("%d %B %Y  (%A)")
@@ -1889,7 +1888,6 @@ class NewspaperTracker(ctk.CTkToplevel):
                       command=self._reset_papers).pack(anchor="w", padx=20)
 
     def _browse_creds(self):
-        from tkinter import filedialog
         p = filedialog.askopenfilename(
             filetypes=[("JSON", "*.json"), ("All files", "*.*")],
             title="Select Service Account JSON file")

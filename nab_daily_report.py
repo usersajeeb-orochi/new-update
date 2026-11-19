@@ -4,7 +4,6 @@
 # By hour, People, 30-day trend, Missing papers, and every clip. Built from the clip archive with openpyxl only (free, already in NAB).
 import collections
 import datetime
-import logging
 import os
 import re
 import time
@@ -318,7 +317,6 @@ def build_workbook(rows_all, day, out_dir=None, client=""):
         bar(ov, bp, 5, min(4 + len(papers), 14), "Clips by newspaper (top 10)", ACCENT, f"A{r}")
     if cats:
         pie_rows = cats[:8] + ([("Other", sum(v for _, v in cats[8:]))] if len(cats) > 8 else [])
-        pr = len(papers) + 8
         # helper table for the pie on the By paper sheet (right side), so the Overview stays clean
         bp.cell(row=4, column=12, value="Category").font = Font(bold=True)
         bp.cell(row=4, column=13, value="Clips").font = Font(bold=True)

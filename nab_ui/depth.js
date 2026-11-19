@@ -4,7 +4,7 @@
   "use strict";
   const KEY = "nab_depth"; let on = false, cur = null, raf = 0, ev = null;
   const reduce = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const SEL = ".card,.dtilt";
+  const SEL = ".card,.dtilt,.tk-card";
   function reset(el) { if (!el) return; el.classList.remove("dt-on"); el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); }
   function tick() {
     raf = 0; if (!ev) return; const e = ev; ev = null;
@@ -75,6 +75,62 @@
     d.addEventListener("pointerup", () => { down = null; });
   }
 
+
+  /* ───── three.js loader (shared) ───── */
+  let n3 = 0, n3q = [];
+  function need3d(cb) {
+    if (window.NAB3D && NAB3D.supported && NAB3D.supported()) return cb(true);
+    if (window.NAB3D) return cb(false);
+    n3q.push(cb); if (n3) return; n3 = 1;
+    const sc = document.createElement("script"); sc.src = "/s/intro_3d.js"; sc.onload = () => { const ok = !!(window.NAB3D && NAB3D.supported()); n3q.splice(0).forEach((f) => f(ok)); }; sc.onerror = () => n3q.splice(0).forEach((f) => f(false)); document.head.appendChild(sc);
+  }
+  /* ───── activity globe (WebGL) ───── */
+  function globe(host, title, rows) {
+    rows = (rows || []).filter((r) => r && r[1] > 0).slice(0, 8); if (!rows.length) return null;
+    const d = document.createElement("div"); d.className = "d3b d3g"; d.innerHTML = `<div class="d3b-t">${C.esc(title)}</div><canvas></canvas><div class="d3b-lg">${rows.map((r) => `<span><i style="background:var(--acc)"></i>${C.esc(String(r[0]))} <b>${r[1]}</b></span>`).join("")}</div>`; host.appendChild(d);
+    need3d((ok) => { if (!ok) { d.querySelector("canvas").replaceWith(Object.assign(document.createElement("div"), { className: "d3b-no", textContent: "3D globe needs WebGL (not available on this PC)." })); return; }
+      const cs = getComputedStyle(document.documentElement); const g = NAB3D.globe(d.querySelector("canvas"), { accent: (cs.getPropertyValue("--acc") || "#5b8cff").trim(), items: rows.map((r) => ({ name: r[0], count: r[1] })) });
+      const gone = new MutationObserver(() => { if (!document.body.contains(d)) { g.dispose(); gone.disconnect(); } }); gone.observe(document.body, { childList: true, subtree: true }); });
+    return d;
+  }
+  /* ───── page-turn book: pages flip around the spine ───── */
+  function book(host, pages) {
+    pages = pages.filter(Boolean); if (pages.length < 2) { pages.forEach((p) => host.appendChild(p)); return; }
+    const b = document.createElement("div"); b.className = "dbook"; b.innerHTML = '<div class="dbook-s"></div><div class="dbook-n"><button class="btn" data-d="-1">◀</button><span></span><button class="btn" data-d="1">▶</button></div>'; host.appendChild(b);
+    const st = b.querySelector(".dbook-s"), lab = b.querySelector("span"); pages.forEach((p, i) => { p.classList.add("dpage"); p.style.zIndex = pages.length - i; st.appendChild(p); }); let cur = 0;
+    function show(n, dir) { n = Math.max(0, Math.min(pages.length - 1, n)); if (n === cur) return; const a = pages[cur], z = pages[n]; cur = n;
+      pages.forEach((p) => p.classList.remove("cur")); z.classList.add("cur"); z.style.display = "";
+      if (dir > 0) { a.classList.add("turn-out"); setTimeout(() => { a.classList.remove("turn-out"); a.style.display = "none"; }, 650); } else { a.style.display = "none"; z.classList.add("turn-in"); setTimeout(() => z.classList.remove("turn-in"), 650); }
+      lab.textContent = (cur + 1) + " / " + pages.length; }
+    pages.forEach((p, i) => { p.style.display = i ? "none" : ""; }); pages[0].classList.add("cur"); lab.textContent = "1 / " + pages.length;
+    b.querySelectorAll("button").forEach((x) => x.onclick = () => show(cur + +x.dataset.d, +x.dataset.d));
+  }
+  function report(host, ch) {
+    if (!ch) return; const mk = (f) => { const w = document.createElement("div"); f(w); return w.firstChild; };
+    book(host, [mk((w) => bars(w, "Clips by paper (drag to turn)", ch.papers)), mk((w) => bars(w, "Clips by category", ch.cats)), mk((w) => globe(w, "Activity globe (drag to turn)", ch.papers))]);
+  }
+  /* ───── category shelf: rows bend away from the centre like a curved shelf ───── */
+  function shelf() {
+    const t = document.getElementById("catTree"); if (!t) return setTimeout(shelf, 700);
+    const sc = t.closest(".side") || t.parentElement; let q = 0;
+    const run = () => { q = 0; if (!on) { t.querySelectorAll(".cat-root,.cat-sub").forEach((r) => { r.style.transform = ""; }); return; } const R = sc.getBoundingClientRect(), mid = R.top + R.height / 2;
+      t.querySelectorAll(".cat-root").forEach((r) => { const b = r.getBoundingClientRect(); if (r.classList.contains("dreach") || r.classList.contains("dcatch")) return; const k = Math.max(-1, Math.min(1, (b.top + b.height / 2 - mid) / (R.height / 2)));
+        r.style.transform = `perspective(700px) rotateX(${(-k * 14).toFixed(1)}deg) translateZ(${(-Math.abs(k) * 26).toFixed(0)}px)`; r.style.opacity = (1 - Math.abs(k) * .28).toFixed(2); }); };
+    const sched = () => { if (!q) q = requestAnimationFrame(run); };
+    sc.addEventListener("scroll", sched, { passive: true }); t.addEventListener("scroll", sched, { passive: true }); new MutationObserver(sched).observe(t, { childList: true }); window.addEventListener("resize", sched); sched();
+  }
+  /* ───── paper corner peel on the canvas: hover the lower-right corner ───── */
+  function peel() {
+    const st = document.getElementById("stage"); if (!st) return setTimeout(peel, 700);
+    const el = document.createElement("div"); el.className = "dpeel"; el.innerHTML = "<b></b>"; st.appendChild(el);
+    st.addEventListener("pointermove", (e) => { if (!on) return; const r = st.getBoundingClientRect(), dx = r.right - e.clientX, dy = r.bottom - e.clientY, d = Math.hypot(dx, dy), k = Math.max(0, 1 - d / 170);
+      el.style.setProperty("--k", k.toFixed(2)); const c = document.querySelector("#dockCatName"); el.querySelector("b").textContent = k > .5 && c ? "→ " + c.textContent : ""; }, { passive: true });
+    st.addEventListener("pointerleave", () => el.style.setProperty("--k", 0));
+  }
+  /* ───── save pulse: particles burst, the backdrop flashes ───── */
+  function savePulse() { if (quiet || !on) return; if (window.MAIN && MAIN.mfxPulse) MAIN.mfxPulse(); document.body.classList.remove("bgpulse"); void document.body.offsetWidth; document.body.classList.add("bgpulse"); setTimeout(() => document.body.classList.remove("bgpulse"), 900); }
+  /* toolbar: the mouse wheel scrolls it sideways when icons do not fit */
+  function toolbarWheel() { const tb = document.getElementById("toolbar"); if (!tb) return setTimeout(toolbarWheel, 700); tb.addEventListener("wheel", (e) => { if (tb.scrollWidth > tb.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) { tb.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); }
   /* ───── quiet mode: every effect off at once (Ctrl+Shift+Q) ───── */
   let quiet = false, pre = null;
   function setQuiet(v) {
@@ -105,9 +161,9 @@
       b.innerHTML = l.map((n, i) => `<i class="dav" style="--i:${i};--h:${(n.split("").reduce((a, c) => a + c.charCodeAt(0), 0) * 37) % 360}" title="${C.esc(n)} is online">${C.esc(n.replace(/^DESKTOP-?/i, "").slice(0, 2).toUpperCase() || "PC")}</i>`).join("");
       b.classList.toggle("hidden", !l.length); } catch (e) { }
   }
-  function startExtras() { wireFocus(); ring(); team(); setInterval(ring, 20000); setInterval(team, 30000); document.addEventListener("clips", ring); if (window.C && C.on) { C.on("saved", () => setTimeout(ring, 600)); } try { if (localStorage.getItem("nab_quiet") === "1") setQuiet(true); } catch (e) { } }
+  function startExtras() { wireFocus(); shelf(); peel(); toolbarWheel(); ring(); team(); setInterval(ring, 20000); setInterval(team, 30000); document.addEventListener("clips", ring); if (window.C && C.on) { C.on("saved", () => { setTimeout(ring, 600); savePulse(); }); } try { if (localStorage.getItem("nab_quiet") === "1") setQuiet(true); } catch (e) { } }
   setTimeout(startExtras, 1500);
-  window.DEPTH = { enable, fly, bars, isOn: () => on, quiet: setQuiet, isQuiet: () => quiet, goal: (n) => { goal = Math.max(1, +n || 30); try { localStorage.setItem("nab_goal", goal); } catch (e) { } ring(); }, getGoal: () => goal };
+  window.DEPTH = { enable, fly, bars, globe, book, report, need3d, isOn: () => on, quiet: setQuiet, isQuiet: () => quiet, goal: (n) => { goal = Math.max(1, +n || 30); try { localStorage.setItem("nab_goal", goal); } catch (e) { } ring(); }, getGoal: () => goal };
   wirePeek();
   let saved = "1"; try { saved = localStorage.getItem(KEY) || "1"; } catch (e) { }
   enable(saved !== "0");

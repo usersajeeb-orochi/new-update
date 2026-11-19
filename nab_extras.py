@@ -2,7 +2,6 @@
 #   per-paper defaults · page-from-ePaper hints · detection test · extension light · learn-this-paper
 #   local settings backups · crash-safe draft · copy last saved · inch calibration · clean-up memory
 #   first-run guide status · slow-PC detection · missed-save guard
-import io
 import os
 import re
 import sys
@@ -137,7 +136,6 @@ class ExtrasMixin:
         if l is None:
             return {"ok": False, "error": "No clip."}
         w, h = l.img.size
-        first = True
         for r in rects:
             shape = {"type": "rect", "x1": r["x1"] * w, "y1": r["y1"] * h, "x2": r["x2"] * w, "y2": r["y2"] * h}
             self.doc.op_erase(layer_id, shape)
@@ -569,7 +567,6 @@ class ExtrasMixin:
                       "fix": "Settings → Newspapers → Paste shot (Win+Shift+S, drag around the logo)."})
         # 3 extension
         e = self.ext_status()
-        here = os.path.dirname(os.path.abspath(__file__))
         ext_dir = self.ext_install_dir()
         steps.append({"id": "ext", "ok": e["state"] == "ok", "title": "Browser extension", "detail": e["text"], "path": ext_dir,
                       "why": "It tells NAB which e-paper tab you are on, so the paper (and page) are picked automatically.",
@@ -595,7 +592,6 @@ class ExtrasMixin:
                       "why": "NAB's window needs it. Windows 11 has it; some Windows 10 PCs do not.",
                       "fix": "Install 'Evergreen Bootstrapper' from microsoft.com/edge/webview2 (free, 2 minutes)."})
         # 5 drive key / upload
-        c = _sum() if callable(_sum) else {}
         steps.append({"id": "upload", "ok": True, "title": "Google upload", "detail": "ON" if self.upload_enabled() else "OFF (clips stay on this PC)",
                       "why": "Uploading is optional and can be turned on later.", "fix": "Settings → Sync → Upload clips to Google."})
         # 6 mappings
