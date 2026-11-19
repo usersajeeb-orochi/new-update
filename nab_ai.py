@@ -112,8 +112,18 @@ class AI:
             body = json.dumps({"kind": kind, "messages": messages, "json_mode": json_mode, "max_tokens": max_tokens, "temperature": temperature}).encode()
             req = urllib.request.Request(nab_remote.cloud_url() + "/ai/chat?pc=" + urllib.parse.quote(PC_NAME), data=body,
                                          headers=dict(nab_remote.sign_headers(PC_NAME), **{"Content-Type": "application/json", "User-Agent": "NAB/3"}))
-            with urllib.request.urlopen(req, timeout=60) as r:
-                j = json.loads(r.read().decode("utf-8"))
+            j = None
+            for tmo in (35, 55):                         # a sleeping free server needs ~30 s to wake: one quiet retry before giving up
+                try:
+                    with urllib.request.urlopen(req, timeout=tmo) as r:
+                        j = json.loads(r.read().decode("utf-8"))
+                    break
+                except urllib.error.HTTPError:
+                    raise
+                except Exception as ex:
+                    if tmo == 55:
+                        raise ex
+                    time.sleep(1.5)
             if j.get("ok") and j.get("text"):
                 self.last_used = f"{j.get('provider')} / {j.get('model')}"
                 return j["text"].strip(), ""

@@ -87,23 +87,17 @@
   }
   function mouseFx(on) {
     const stage = $("#stage");
-    if (!on || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+    if (!on) {
       if (mfx) { mfx.dispose(); mfx = null; clearInterval(mfxT); window.removeEventListener("pointermove", mfxMove); }
       const c = $("#mfx"); if (c) c.remove(); return;
     }
-    if (mfx || mfxLoading || !stage) return;
-    const go = () => {
-      mfxLoading = false; if (mfx || !window.NAB3D || !NAB3D.supported()) return;
-      let cv = $("#mfx"); if (!cv) { cv = document.createElement("canvas"); cv.id = "mfx"; document.body.appendChild(cv); }
-      try { mfx = NAB3D.pointerFx(cv, { accent: getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#5b8cff", count: (navigator.hardwareConcurrency || 4) <= 4 ? 90 : 150 }); }
-      catch (e) { cv.remove(); return; }
-      window.addEventListener("pointermove", mfxMove, { passive: true });
-      mfx.active(true); mfxT = setInterval(mfxCut, 250); mfxCut();
-    };
-    if (window.NAB3D) return go();
-    mfxLoading = true; const sc = document.createElement("script"); sc.src = "/s/intro_3d.js"; sc.onload = go; sc.onerror = () => { mfxLoading = false; }; document.head.appendChild(sc);
+    if (mfx || !stage || !window.STARS) return;
+    let cv = $("#mfx"); if (!cv) { cv = document.createElement("canvas"); cv.id = "mfx"; document.body.appendChild(cv); }
+    mfx = STARS.create(cv, { accent: getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#5b8cff" });
+    window.addEventListener("pointermove", mfxMove, { passive: true });
+    mfxT = setInterval(mfxCut, 400); mfxCut();
   }
-  M.mouseFx = mouseFx; M.mouseFxOn = () => !!mfx; M.mfxPulse = () => { if (mfx && mfx.pulse) mfx.pulse(1); };
+  M.mouseFx = mouseFx; M.mouseFxOn = () => !!mfx; M.mfxPulse = () => { if (mfx && mfx.pulse) mfx.pulse(); };
   let started = false;
   async function start() {
     if (started) return; started = true;
@@ -172,6 +166,7 @@
       $("#pmList").innerHTML = list.map((p, i) => '<div class="mi' + (p === M.st.paper ? " sel" : "") + (i === hl ? " hl" : "") + '" data-p="' + esc(p) + '"><img loading="lazy" src="' + url("/logo?n=" + encodeURIComponent(p)) + '" onerror="this.style.visibility=\'hidden\'"><span>' + esc(C.clean(p)) + "</span></div>").join("");
       $$("#pmList .mi").forEach(n => n.onclick = () => pick(n.dataset.p));
     };
+    $("#catEditBtn").onclick = () => { M.show("settings"); setTimeout(() => window.SETTINGS_GO && window.SETTINGS_GO("cats"), 120); };
     $("#pmEdit").onclick = () => { menu.classList.add("hidden"); const b = document.querySelector('[data-view="settings"]'); b && b.click(); setTimeout(() => window.SETTINGS_GO && window.SETTINGS_GO("papers"), 150); };
     const pick = async (p) => { menu.classList.add("hidden"); await api("set_paper", { paper: p }); M.st.paper = p; };
     inp.oninput = () => { hl = 0; draw(); };
@@ -332,7 +327,7 @@
 
   // ───────────────────────── nav / views ─────────────────────────
   M.show = function (v) {
-    M.view = v; if (mfx) mfx.active(v === "clip"); $$(".view").forEach(n => n.classList.add("hidden")); $("#view-" + v).classList.remove("hidden");
+    M.view = v; $$(".view").forEach(n => n.classList.add("hidden")); $("#view-" + v).classList.remove("hidden");
     $$("#rail .rb[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === v));
     $("#dock").classList.toggle("hidden", v !== "clip"); if (v === "clip") setTimeout(() => CLIPUI.onShow(), 0); if (v === "settings") SETTINGS.render();
     if (window.TOOLS && TOOLS[v]) { const T = TOOLS[v]; if (!T._m) { T._m = true; T.mount($("#view-" + v)); } T.show && T.show(); }

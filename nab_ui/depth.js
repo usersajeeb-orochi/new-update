@@ -109,15 +109,17 @@
     if (!ch) return; const mk = (f) => { const w = document.createElement("div"); f(w); return w.firstChild; };
     book(host, [mk((w) => bars(w, "Clips by paper (drag to turn)", ch.papers)), mk((w) => bars(w, "Clips by category", ch.cats)), mk((w) => globe(w, "Activity globe (drag to turn)", ch.papers))]);
   }
-  /* ───── category shelf: rows bend away from the centre like a curved shelf ───── */
+  /* ───── category shelf: every row is a small slab; rows lean away and sink toward the top and bottom edge of the list like a curved shelf ───── */
   function shelf() {
     const t = document.getElementById("catTree"); if (!t) return setTimeout(shelf, 700);
-    const sc = t.closest(".side") || t.parentElement; let q = 0;
-    const run = () => { q = 0; if (!on) { t.querySelectorAll(".cat-root,.cat-sub").forEach((r) => { r.style.transform = ""; }); return; } const R = sc.getBoundingClientRect(), mid = R.top + R.height / 2;
-      t.querySelectorAll(".cat-root").forEach((r) => { const b = r.getBoundingClientRect(); if (r.classList.contains("dreach") || r.classList.contains("dcatch")) return; const k = Math.max(-1, Math.min(1, (b.top + b.height / 2 - mid) / (R.height / 2)));
-        r.style.transform = `perspective(700px) rotateX(${(-k * 14).toFixed(1)}deg) translateZ(${(-Math.abs(k) * 26).toFixed(0)}px)`; r.style.opacity = (1 - Math.abs(k) * .28).toFixed(2); }); };
+    let sc = t.parentElement; while (sc && sc !== document.body && !/(auto|scroll)/.test(getComputedStyle(sc).overflowY)) sc = sc.parentElement; if (!sc || sc === document.body) sc = t.parentElement;
+    let q = 0;
+    const run = () => { q = 0; const rows = t.querySelectorAll(".cat-root,.cat-sub"); if (!on) { rows.forEach((r) => { r.style.removeProperty("--ry"); r.style.removeProperty("--tz"); r.style.removeProperty("--op"); }); return; }
+      const R = sc.getBoundingClientRect(), mid = R.top + R.height / 2, half = Math.max(80, R.height / 2), vals = [];
+      rows.forEach((r) => { const b = r.getBoundingClientRect(); vals.push(b.bottom < R.top - 40 || b.top > R.bottom + 40 ? null : Math.max(-1, Math.min(1, (b.top + b.height / 2 - mid) / half))); });
+      rows.forEach((r, i) => { const k = vals[i]; if (k === null) return; r.style.setProperty("--ry", (-Math.abs(k) * 16).toFixed(1) + "deg"); r.style.setProperty("--tz", (-Math.abs(k) * 34).toFixed(0) + "px"); r.style.setProperty("--op", (1 - Math.abs(k) * .35).toFixed(2)); }); };
     const sched = () => { if (!q) q = requestAnimationFrame(run); };
-    sc.addEventListener("scroll", sched, { passive: true }); t.addEventListener("scroll", sched, { passive: true }); new MutationObserver(sched).observe(t, { childList: true }); window.addEventListener("resize", sched); sched();
+    sc.addEventListener("scroll", sched, { passive: true }); t.addEventListener("scroll", sched, { passive: true }); new MutationObserver(sched).observe(t, { childList: true, subtree: true }); window.addEventListener("resize", sched); setTimeout(sched, 300); sched();
   }
   /* ───── paper corner peel on the canvas: hover the lower-right corner ───── */
   function peel() {

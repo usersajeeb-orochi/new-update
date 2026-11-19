@@ -80,10 +80,10 @@ body.depth .tk-card{--tz:-10px;transform:perspective(900px) rotateX(var(--rx,0de
 body.depth .tk-card.on{--tz:22px;box-shadow:0 16px 30px -14px rgba(34,197,94,.55),0 0 0 1px rgba(34,197,94,.45)}
 body.depth .tk-card:not(.on){opacity:.82}
 /* glass cards over a slow moving colour field */
-body.depth::before{content:"";position:fixed;inset:-10%;z-index:0;pointer-events:none;background:radial-gradient(35% 35% at 20% 30%,rgba(var(--accrgb),.16),transparent 70%),radial-gradient(30% 30% at 80% 70%,rgba(167,139,250,.12),transparent 70%),radial-gradient(28% 28% at 60% 15%,rgba(34,211,238,.09),transparent 70%);animation:daur 18s ease-in-out infinite alternate;opacity:.9}
-body.depth.bgpulse::before{animation:daur 18s ease-in-out infinite alternate,dflash .9s ease-out}
+body.depth::before{content:"";position:fixed;inset:-10%;z-index:0;pointer-events:none;background:radial-gradient(35% 35% at 20% 30%,rgba(var(--accrgb),.16),transparent 70%),radial-gradient(30% 30% at 80% 70%,rgba(167,139,250,.12),transparent 70%),radial-gradient(28% 28% at 60% 15%,rgba(34,211,238,.09),transparent 70%);opacity:.9}
+body.depth.bgpulse::before{animation:dflash .9s ease-out}
 @keyframes dflash{0%{filter:brightness(2.2) saturate(1.5)}100%{filter:none}}
-body.depth .card{background:color-mix(in srgb,var(--surf) 78%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border-color:color-mix(in srgb,#fff 10%,var(--line))}
+body.depth .card{background:color-mix(in srgb,var(--surf) 92%,transparent);border-color:color-mix(in srgb,#fff 10%,var(--line))}
 /* 3D rail icons: extruded look, spin on hover */
 body.depth .rail .rb svg,body.depth .rail .rb .ic{filter:drop-shadow(1px 1px 0 color-mix(in srgb,var(--acc) 55%,#000)) drop-shadow(2px 2px 0 color-mix(in srgb,var(--acc) 40%,#000)) drop-shadow(3px 4px 5px rgba(0,0,0,.55));transition:transform .5s cubic-bezier(.3,1.4,.5,1);transform-style:preserve-3d}
 body.depth .rail .rb:hover svg,body.depth .rail .rb:hover .ic{transform:perspective(200px) rotateY(360deg) translateZ(8px)}
@@ -100,3 +100,19 @@ body.depth .rail .rb.active svg,body.depth .rail .rb.active .ic{animation:dfloat
 @keyframes dturn{to{transform:rotateY(-105deg);opacity:0}}
 .dbook-n{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px;font:12px system-ui;color:var(--dim)}
 .d3g canvas{width:100%;height:260px;display:block;cursor:grab}.d3b-no{padding:40px 10px;text-align:center;color:var(--dim)}
+
+/* ───── category list: raised slabs on a curved shelf ───── */
+body.depth .cat-tree{perspective:800px;perspective-origin:0% 50%;gap:5px;padding:2px 4px 8px 2px}
+body.depth .cat-root,body.depth .cat-sub{--ry:0deg;--tz:0px;position:relative;transform-origin:0% 50%;transform:rotateY(var(--ry)) translateZ(var(--tz));opacity:var(--op,1);
+ background:linear-gradient(135deg,color-mix(in srgb,var(--cc,var(--acc)) 16%,var(--surf2)),var(--surf));border:1px solid color-mix(in srgb,var(--cc,var(--acc)) 22%,var(--line));
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.07),3px 3px 0 -1px color-mix(in srgb,var(--cc,var(--acc)) 45%,#000),0 8px 12px -8px rgba(0,0,0,.65);transition:transform .22s cubic-bezier(.3,1.3,.5,1),box-shadow .22s,background-color .15s}
+body.depth .cat-root:hover,body.depth .cat-sub:hover{transform:rotateY(-5deg) translateZ(20px) translateX(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),5px 5px 0 -1px color-mix(in srgb,var(--cc,var(--acc)) 60%,#000),0 14px 18px -8px rgba(0,0,0,.7);z-index:3}
+body.depth .cat-root.sel,body.depth .cat-sub.sel{background:linear-gradient(135deg,var(--cc),color-mix(in srgb,var(--cc) 70%,#000));transform:rotateY(-3deg) translateZ(14px);box-shadow:4px 4px 0 -1px color-mix(in srgb,var(--cc) 40%,#000),0 12px 22px -8px var(--cc)}
+body.depth .cat-root.dreach,body.depth .cat-sub.dreach{transform:translateZ(40px) scale(1.05)}
+/* ───── recent saves: cards stand in a staggered stack and rise toward you ───── */
+body.depth #drawer .rs{transform-origin:0% 50%;transform:perspective(800px) rotateY(-9deg) translateZ(0);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),4px 4px 0 -1px color-mix(in srgb,var(--acc) 35%,#000),0 10px 16px -10px rgba(0,0,0,.7);border:1px solid var(--line);transition:transform .25s cubic-bezier(.3,1.3,.5,1),box-shadow .25s;animation:drsIn .45s cubic-bezier(.2,1,.3,1) backwards}
+body.depth #drawer .rs:hover{transform:perspective(800px) rotateY(0deg) translateZ(26px) scale(1.02);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 18px 26px -10px rgba(0,0,0,.75),0 0 0 1px var(--acc);z-index:3;position:relative}
+body.depth #drawer .rs img{box-shadow:2px 3px 0 0 rgba(0,0,0,.35),0 6px 10px -4px rgba(0,0,0,.6)}
+body.depth #drawer .rs:nth-child(2){animation-delay:.05s}body.depth #drawer .rs:nth-child(3){animation-delay:.1s}body.depth #drawer .rs:nth-child(4){animation-delay:.15s}body.depth #drawer .rs:nth-child(5){animation-delay:.2s}body.depth #drawer .rs:nth-child(n+6){animation-delay:.25s}
+@keyframes drsIn{from{transform:perspective(800px) translate3d(60px,0,-160px) rotateY(-50deg)}}
+body.quiet .cat-root,body.quiet .cat-sub{transform:none!important;opacity:1!important}

@@ -72,6 +72,11 @@ def shape_bbox(shape, size):
     t = shape.get("type", "rect")
     if t == "not":
         return 0, 0, w, h
+    if t == "sub":                      # base minus cut: it can never be bigger than the base
+        return shape_bbox(shape["base"], size)
+    if t == "union":
+        bbs = [shape_bbox(p, size) for p in shape["parts"]]
+        return min(b[0] for b in bbs), min(b[1] for b in bbs), max(b[2] for b in bbs), max(b[3] for b in bbs)
     if t in ("rect", "ellipse"):
         xs = [shape["x1"], shape["x2"]]
         ys = [shape["y1"], shape["y2"]]
@@ -95,6 +100,13 @@ def make_mask(size, shape):
     t = shape.get("type", "rect")
     if t == "not":                      # inverted selection: everything except the inner shape
         return ImageOps.invert(make_mask(size, shape["inner"]))
+    if t == "union":                    # Shift: several shapes added together
+        m = Image.new("L", size, 0)
+        for part in shape["parts"]:
+            m = ImageChops.lighter(m, make_mask(size, part))
+        return m
+    if t == "sub":                      # Alt: the second shape cut out of the first
+        return ImageChops.subtract(make_mask(size, shape["base"]), make_mask(size, shape["cut"]))
     m = Image.new("L", size, 0)
     d = ImageDraw.Draw(m)
     if t == "rect":
@@ -725,7 +737,7 @@ class Document:
                 return False
             x1, y1, x2, y2 = shape_bbox(shape, l.img.size)
             self.checkpoint()
-            if shape.get("type", "rect") in ("poly", "ellipse"):
+            if shape.get("type", "rect") in ("poly", "ellipse", "union", "sub"):
                 # non-rectangular crop: keep the shape, white outside
                 m = make_mask(l.img.size, shape).crop((x1, y1, x2, y2))
                 piece = l.img.crop((x1, y1, x2, y2))

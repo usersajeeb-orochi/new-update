@@ -108,16 +108,18 @@
   }
 
   // ───────────────────────── overlay drawing ─────────────────────────
-  function pathShape(c, it, sh) {
-    if (sh.type === "not") { pathShape(c, it, sh.inner); const [ia, ib] = fromLayer(it, 0, 0), [ic, id] = fromLayer(it, it.w * it.sx, it.h * it.sy); c.rect(ia, ib, ic - ia, id - ib); return; }
-    c.beginPath();
+  function addPath(c, it, sh) {
+    if (sh.type === "union") { sh.parts.forEach(q => addPath(c, it, q)); return; }
+    if (sh.type === "sub") { addPath(c, it, sh.base); addPath(c, it, sh.cut); return; }
+    if (sh.type === "not") { addPath(c, it, sh.inner); const [ia, ib] = fromLayer(it, 0, 0), [ic, id] = fromLayer(it, it.w * it.sx, it.h * it.sy); c.rect(ia, ib, ic - ia, id - ib); return; }
     if (sh.type === "rect" || sh.type === "ellipse") {
       const [a, b] = fromLayer(it, Math.min(sh.x1, sh.x2), Math.min(sh.y1, sh.y2)), [d, e] = fromLayer(it, Math.max(sh.x1, sh.x2), Math.max(sh.y1, sh.y2));
-      if (sh.type === "rect") c.rect(a, b, d - a, e - b); else c.ellipse((a + d) / 2, (b + e) / 2, Math.abs(d - a) / 2, Math.abs(e - b) / 2, 0, 0, Math.PI * 2);
+      if (sh.type === "rect") c.rect(a, b, d - a, e - b); else { c.moveTo((a + d) / 2 + Math.abs(d - a) / 2, (b + e) / 2); c.ellipse((a + d) / 2, (b + e) / 2, Math.abs(d - a) / 2, Math.abs(e - b) / 2, 0, 0, Math.PI * 2); }
     } else if (sh.type === "poly") {
       sh.points.forEach((p, i) => { const [x, y] = fromLayer(it, p[0], p[1]); if (i) c.lineTo(x, y); else c.moveTo(x, y); }); c.closePath();
     }
   }
+  function pathShape(c, it, sh) { c.beginPath(); addPath(c, it, sh); }
   function strokeShape(it, sh) {
     pathShape(ctx, it, sh);
     ctx.lineWidth = 3; ctx.strokeStyle = "#000"; ctx.setLineDash([]); ctx.stroke();
@@ -125,6 +127,8 @@
   }
   function bboxOf(sh) {
     if (sh.type === "not") return bboxOf(sh.inner);
+    if (sh.type === "sub") return bboxOf(sh.base);
+    if (sh.type === "union") { const b = sh.parts.map(bboxOf); return [Math.min(...b.map(x => x[0])), Math.min(...b.map(x => x[1])), Math.max(...b.map(x => x[2])), Math.max(...b.map(x => x[3]))]; }
     if (sh.type === "poly") { const xs = sh.points.map(p => p[0]), ys = sh.points.map(p => p[1]); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; }
     return [Math.min(sh.x1, sh.x2), Math.min(sh.y1, sh.y2), Math.max(sh.x1, sh.x2), Math.max(sh.y1, sh.y2)];
   }
@@ -170,7 +174,7 @@
           const sc = dr.scale || 1, s = scale() / (it.sx), k = 1;
           const dxv = dr.dx * (scale() / it.sx), dyv = dr.dy * (scale() / it.sy);
           ctx.translate(cx + dxv, cy + dyv); ctx.scale(sc, sc); ctx.translate(-cx, -cy);
-          pathShape(ctx, it, S.sel.shape); ctx.clip();
+          pathShape(ctx, it, S.sel.shape); ctx.clip(S.sel.shape.type === "sub" ? "evenodd" : "nonzero");
           ctx.drawImage(pageEl, S.tx, S.ty, S.P.w * scale(), S.P.h * scale());
           ctx.restore();
           ctx.save(); ctx.translate(cx + dxv, cy + dyv); ctx.scale(sc, sc); ctx.translate(-cx, -cy); strokeShape(it, S.sel.shape); ctx.restore();
@@ -234,6 +238,30 @@
     for (const k in H) if (near(x, y, H[k][0], H[k][1])) return k; return null;
   }
 
+  // keep the end of the selection under the pointer (also after the view scrolled under it)
+  function growShape(d) {
+    const [lx, ly] = toLayer(d.it, d.last[0], d.last[1]);
+    if (d.shape.type === "poly") { const q = d.shape.points[d.shape.points.length - 1]; if (!q || Math.abs(q[0] - lx) + Math.abs(q[1] - ly) > 0.5) d.shape.points.push([lx, ly]); return; }
+    d.shape.x2 = lx; d.shape.y2 = ly;
+    if (d.shiftNow && d.mode === "new" && d.shape.type === "rect") { const w = d.shape.x2 - d.shape.x1; d.shape.y2 = d.shape.y1 + Math.sign(d.shape.y2 - d.shape.y1 || 1) * Math.abs(w); }
+  }
+  // Photoshop: while you drag a selection the picture scrolls by itself when the pointer touches (or leaves) the edge of the canvas
+  let asRaf = 0;
+  function startAutoScroll() {
+    if (asRaf) return;
+    const tickAS = () => {
+      const d = S.drag; if (!d || d.kind !== "draw" || !S.P) { asRaf = 0; return; }
+      const [x, y] = d.last, E = 44, s = scale(); let vx = 0, vy = 0;
+      if (x < E) vx = -(E - x); else if (x > S.sw - E) vx = x - (S.sw - E);
+      if (y < E) vy = -(E - y); else if (y > S.sh - E) vy = y - (S.sh - E);
+      if (vx || vy) {
+        const k = 0.35; vx = Math.max(-120, Math.min(120, vx)) * k; vy = Math.max(-120, Math.min(120, vy)) * k;
+        S.V.cx += vx / (S.P.w * s); S.V.cy += vy / (S.P.h * s); applyView(); growShape(d); drawOv();
+      }
+      asRaf = requestAnimationFrame(tickAS);
+    };
+    asRaf = requestAnimationFrame(tickAS);
+  }
   stage.addEventListener("pointerdown", (e) => {
     if (e.target.closest(".suggest,.card-float,.textbox")) return;
     stage.focus(); const [x, y] = evPos(e);
@@ -264,11 +292,14 @@
       S.drag = { kind: "brush", clone: { dx: S.cloneSrc.x - lx, dy: S.cloneSrc.y - ly }, layer: it.id, view: [[x, y]], pts: [[lx, ly]], it }; return;
     }
     if (S.tool === "brush") { const [lx, ly] = toLayer(it, x, y); S.drag = { kind: "brush", layer: it.id, view: [[x, y]], pts: [[lx, ly]], it }; return; }
-    S.sel = null;
+    // Photoshop rules: Shift = add to the selection, Alt = subtract from it, neither = start a new one
+    const mode = S.sel && S.sel.layer === it.id ? (e.altKey ? "sub" : e.shiftKey ? "add" : "new") : "new";
+    if (mode === "new") S.sel = null;
     const [lx, ly] = toLayer(it, x, y);
-    if (S.tool === "lasso") S.drag = { kind: "draw", layer: it.id, shape: { type: "poly", points: [[lx, ly]] }, it };
-    else S.drag = { kind: "draw", layer: it.id, start: [lx, ly], shape: { type: S.tool === "ellipse" ? "ellipse" : "rect", x1: lx, y1: ly, x2: lx, y2: ly }, it };
-    drawOv();
+    if (S.tool === "lasso") S.drag = { kind: "draw", layer: it.id, shape: { type: "poly", points: [[lx, ly]] }, it, mode, last: [x, y], shift: e.shiftKey };
+    else S.drag = { kind: "draw", layer: it.id, start: [lx, ly], shape: { type: S.tool === "ellipse" ? "ellipse" : "rect", x1: lx, y1: ly, x2: lx, y2: ly }, it, mode, last: [x, y], shift: e.shiftKey };
+    if (mode !== "new") toast(mode === "sub" ? "Subtracting from the selection" : "Adding to the selection", "", 900);
+    startAutoScroll(); drawOv();
   });
   stage.addEventListener("pointermove", (e) => {
     const [x, y] = evPos(e), d = S.drag;
@@ -283,11 +314,7 @@
     if (d.kind === "lsize") { const [px, py] = toPrev(x, y); d.r = newRect(d, px, py, e.shiftKey); drawOv(); return; }
     if (d.kind === "pan") { const s = scale(); S.V.cx = d.cx - (x - d.x) / (S.P.w * s); S.V.cy = d.cy - (y - d.y) / (S.P.h * s); applyView(); return; }
     if (d.kind === "sugg") { const it = itemFor(S.suggest.layer), [lx, ly] = toLayer(it, x, y), r = S.suggest.rect; if (d.h.includes("w")) r[0] = Math.min(lx, r[2] - 20); if (d.h.includes("e")) r[2] = Math.max(lx, r[0] + 20); if (d.h.includes("n")) r[1] = Math.min(ly, r[3] - 20); if (d.h.includes("s")) r[3] = Math.max(ly, r[1] + 20); drawOv(); return; }
-    if (d.kind === "draw") {
-      const [lx, ly] = toLayer(d.it, x, y);
-      if (d.shape.type === "poly") d.shape.points.push([lx, ly]); else { d.shape.x2 = lx; d.shape.y2 = ly; if (e.shiftKey && d.shape.type === "rect") { const w = d.shape.x2 - d.shape.x1; d.shape.y2 = d.shape.y1 + Math.sign(d.shape.y2 - d.shape.y1 || 1) * Math.abs(w); } }
-      drawOv(); return;
-    }
+    if (d.kind === "draw") { d.last = [x, y]; d.shiftNow = e.shiftKey; growShape(d); drawOv(); return; }
     if (d.kind === "brush") { const [lx, ly] = toLayer(d.it, x, y); d.view.push([x, y]); d.pts.push([lx, ly]); drawOv(); return; }
     if (d.kind === "move") {
       const it = itemFor(S.sel.layer), k = scale();
@@ -312,7 +339,12 @@
     if (d.kind === "draw") {
       const sh = d.shape; let tiny = false;
       if (sh.type === "poly") tiny = sh.points.length < 3; else tiny = Math.abs(sh.x2 - sh.x1) < 4 && Math.abs(sh.y2 - sh.y1) < 4;
-      S.sel = tiny ? null : { layer: d.layer, shape: sh }; drawOv(); return;
+      if (tiny) { if (d.mode === "new") S.sel = null; drawOv(); return; }
+      const old = S.sel && S.sel.layer === d.layer ? S.sel.shape : null;
+      if (d.mode === "sub" && old) S.sel = { layer: d.layer, shape: { type: "sub", base: old, cut: sh } };
+      else if (d.mode === "add" && old) S.sel = { layer: d.layer, shape: { type: "union", parts: old.type === "union" ? old.parts.concat([sh]) : [old, sh] } };
+      else S.sel = { layer: d.layer, shape: sh };
+      drawOv(); return;
     }
     if (d.kind === "brush") { if (d.pts.length) await doEdit(d.clone ? "clone" : "erase", { layer: d.layer, ...(d.clone || {}), shape: { type: "stroke", points: d.pts, width: S.brush / scale() * d.it.sx } }); return; }
     if (d.kind === "move") {
@@ -323,6 +355,10 @@
   });
   stage.addEventListener("wheel", (e) => {
     e.preventDefault(); if (!S.P) return;
+    if (S.drag && S.drag.kind === "draw") {                      // mid-selection the wheel scrolls (Shift = sideways), it does not zoom
+      const s0 = scale(), dx = e.shiftKey ? e.deltaY : e.deltaX, dy = e.shiftKey ? 0 : e.deltaY;
+      S.V.cx += dx / (S.P.w * s0); S.V.cy += dy / (S.P.h * s0); applyView(); growShape(S.drag); drawOv(); return;
+    }
     const [x, y] = evPos(e), f = e.deltaY < 0 ? 1.15 : 1 / 1.15, nz = Math.max(0.2, Math.min(12, S.V.z * f));
     const s0 = scale(), px = (x - S.tx) / s0, py = (y - S.ty) / s0; S.V.z = nz; const s1 = scale();
     S.V.cx = (px - (x - S.sw / 2) / s1) / S.P.w; S.V.cy = (py - (y - S.sh / 2) / s1) / S.P.h; applyView(); hiresSoon();

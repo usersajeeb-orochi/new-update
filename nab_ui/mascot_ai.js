@@ -59,8 +59,9 @@
   async function send(text) {
     if (busy || !panel) return; busy = true; add("u", text);
     const w = add("a", ""); w.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
-    const r = await api("ai_chat", { history: hist, text }).catch(() => ({ ok: false, error: "no connection" }));
-    busy = false; if (!panel) return;
+    const slow = setTimeout(() => { if (w.isConnected && !w.textContent) w.innerHTML = '<span class="dots"><i></i><i></i><i></i></span> <small>still thinking, the cloud may be waking up…</small>'; }, 9000);
+    const r = await api("ai_chat", { history: hist, text }).catch(() => ({ ok: false, error: "no connection to NAB itself, restart the app" }));
+    clearTimeout(slow); busy = false; if (!panel) return;
     if (!r.ok) { w.className = "m e"; w.textContent = r.error || "I could not answer right now."; return; }
     w.textContent = r.reply; hist.push({ role: "user", text }, { role: "assistant", text: r.reply }); hist = hist.slice(-12);
     if (r.confirm) {
