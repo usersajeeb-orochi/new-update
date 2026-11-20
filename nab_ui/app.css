@@ -68,14 +68,29 @@ kbd{font:600 10px var(--font);padding:1px 6px;border-radius:6px;background:var(-
 .qc:hover{border-color:var(--cc,var(--acc))}
 .cat-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px;color:var(--dim)}
 .cat-tree{display:flex;flex-direction:column;gap:2px}
-.cat-root,.cat-sub{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;cursor:pointer}
-.cat-root{font-weight:700} .cat-sub{margin-left:18px;font-size:13px}
-.cat-root:hover,.cat-sub:hover{background:var(--surf2)}
-.cat-root.sel,.cat-sub.sel{background:var(--cc);color:#fff}
-.cat-dot{width:9px;height:9px;border-radius:50%;background:var(--cc);flex:none}
-.cat-root.sel .cat-dot,.cat-sub.sel .cat-dot{background:#fff}
-.cat-key{margin-left:auto;font-size:10px;opacity:.7;font-weight:700}
-.cat-root .fold{font-size:10px;color:var(--dim);width:10px}
+/* categories: flat rows, a colour chip per group, a guide line down the sub-categories, a glowing bar on the armed one */
+.cat-root,.cat-sub{position:relative;display:flex;align-items:center;gap:9px;cursor:pointer;border-radius:12px;color:var(--txt)}
+.cat-root{margin-top:5px;padding:6px 8px 6px 7px;font-weight:700;font-size:13.5px}
+.cat-sub{margin-left:21px;padding:5px 8px 5px 14px;font-size:12.5px;color:color-mix(in srgb,var(--txt) 82%,var(--dim))}
+.cat-sub::before{content:"";position:absolute;left:0;top:-3px;bottom:50%;width:9px;border-left:1.5px solid color-mix(in srgb,var(--cc) 34%,var(--line));border-bottom:1.5px solid color-mix(in srgb,var(--cc) 34%,var(--line));border-bottom-left-radius:7px}
+.cat-sub:not(.last)::after{content:"";position:absolute;left:0;top:50%;bottom:-3px;border-left:1.5px solid color-mix(in srgb,var(--cc) 34%,var(--line))}
+.cat-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-dot{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:8px;font-size:11.5px;font-weight:800;color:var(--cc);background:color-mix(in srgb,var(--cc) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cc) 28%,transparent);transition:background-color .2s,color .2s,box-shadow .2s}
+.cat-sub .cat-dot{width:7px;height:7px;border-radius:50%;background:color-mix(in srgb,var(--cc) 70%,transparent);box-shadow:none}
+.cat-root:hover,.cat-sub:hover{background:color-mix(in srgb,var(--cc) 10%,transparent)}
+.cat-root:hover .cat-dot{background:color-mix(in srgb,var(--cc) 26%,transparent)}
+.cat-root:active,.cat-sub:active{transform:scale(.985)}
+.cat-root.sel,.cat-sub.sel{background:linear-gradient(90deg,color-mix(in srgb,var(--cc) 30%,transparent),color-mix(in srgb,var(--cc) 6%,transparent));color:var(--txt);font-weight:700}
+.cat-root.sel::before,.cat-sub.sel::after{content:"";position:absolute;left:-4px;top:18%;bottom:18%;width:3px;border-radius:3px;background:var(--cc);box-shadow:0 0 10px var(--cc);border:0}
+.cat-sub.sel::before{border-color:var(--cc)}
+.cat-root.sel .cat-dot{background:var(--cc);color:#fff;box-shadow:0 0 12px -2px var(--cc)}
+.cat-sub.sel .cat-dot{background:var(--cc);box-shadow:0 0 8px var(--cc)}
+.cat-key{flex:none;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;color:var(--dim);background:var(--surf2);empty-cells:hide}
+.cat-key:empty{display:none}
+.cat-root .fold{flex:none;width:20px;height:20px;display:grid;place-items:center;border-radius:6px;font-size:10px;color:var(--dim);transition:transform .2s,background-color .15s}
+.cat-root .fold:hover{background:var(--surf2);color:var(--txt)}
+.cat-root.folded .fold{transform:rotate(-90deg)}
+.cat-tree{display:flex;flex-direction:column;gap:1px;padding-bottom:10px}
 
 .stage-wrap{display:flex;flex-direction:column;min-width:0;min-height:0}
 .toolbar{display:flex;align-items:center;gap:2px;padding:8px 8px;border-bottom:1px solid var(--line);background:var(--surf);flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.toolbar>*{flex:none}
@@ -246,8 +261,8 @@ body:not(.locked) .app{animation:appIn .35s ease-out}
 .cat-tree.enter>*{animation:rowIn .3s both ease-out}
 .cat-tree.enter>*:nth-child(1){animation-delay:.02s}.cat-tree.enter>*:nth-child(2){animation-delay:.05s}.cat-tree.enter>*:nth-child(3){animation-delay:.08s}.cat-tree.enter>*:nth-child(4){animation-delay:.11s}.cat-tree.enter>*:nth-child(5){animation-delay:.14s}.cat-tree.enter>*:nth-child(6){animation-delay:.17s}.cat-tree.enter>*:nth-child(7){animation-delay:.2s}.cat-tree.enter>*:nth-child(n+8){animation-delay:.23s}
 @keyframes rowIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
-.cat-root,.cat-sub{transition:background-color .15s,transform .15s,color .15s}
-.cat-root:hover,.cat-sub:hover{transform:translateX(3px)}.cat-root.sel,.cat-sub.sel{animation:selPop .22s ease-out}
+.cat-root,.cat-sub{transition:background-color .18s,transform .12s,color .15s}
+.cat-root.sel,.cat-sub.sel{animation:selPop .22s ease-out}
 @keyframes selPop{0%{transform:scale(.97)}60%{transform:scale(1.02)}100%{transform:none}}
 .qc.on{animation:selPop .22s ease-out}
 #page.arrive{animation:arrive .32s cubic-bezier(.2,1,.4,1)}
@@ -427,4 +442,4 @@ html.bg-hidden *,html.bg-hidden *::before,html.bg-hidden *::after{animation-play
   .sh-links{min-height:110px;height:24vh}
 }
 
-#mfx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:40;transition:opacity .25s}
+#mfx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:0;transition:opacity .25s}

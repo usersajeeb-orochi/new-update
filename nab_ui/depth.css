@@ -15,9 +15,9 @@ body.depth .rail .rb.active{box-shadow:0 10px 22px -10px var(--acc)}
 @media (prefers-reduced-motion:reduce){body.depth .card,body.depth .dtilt,body.depth .rail .rb{transform:none!important}}
 
 /* category row leans out, then catches the clip */
-.cat-root.dreach,.cat-sub.dreach{transform:translateX(10px) scale(1.04);transition:transform .25s cubic-bezier(.3,1.6,.5,1);box-shadow:0 8px 20px -8px var(--acc);position:relative;z-index:2}
-.cat-root.dcatch,.cat-sub.dcatch{animation:dcatch .6s cubic-bezier(.3,1.6,.5,1);position:relative}
-@keyframes dcatch{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-9px) scale(1.07)}100%{transform:translateY(0) scale(1)}}
+.cat-root.dreach,.cat-sub.dreach{box-shadow:0 0 0 2px var(--cc),0 0 22px -2px var(--cc);transition:box-shadow .25s;z-index:3}
+.cat-root.dcatch,.cat-sub.dcatch{animation:dcatch .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes dcatch{0%{transform:scale(1)}35%{transform:scale(1.04);box-shadow:0 0 0 2px var(--cc),0 0 26px 0 var(--cc)}100%{transform:scale(1)}}
 .dplus{position:absolute;right:8px;top:2px;font:800 12px system-ui;color:var(--acc);animation:dplus .9s ease-out forwards;pointer-events:none}
 @keyframes dplus{0%{transform:translateY(6px);opacity:0}25%{opacity:1}100%{transform:translateY(-16px);opacity:0}}
 /* recent-saves stack peek */
@@ -101,18 +101,9 @@ body.depth .rail .rb.active svg,body.depth .rail .rb.active .ic{animation:dfloat
 .dbook-n{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px;font:12px system-ui;color:var(--dim)}
 .d3g canvas{width:100%;height:260px;display:block;cursor:grab}.d3b-no{padding:40px 10px;text-align:center;color:var(--dim)}
 
-/* ───── category list: raised slabs on a curved shelf ───── */
-body.depth .cat-tree{perspective:800px;perspective-origin:0% 50%;gap:5px;padding:2px 4px 8px 2px}
-body.depth .cat-root,body.depth .cat-sub{--ry:0deg;--tz:0px;position:relative;transform-origin:0% 50%;transform:rotateY(var(--ry)) translateZ(var(--tz));opacity:var(--op,1);
- background:linear-gradient(135deg,color-mix(in srgb,var(--cc,var(--acc)) 16%,var(--surf2)),var(--surf));border:1px solid color-mix(in srgb,var(--cc,var(--acc)) 22%,var(--line));
- box-shadow:inset 0 1px 0 rgba(255,255,255,.07),3px 3px 0 -1px color-mix(in srgb,var(--cc,var(--acc)) 45%,#000),0 8px 12px -8px rgba(0,0,0,.65);transition:transform .22s cubic-bezier(.3,1.3,.5,1),box-shadow .22s,background-color .15s}
-body.depth .cat-root:hover,body.depth .cat-sub:hover{transform:rotateY(-5deg) translateZ(20px) translateX(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),5px 5px 0 -1px color-mix(in srgb,var(--cc,var(--acc)) 60%,#000),0 14px 18px -8px rgba(0,0,0,.7);z-index:3}
-body.depth .cat-root.sel,body.depth .cat-sub.sel{background:linear-gradient(135deg,var(--cc),color-mix(in srgb,var(--cc) 70%,#000));transform:rotateY(-3deg) translateZ(14px);box-shadow:4px 4px 0 -1px color-mix(in srgb,var(--cc) 40%,#000),0 12px 22px -8px var(--cc)}
-body.depth .cat-root.dreach,body.depth .cat-sub.dreach{transform:translateZ(40px) scale(1.05)}
 /* ───── recent saves: cards stand in a staggered stack and rise toward you ───── */
 body.depth #drawer .rs{transform-origin:0% 50%;transform:perspective(800px) rotateY(-9deg) translateZ(0);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),4px 4px 0 -1px color-mix(in srgb,var(--acc) 35%,#000),0 10px 16px -10px rgba(0,0,0,.7);border:1px solid var(--line);transition:transform .25s cubic-bezier(.3,1.3,.5,1),box-shadow .25s;animation:drsIn .45s cubic-bezier(.2,1,.3,1) backwards}
 body.depth #drawer .rs:hover{transform:perspective(800px) rotateY(0deg) translateZ(26px) scale(1.02);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 18px 26px -10px rgba(0,0,0,.75),0 0 0 1px var(--acc);z-index:3;position:relative}
 body.depth #drawer .rs img{box-shadow:2px 3px 0 0 rgba(0,0,0,.35),0 6px 10px -4px rgba(0,0,0,.6)}
 body.depth #drawer .rs:nth-child(2){animation-delay:.05s}body.depth #drawer .rs:nth-child(3){animation-delay:.1s}body.depth #drawer .rs:nth-child(4){animation-delay:.15s}body.depth #drawer .rs:nth-child(5){animation-delay:.2s}body.depth #drawer .rs:nth-child(n+6){animation-delay:.25s}
 @keyframes drsIn{from{transform:perspective(800px) translate3d(60px,0,-160px) rotateY(-50deg)}}
-body.quiet .cat-root,body.quiet .cat-sub{transform:none!important;opacity:1!important}

@@ -35,7 +35,7 @@
     hd(b, t("general"));
     let d = card(b, t("language"), `<div class="btn-grid"><button class="btn ${LANG === "en" ? "pri" : ""}" data-l="en">English</button><button class="btn ${LANG === "bn" ? "pri" : ""}" data-l="bn">বাংলা</button></div>`);
     $$("[data-l]", d).forEach(x => x.onclick = async () => { LANG = x.dataset.l; await api("ui_set", { lang: LANG }); applyI18n(); render(); });
-    d = card(b, t("theme"), `<div class="btn-grid">${[["dark", t("dark")], ["light", t("light")], ["blue", "Blue"], ["snow", "Snow"], ["shadow", "Shadow Cat"], ["neon", "Neon Cat"]].map(([k, n]) => `<button class="btn ${(ui.theme || "dark") === k ? "pri" : ""}" data-th="${k}">${esc(n)}</button>`).join("")}</div>`);
+    d = card(b, t("theme"), `<div class="btn-grid">${[["dark", t("dark")], ["light", t("light")], ["blue", "Blue"], ["snow", "Snow"], ["shadow", "Shadow Cat"], ["neon", "Neon Cat"], ["nebula", "Nebula"]].map(([k, n]) => `<button class="btn ${(ui.theme || "dark") === k ? "pri" : ""}" data-th="${k}">${esc(n)}</button>`).join("")}</div>`);
     $$("[data-th]", d).forEach(x => x.onclick = async () => { C.theme(x.dataset.th); await api("ui_set", { theme: x.dataset.th }); render(); });
     d = card(b, "Saving", `<div class="kv"><span>Save folder</span><input id="o_root" value="${esc(s.base_root)}"><button class="btn" id="o_reveal">Open</button></div>
       ${num("o_min", "Min file size (KB)", s.min_kb, 1, 5000)}${num("o_max", "Max file size (KB)", s.max_kb, 50, 50000)}

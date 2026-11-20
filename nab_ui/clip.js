@@ -444,14 +444,18 @@
   function qsFor(path) { const o = []; for (const k in S.st.quick_saves) if (S.st.quick_saves[k] === path) o.push(k); return o; }
   function renderCats() {
     const tree = $("#catTree"); tree.innerHTML = ""; if (!S._catIn) { S._catIn = true; tree.classList.add("enter"); setTimeout(() => tree.classList.remove("enter"), 900); } const R = roots();
+    let fold = {}; try { fold = JSON.parse(localStorage.getItem("nab_catfold") || "{}"); } catch (e) { }
     R.forEach((r) => {
-      const subs = S.st.categories[r], col = catColor(r, R);
-      const row = document.createElement("div"); row.className = "cat-root" + (S.armed.includes(r) ? " sel" : ""); row.dataset.cat = r; row.style.setProperty("--cc", col);
-      row.innerHTML = '<span class="fold">' + (subs.length ? "▾" : "") + '</span><span class="cat-dot"></span><span>' + esc(r) + '</span><span class="cat-key">' + esc(qsFor(r).join(" ")) + "</span>";
-      row.onclick = (e) => armToggle(r, e.ctrlKey || e.metaKey); tree.appendChild(row);
-      subs.forEach((s) => {
-        const p = r + "/" + s, sr = document.createElement("div"); sr.className = "cat-sub" + (S.armed.includes(p) ? " sel" : ""); sr.style.setProperty("--cc", col);
-        sr.innerHTML = '<span class="cat-dot"></span><span>' + esc(s) + '</span><span class="cat-key">' + esc(qsFor(p).join(" ")) + "</span>";
+      const subs = S.st.categories[r], col = catColor(r, R), folded = !!fold[r] && subs.length > 0;
+      const row = document.createElement("div"); row.className = "cat-root" + (S.armed.includes(r) ? " sel" : "") + (folded ? " folded" : ""); row.dataset.cat = r; row.style.setProperty("--cc", col);
+      row.innerHTML = '<span class="cat-dot">' + esc(r.trim().charAt(0).toUpperCase()) + '</span><span class="cat-name">' + esc(r) + '</span><span class="cat-key">' + esc(qsFor(r).join(" ")) + '</span>' + (subs.length ? '<span class="fold" title="Fold / unfold">▾</span>' : "");
+      row.onclick = (e) => armToggle(r, e.ctrlKey || e.metaKey);
+      const fd = row.querySelector(".fold"); if (fd) fd.onclick = (e) => { e.stopPropagation(); fold[r] = !fold[r]; try { localStorage.setItem("nab_catfold", JSON.stringify(fold)); } catch (x) { } renderCats(); };
+      tree.appendChild(row);
+      if (folded) return;
+      subs.forEach((s, i) => {
+        const p = r + "/" + s, sr = document.createElement("div"); sr.className = "cat-sub" + (S.armed.includes(p) ? " sel" : "") + (i === subs.length - 1 ? " last" : ""); sr.dataset.cat = p; sr.style.setProperty("--cc", col);
+        sr.innerHTML = '<span class="cat-dot"></span><span class="cat-name">' + esc(s) + '</span><span class="cat-key">' + esc(qsFor(p).join(" ")) + "</span>";
         sr.onclick = (e) => armToggle(p, e.ctrlKey || e.metaKey); tree.appendChild(sr);
       });
     });

@@ -166,7 +166,7 @@
     return close;
   }
 
-  function theme(v) { v = ["light", "blue", "snow", "shadow", "neon"].includes(v) ? v : "dark"; document.documentElement.setAttribute("data-theme", v); document.documentElement.setAttribute("data-mode", (v === "light" || v === "snow") ? "light" : "dark"); setTimeout(titlebar, 60); setTimeout(titlebar, 1500); setTimeout(titlebar, 4000); }
+  function theme(v) { v = ["light", "blue", "snow", "shadow", "neon", "nebula"].includes(v) ? v : "dark"; document.documentElement.setAttribute("data-theme", v); document.documentElement.setAttribute("data-mode", (v === "light" || v === "snow") ? "light" : "dark"); setTimeout(titlebar, 60); setTimeout(titlebar, 1500); setTimeout(titlebar, 4000); }
   let tbLast = "";
   function titlebar() { try { let c = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim(); if (/^#[0-9a-f]{3}$/i.test(c)) c = "#" + c.slice(1).split("").map(x => x + x).join(""); if (/^#[0-9a-f]{6}$/i.test(c)) { tbLast = c; api("titlebar", { bg: c }); } } catch (e) { } }
   function debounce(fn, ms) { let h; return function () { clearTimeout(h); const a = arguments; h = setTimeout(() => fn.apply(null, a), ms); }; }

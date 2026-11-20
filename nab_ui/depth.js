@@ -109,18 +109,6 @@
     if (!ch) return; const mk = (f) => { const w = document.createElement("div"); f(w); return w.firstChild; };
     book(host, [mk((w) => bars(w, "Clips by paper (drag to turn)", ch.papers)), mk((w) => bars(w, "Clips by category", ch.cats)), mk((w) => globe(w, "Activity globe (drag to turn)", ch.papers))]);
   }
-  /* ───── category shelf: every row is a small slab; rows lean away and sink toward the top and bottom edge of the list like a curved shelf ───── */
-  function shelf() {
-    const t = document.getElementById("catTree"); if (!t) return setTimeout(shelf, 700);
-    let sc = t.parentElement; while (sc && sc !== document.body && !/(auto|scroll)/.test(getComputedStyle(sc).overflowY)) sc = sc.parentElement; if (!sc || sc === document.body) sc = t.parentElement;
-    let q = 0;
-    const run = () => { q = 0; const rows = t.querySelectorAll(".cat-root,.cat-sub"); if (!on) { rows.forEach((r) => { r.style.removeProperty("--ry"); r.style.removeProperty("--tz"); r.style.removeProperty("--op"); }); return; }
-      const R = sc.getBoundingClientRect(), mid = R.top + R.height / 2, half = Math.max(80, R.height / 2), vals = [];
-      rows.forEach((r) => { const b = r.getBoundingClientRect(); vals.push(b.bottom < R.top - 40 || b.top > R.bottom + 40 ? null : Math.max(-1, Math.min(1, (b.top + b.height / 2 - mid) / half))); });
-      rows.forEach((r, i) => { const k = vals[i]; if (k === null) return; r.style.setProperty("--ry", (-Math.abs(k) * 16).toFixed(1) + "deg"); r.style.setProperty("--tz", (-Math.abs(k) * 34).toFixed(0) + "px"); r.style.setProperty("--op", (1 - Math.abs(k) * .35).toFixed(2)); }); };
-    const sched = () => { if (!q) q = requestAnimationFrame(run); };
-    sc.addEventListener("scroll", sched, { passive: true }); t.addEventListener("scroll", sched, { passive: true }); new MutationObserver(sched).observe(t, { childList: true, subtree: true }); window.addEventListener("resize", sched); setTimeout(sched, 300); sched();
-  }
   /* ───── paper corner peel on the canvas: hover the lower-right corner ───── */
   function peel() {
     const st = document.getElementById("stage"); if (!st) return setTimeout(peel, 700);
@@ -163,7 +151,8 @@
       b.innerHTML = l.map((n, i) => `<i class="dav" style="--i:${i};--h:${(n.split("").reduce((a, c) => a + c.charCodeAt(0), 0) * 37) % 360}" title="${C.esc(n)} is online">${C.esc(n.replace(/^DESKTOP-?/i, "").slice(0, 2).toUpperCase() || "PC")}</i>`).join("");
       b.classList.toggle("hidden", !l.length); } catch (e) { }
   }
-  function startExtras() { wireFocus(); shelf(); peel(); toolbarWheel(); ring(); team(); setInterval(ring, 20000); setInterval(team, 30000); document.addEventListener("clips", ring); if (window.C && C.on) { C.on("saved", () => { setTimeout(ring, 600); savePulse(); }); } try { if (localStorage.getItem("nab_quiet") === "1") setQuiet(true); } catch (e) { } }
+  function spot() { let q = 0, ev = null; document.addEventListener("pointermove", (e) => { ev = e; if (q) return; q = requestAnimationFrame(() => { q = 0; if (!ev || quiet) return; const t = ev.target && ev.target.closest && ev.target.closest(".panel,.card,.tk-card"); if (!t) return; const r = t.getBoundingClientRect(); t.style.setProperty("--mx", (ev.clientX - r.left) + "px"); t.style.setProperty("--my", (ev.clientY - r.top) + "px"); }); }, { passive: true }); }
+  function startExtras() { spot(); wireFocus(); peel(); toolbarWheel(); ring(); team(); setInterval(ring, 20000); setInterval(team, 30000); document.addEventListener("clips", ring); if (window.C && C.on) { C.on("saved", () => { setTimeout(ring, 600); savePulse(); }); } try { if (localStorage.getItem("nab_quiet") === "1") setQuiet(true); } catch (e) { } }
   setTimeout(startExtras, 1500);
   window.DEPTH = { enable, fly, bars, globe, book, report, need3d, isOn: () => on, quiet: setQuiet, isQuiet: () => quiet, goal: (n) => { goal = Math.max(1, +n || 30); try { localStorage.setItem("nab_goal", goal); } catch (e) { } ring(); }, getGoal: () => goal };
   wirePeek();

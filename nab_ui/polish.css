@@ -10,3 +10,21 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .mini.dis{margin-right:6px;color:var(--dim)}.mini.dis:hover{background:var(--bad);color:#fff}
 .view:not(.hidden){animation:viewin .22s ease both}@keyframes viewin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .toasts>*{box-shadow:0 14px 34px -14px rgba(0,0,0,.7)}
+
+
+/* ───── 2026 look: the star map is the room behind the app; panels are frosted glass over it, light follows the pointer ───── */
+body.stars .app{position:relative;z-index:1;background:transparent}
+body.stars .top,body.stars .rail,body.stars .panel,body.stars .card,body.stars .dock,body.stars .status{background-color:color-mix(in srgb,var(--surf) 82%,transparent)}
+body.stars .top{background-color:color-mix(in srgb,var(--surf) 74%,transparent)}
+body.stars .panel,body.stars .card{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 30px -18px rgba(0,0,0,.7)}
+/* spotlight: a soft light under the pointer, inside whichever panel or card it is over */
+.panel,.card,.tk-card,.kv{--mx:50%;--my:-40%}
+.panel:hover,.card:hover,.tk-card:hover{background-image:radial-gradient(320px circle at var(--mx) var(--my),color-mix(in srgb,var(--acc) 11%,transparent),transparent 62%)}
+/* micro-delight: buttons press down and spring back; the primary button is a soft raised key */
+.btn,.tb,.rb,.qc,.icon-btn{transition:transform .16s cubic-bezier(.3,1.6,.5,1),background-color .15s,border-color .15s,box-shadow .2s}
+.btn:active,.tb:active,.rb:active,.qc:active,.icon-btn:active{transform:scale(.93)}
+.btn.pri{background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 55%);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 6px 16px -8px var(--acc)}
+.btn.pri:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 10px 22px -8px var(--acc);transform:translateY(-1px)}
+body.quiet .panel:hover,body.quiet .card:hover,body.quiet .tk-card:hover{background-image:none}
+/* Nebula theme: deep indigo glass with a magenta-to-cyan gradient */
+[data-theme=nebula]{--bg:#0a0816;--surf:#14102a;--surf2:#1e1840;--line:#32295e;--txt:#f4f1ff;--dim:#9b94c7;--acc:#a78bfa;--acc2:#8b6cf0;--grad:linear-gradient(135deg,#a78bfa 0%,#f472b6 55%,#38bdf8 100%)}

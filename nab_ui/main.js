@@ -76,26 +76,18 @@
 
   /* mouse swarm: a transparent three.js layer on the Clip stage (loaded on demand, bundle shared with the start-up scenes) */
   let mfx = null, mfxLoading = false;
-  let mfxT = 0, mfxBox = "";
-  function mfxMove(e) { if (mfx) mfx.move(e.clientX, e.clientY); }
-  function mfxCut() {                                   // the swarm never draws over the canvas you are editing: that rectangle is cut out of the layer
-    const c = $("#mfx"), st = $("#stage"); if (!c) return; let box = "";
-    if (st && st.offsetParent) { const r = st.getBoundingClientRect(); box = [r.left, r.top, r.right, r.bottom].map(Math.round).join(","); }
-    if (box === mfxBox) return; mfxBox = box;
-    if (!box) { c.style.clipPath = "none"; return; } const [l, t, rr, b] = box.split(",");
-    c.style.clipPath = `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${l}px ${t}px,${l}px ${b}px,${rr}px ${b}px,${rr}px ${t}px,${l}px ${t}px)`;
-  }
+    function mfxMove(e) { if (mfx) mfx.move(e.clientX, e.clientY); }
   function mouseFx(on) {
     const stage = $("#stage");
     if (!on) {
-      if (mfx) { mfx.dispose(); mfx = null; clearInterval(mfxT); window.removeEventListener("pointermove", mfxMove); }
-      const c = $("#mfx"); if (c) c.remove(); return;
+      if (mfx) { mfx.dispose(); mfx = null; window.removeEventListener("pointermove", mfxMove); }
+      const c = $("#mfx"); if (c) c.remove(); document.body.classList.remove("stars"); return;
     }
     if (mfx || !stage || !window.STARS) return;
-    let cv = $("#mfx"); if (!cv) { cv = document.createElement("canvas"); cv.id = "mfx"; document.body.appendChild(cv); }
+    let cv = $("#mfx"); if (!cv) { cv = document.createElement("canvas"); cv.id = "mfx"; document.body.insertBefore(cv, document.body.firstChild); }
     mfx = STARS.create(cv, { accent: getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#5b8cff" });
     window.addEventListener("pointermove", mfxMove, { passive: true });
-    mfxT = setInterval(mfxCut, 400); mfxCut();
+    document.body.classList.add("stars");                  // the star map is the app's background: panels turn into glass over it
   }
   M.mouseFx = mouseFx; M.mouseFxOn = () => !!mfx; M.mfxPulse = () => { if (mfx && mfx.pulse) mfx.pulse(); };
   let started = false;
