@@ -75,8 +75,8 @@ class TelegramAuth:
         now = datetime.datetime.now()
 
         # ── Blocked PC check ──
-        blocked = _load_blocked_pcs()
-        if PC_NAME in blocked:
+        import nab_access as _na
+        if _na.blocked_now(PC_NAME):
             _tg_send(
                 f"🚫 <b>Blocked PC attempted login</b>\n\n"
                 f"💻 PC: <code>{PC_NAME}</code>\n"
@@ -184,7 +184,7 @@ class TelegramAuth:
             events = []                                   # (text, responder)
             if relay:
                 time.sleep(min(2, max(poll_timeout, 0)))
-                d = nab_remote.get_decision(rid, PC_NAME)
+                d = nab_remote.get_decision(rid, PC_NAME, remember_until, remember_long)
                 if d:
                     act, responder = d
                     text = {"allow": "allow", "allow2": "allow 2", "today": "today", "week": "week", "deny": "deny"}.get(act)
@@ -235,23 +235,12 @@ class TelegramAuth:
                     if shot:
                         _tg_send_photo(shot, f"Screen at denied login — {PC_NAME}")
                     _log_access_attempt(PC_NAME, user, "denied")
-                    denied_count = _get_denied_count(PC_NAME)
-                    if denied_count >= 10:
-                        blocked          = _load_blocked_pcs()
-                        blocked[PC_NAME] = {
-                            "user":       user,
-                            "blocked_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "deny_count": denied_count
-                        }
+                    # with the cloud the CLOUD counts denials and blocks after 10; only a PC without a cloud counts them itself
+                    if not relay and _get_denied_count(PC_NAME) >= 10:
+                        blocked = _load_blocked_pcs()
+                        blocked[PC_NAME] = {"user": user, "blocked_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "deny_count": 10}
                         _save_blocked_pcs(blocked)
-                        _tg_send(
-                            f"🔴 <b>PC AUTO-BLOCKED after 10 denials!</b>\n\n"
-                            f"💻 PC: <code>{PC_NAME}</code>\n"
-                            f"Send /unblock {PC_NAME} to allow again."
-                        )
-                        shot = _take_screenshot()
-                        if shot:
-                            _tg_send_photo(shot, f"Auto-blocked — {PC_NAME}")
+                        _tg_send(f"🔴 <b>PC AUTO-BLOCKED after 10 denials!</b>\n\n💻 PC: <code>{PC_NAME}</code>\nSend /unblock {PC_NAME} to allow again.")
                     return False
 
                 elif text == "week" and remember_long:

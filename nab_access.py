@@ -90,3 +90,27 @@ def _get_denied_count(pc):
                 break
     return count
 
+
+
+def blocked_now(pc):
+    """Is this PC blocked? The cloud's list is the master. The signed local copy is only a fallback for when the cloud
+    cannot be reached, and it can only ADD a block: removing or editing the local file never lifts one."""
+    local = pc in (_load_blocked_pcs() or {})
+    try:
+        import nab_remote
+        cloud = nab_remote.is_blocked(pc)                    # True / False / None (unreachable)
+    except Exception:
+        cloud = None
+    if cloud is True:
+        if not local:
+            b = _load_blocked_pcs() or {}
+            b[pc] = {"user": "?", "blocked_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "deny_count": 0}
+            _save_blocked_pcs(b)
+        return True
+    if cloud is False:
+        if local:
+            b = _load_blocked_pcs() or {}
+            b.pop(pc, None)
+            _save_blocked_pcs(b)
+        return False
+    return local

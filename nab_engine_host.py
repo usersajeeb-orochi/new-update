@@ -1083,7 +1083,7 @@ class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         try:
             import nab_access
             from nab_telegram import PC_NAME
-            if PC_NAME in (nab_access._load_blocked_pcs() or {}):
+            if nab_access.blocked_now(PC_NAME):
                 return out
             kind, d = self._session_init().check(out["grace"])
             out["auto"] = kind
@@ -1114,23 +1114,11 @@ class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         return t.timestamp()
 
     def _blocked_now(self):
-        """Is this PC blocked? The cloud bot's list is the master when it can be reached; the signed local copy is the fallback."""
+        """Is this PC blocked? The cloud's list is the master; the signed local copy only fills in when it cannot be reached."""
         try:
-            import nab_access, nab_remote
+            import nab_access
             from nab_telegram import PC_NAME
-            local = PC_NAME in (nab_access._load_blocked_pcs() or {})
-            cloud = nab_remote.is_blocked(PC_NAME)                      # True / False / None (unreachable)
-            if cloud is True and not local:
-                b = nab_access._load_blocked_pcs() or {}
-                b[PC_NAME] = {"user": "?", "blocked_at": time.strftime("%Y-%m-%d %H:%M:%S"), "deny_count": 0}
-                nab_access._save_blocked_pcs(b)
-                return True
-            if cloud is False and local:
-                b = nab_access._load_blocked_pcs() or {}
-                b.pop(PC_NAME, None)
-                nab_access._save_blocked_pcs(b)
-                return False
-            return local if cloud is None else bool(cloud)
+            return nab_access.blocked_now(PC_NAME)
         except Exception as e:
             logging.error(f"blocked check: {e}")
             return False
@@ -1228,12 +1216,8 @@ class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         import nab_accounts
         from nab_telegram import PC_NAME
         nab_accounts.init(PC_NAME)
-        try:
-            import nab_access
-            if PC_NAME in (nab_access._load_blocked_pcs() or {}):
-                return {"ok": False, "error": "This PC is blocked."}
-        except Exception:
-            pass
+        if self._blocked_now():
+            return {"ok": False, "error": "This PC is blocked."}
         return None
 
     def _trial_watch(self, until):
@@ -1255,6 +1239,7 @@ class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
         if r.get("ok") and not self.authorized:
             self.authorized = True
             self._login_started = True
+            self._grant_enforced = False                               # account sessions are ended by a block or /close, not by a missing approval
             self.hub.emit("login", sticky=True, stage="granted", how="account")
             self._start_session_touch()
             self.after_login()
@@ -1320,6 +1305,7 @@ class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
                 granted = False
             if granted:
                 self.authorized = True
+                self._grant_enforced = bool(LOGIN_REQUIRED)             # a Telegram-approved session lives and dies by its cloud approval
                 self.hub.emit("login", sticky=True, stage="granted", how=note)
                 self._start_session_touch()
                 self.after_login()
@@ -1336,7 +1322,25 @@ class Engine(PSMixin, MailMixin, ExtrasMixin, EngineBase, HeadlessOps):
             try:
                 import nab_auth
                 sess = self._session_init()
+                offline_since = None
                 while self.authorized and gen == self._touch_gen:        # stops at lock/end: a locked PC must not keep its grace window alive
+                    hb = sess.heartbeat(enforce=getattr(self, "_grant_enforced", True))
+                    if hb["state"] == "revoked":
+                        self.lock_session(hb.get("why") or "session closed")
+                        try:
+                            from nab_telegram import _tg_send, PC_NAME
+                            _tg_send(f"🔒 <b>{PC_NAME}</b> locked: {hb.get('why')}.")
+                        except Exception:
+                            pass
+                        return
+                    if hb["state"] == "ok":
+                        offline_since = None
+                        nab_auth.TelegramAuth._access_deadline = hb.get("deadline")    # the cloud sets (and extends) the end time
+                    elif hb["state"] == "offline":
+                        offline_since = offline_since or time.time()
+                        if getattr(self, "_grant_enforced", True) and time.time() - offline_since > sess.OFFLINE_LOCK:
+                            self.lock_session("No connection to the NAB server for 30 minutes")
+                            return
                     sess.touch(getattr(nab_auth.TelegramAuth, "_access_deadline", None))
                     time.sleep(30)
             except Exception as e:

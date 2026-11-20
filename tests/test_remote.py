@@ -1,6 +1,6 @@
 import os, sys, time, types
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import nab_remote
+import nab_remote, nab_access
 
 
 class FakeTG:
@@ -53,12 +53,13 @@ def test_approval_uses_relay(monkeypatch):
     TA = nab_auth.TelegramAuth
     sent = []
     monkeypatch.setattr(nab_remote, "available", lambda: True)
-    monkeypatch.setattr(nab_remote, "get_decision", lambda rid, pc: ("allow2", "Ana"))
+    monkeypatch.setattr(nab_remote, "get_decision", lambda rid, pc, *a: ("allow2", "Ana"))
     monkeypatch.setattr(nab_auth, "_tg_send_callback_buttons", lambda text, buttons, chat_id=None: sent.append(buttons) or 7)
     monkeypatch.setattr(nab_auth, "_tg_edit_message", lambda *a, **k: None)
     monkeypatch.setattr(nab_auth, "_tg_send", lambda *a, **k: None)
     monkeypatch.setattr(nab_auth, "_log_access_attempt", lambda *a, **k: None)
     monkeypatch.setattr(nab_auth, "_load_blocked_pcs", lambda: {})
+    monkeypatch.setattr(nab_access, "blocked_now", lambda pc: False)
     monkeypatch.setattr(nab_auth, "ALLOWED_HOURS", None)
     monkeypatch.setattr(time, "sleep", lambda s: None)
     assert TA.request_access(mode="group") is True

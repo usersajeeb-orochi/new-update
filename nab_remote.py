@@ -44,6 +44,25 @@ def is_blocked(pc):
         return None
 
 
+def session_state(pc, op="touch", grace=0):
+    """Ask the cloud whether this PC may be open. op 'start' (opening) or 'touch' (while open).
+    -> {"state": "ok"|"none"|"blocked", "kind", "until", "deadline"} or None when the cloud cannot be reached."""
+    base = cloud_url()
+    if not base:
+        return None
+    for tmo in ((12, 30) if op == "start" else (10,)):             # the free cloud host can need ~30 s to wake up
+        try:
+            q = _up.urlencode({"pc": pc, "op": op, "grace": int(grace or 0)})
+            req = _rq.Request(base + "/pc/session?" + q, headers=dict(sign_headers(pc), **{"User-Agent": "NAB/3"}))
+            with _rq.urlopen(req, timeout=tmo) as r:
+                j = json.loads(r.read().decode())
+            if j.get("state") in ("ok", "none", "blocked"):
+                return j
+        except Exception as e:
+            logging.error(f"session_state({op}): {e}")
+    return None
+
+
 def google_gate(email, name=""):
     """May this Google email in? The cloud decides: a new email gets 24 hours and the admin is told on Telegram.
     -> {"ok", "role", "until", "status", "error"} or None when the cloud cannot be reached."""
@@ -67,13 +86,14 @@ def available():
     return bool(cloud_url())
 
 
-def get_decision(rid, pc):
-    """-> (action, who) once somebody tapped the button for this request id, else None."""
+def get_decision(rid, pc, today_until=None, days_until=None):
+    """-> (action, who) once somebody tapped the button for this request id, else None. The cloud records the approval
+    itself; the end times are only what the PC's settings ask for, and the cloud caps them."""
     u = cloud_url()
     if not u:
         return None
     try:
-        req = _rq.Request(f"{u}/pc/decision?" + _up.urlencode({"rid": rid, "pc": pc}), headers=sign_headers(pc))
+        req = _rq.Request(f"{u}/pc/decision?" + _up.urlencode({"rid": rid, "pc": pc, "u": int(today_until or 0) or "", "w": int(days_until or 0) or ""}), headers=sign_headers(pc))
         j = json.loads(_rq.urlopen(req, timeout=10).read().decode())
         return (j["d"], j.get("who") or "Someone") if j.get("d") else None
     except Exception as e:

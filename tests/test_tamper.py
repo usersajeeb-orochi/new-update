@@ -56,7 +56,8 @@ def test_session_forged_remember_is_ignored(tmp_path):
 def test_session_remember_is_capped(tmp_path):
     nab_session.init(str(tmp_path), "PC1")
     nab_session.remember(time.time() + 10 ** 9)
-    assert nab_session.load()["remember_until"] <= time.time() + nab_session.MAX_REMEMBER + 5
+    d = nab_session.load()
+    assert (d.get("remember_until") or d["cloud"]["until"]) <= time.time() + nab_session.MAX_REMEMBER + 5
 
 
 def test_accounts_role_edit_is_refused(tmp_path, monkeypatch):
