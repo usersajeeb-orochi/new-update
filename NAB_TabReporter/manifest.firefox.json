@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "NAB Tab Reporter",
+  "version": "1.2",
+  "description": "Tells the NAB desktop app which URL the active tab is on (local only, 127.0.0.1).",
+  "permissions": [
+    "tabs",
+    "alarms"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "nab-tab-reporter@nab.local",
+      "strict_min_version": "121.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}

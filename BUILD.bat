@@ -60,7 +60,7 @@ for %%F in (
     nab_ui\index.html nab_ui\app.css nab_ui\common.js nab_ui\clip.js nab_ui\main.js
     nab_ui\settings.js nab_ui\i18n.js nab_ui\overlay.html nab_ui\pet.html nab_ui\overlay.js nab_ui\overlay3d.js nab_ui\overlay3d.css nab_ui\depth.js nab_ui\depth.css nab_ui\stars.js nab_ui\room.js nab_ui\room.css nab_ui\extras.js nab_ui\mascot.js nab_ui\icons.js nab_ui\mascot_plus.js nab_ui\mascot_care.js nab_ui\mascot_fun.js nab_ui\mascot\skins.json
     surgical_tools.py nab_tracker.py
-    NAB_TabReporter\manifest.json NAB_TabReporter\background.js
+    NAB_TabReporter\manifest.json NAB_TabReporter\manifest.firefox.json NAB_TabReporter\background.js
 ) do (
     if not exist "%%F" (
         echo   MISSING: %%F

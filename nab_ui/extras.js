@@ -54,21 +54,31 @@
     const opts = bro.map((b, i) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join("");
     modal(`<h3>Set up the browser extension</h3>
       <div class="ex-steps">
-        <div class="ex-s"><span class="ex-n">1</span><div><b>Open the extensions page</b><div class="ex-row">${bro.length ? `<select id="exBr">${opts}</select><button class="btn pri" id="exOpen">Open ${esc(bro[0].name)}</button>` : `<small>No Chrome or Edge found. Open your browser and type <code>chrome://extensions</code> in the address bar.</small>`}</div></div></div>
-        <div class="ex-s"><span class="ex-n">2</span><div><b>Turn on “Developer mode”</b><small>The switch is at the top right of that page.</small></div></div>
-        <div class="ex-s"><span class="ex-n">3</span><div><b>Click “Load unpacked”, then choose this folder</b>
-          <div class="ex-row"><input id="exPath" readonly value="${esc(info.dir || "")}"><button class="btn" id="exCopy">Copy path</button><button class="btn" id="exFold">Open folder</button></div>
-          <small>In the folder window: click the address bar, press <kbd>Ctrl</kbd>+<kbd>V</kbd> and <kbd>Enter</kbd>, then <b>Select Folder</b>.</small></div></div>
+        <div class="ex-s"><span class="ex-n">1</span><div><b>Open the extensions page</b><div class="ex-row">${bro.length ? `<select id="exBr">${opts}</select><button class="btn pri" id="exOpen">Open ${esc(bro[0].name)}</button>` : `<small>No supported browser found. Open your browser and type <code>chrome://extensions</code> (Firefox: <code>about:debugging</code>) in the address bar.</small>`}</div></div></div>
+        <div class="ex-s"><span class="ex-n">2</span><div id="exS2"></div></div>
+        <div class="ex-s"><span class="ex-n">3</span><div id="exS3"></div></div>
         <div class="ex-s"><span class="ex-n" id="exDot">4</span><div><b id="exState">Waiting for the extension…</b><small>This turns green by itself when it connects. Keep NAB open.</small></div></div>
       </div>
       ${info.ok ? "" : `<p style="color:var(--bad)">${esc(info.error || "")}</p>`}
       <div class="modal-actions"><button class="btn" id="exClose">Close</button></div>`, (c, close) => {
       let alive = true; const stop = () => { alive = false; close(); };
       $("#exClose").onclick = stop;
-      const br = $("#exBr"); if (br) br.onchange = () => { const b = bro.find(x => x.id === br.value); $("#exOpen").textContent = "Open " + b.name; };
-      const op = $("#exOpen"); if (op) op.onclick = async () => { const r = await api("ext_open_browser", { browser: br ? br.value : null }); if (r.ok) { try { navigator.clipboard.writeText(info.dir); } catch (e) { } toast("Opening " + r.browser + " — the folder path is already copied", "ok", 3500); } else toast(r.error || "Could not open the browser", "warn", 4000); };
-      $("#exCopy").onclick = () => { try { navigator.clipboard.writeText(info.dir); toast("Path copied", "ok", 1200); } catch (e) { $("#exPath").select(); } };
-      $("#exFold").onclick = () => api("ext_open_folder");
+      const br = $("#exBr");
+      const isFx = () => !!br && br.value === "firefox", curDir = () => isFx() ? info.firefox_dir : info.dir;
+      const steps = () => {                                  // Chromium browsers load a folder; Firefox loads one file as a temporary add-on
+        if (isFx()) {
+          $("#exS2").innerHTML = '<b>Click “Load Temporary Add-on…”</b><small>It is on the page that just opened (Firefox 121 or newer).</small>';
+          $("#exS3").innerHTML = '<b>Choose the file <code>manifest.json</code> in this folder</b><div class="ex-row"><input id="exPath" readonly value="' + esc(info.firefox_dir || "") + '"><button class="btn" id="exCopy">Copy path</button><button class="btn" id="exFold">Open folder</button></div><small>Firefox forgets a temporary add-on when it closes. For a permanent one use Firefox Developer Edition or sign it for yourself (see README in the NAB_TabReporter folder).</small>';
+        } else {
+          $("#exS2").innerHTML = '<b>Turn on “Developer mode”</b><small>The switch is at the top right of that page.</small>';
+          $("#exS3").innerHTML = '<b>Click “Load unpacked”, then choose this folder</b><div class="ex-row"><input id="exPath" readonly value="' + esc(info.dir || "") + '"><button class="btn" id="exCopy">Copy path</button><button class="btn" id="exFold">Open folder</button></div><small>In the folder window: click the address bar, press <kbd>Ctrl</kbd>+<kbd>V</kbd> and <kbd>Enter</kbd>, then <b>Select Folder</b>.</small>';
+        }
+        $("#exCopy").onclick = () => { try { navigator.clipboard.writeText(curDir()); toast("Path copied", "ok", 1200); } catch (e) { $("#exPath").select(); } };
+        $("#exFold").onclick = () => api("ext_open_folder", { firefox: isFx() });
+      };
+      steps();
+      if (br) br.onchange = () => { const b = bro.find(x => x.id === br.value); $("#exOpen").textContent = "Open " + b.name; steps(); };
+      const op = $("#exOpen"); if (op) op.onclick = async () => { const r = await api("ext_open_browser", { browser: br ? br.value : null }); if (r.ok) { try { navigator.clipboard.writeText(curDir()); } catch (e) { } toast("Opening " + r.browser + " — the folder path is already copied", "ok", 3500); } else toast(r.error || "Could not open the browser", "warn", 4000); };
       const tick = async () => {
         if (!alive || !document.body.contains($("#exState"))) return;
         try { const e = await api("ext_status"); extLight(e); if (e.state === "ok" || e.state === "idle") { $("#exState").textContent = "Extension connected ✓"; $("#exDot").textContent = "✓"; $("#exDot").classList.add("ok"); toast("Browser extension connected ✓", "ok", 2500); alive = false; return; } } catch (x) { }

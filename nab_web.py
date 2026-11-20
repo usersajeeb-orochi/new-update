@@ -312,7 +312,7 @@ class Api:
         return self.e.ext_open_browser(a.get("browser"))
 
     def ext_open_folder(self, a):
-        return self.e.ext_open_folder()
+        return self.e.ext_open_folder(bool(a.get("firefox")))
 
     def ext_status(self, a):
         return self.e.ext_status()

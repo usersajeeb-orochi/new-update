@@ -1,4 +1,6 @@
 // Sends the active tab's URL/title to NAB on 127.0.0.1:6789. Nothing leaves the PC.
+// One file for every browser: Chrome, Edge, Brave, Opera, Vivaldi (service worker) and Firefox (event page).
+const api = (typeof browser !== "undefined" && browser.tabs) ? browser : chrome;
 let ws = null;
 function connect() {
   try {
@@ -15,14 +17,17 @@ function report(tab) {
   if (ws && ws.readyState === 0) ws.addEventListener("open", send, { once: true }); else send();
 }
 async function reportActive() {
-  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  report(tab);
+  try {
+    const [tab] = await api.tabs.query({ active: true, lastFocusedWindow: true });
+    report(tab);
+  } catch (e) {}
 }
-chrome.tabs.onActivated.addListener(reportActive);
-chrome.tabs.onUpdated.addListener((id, info, tab) => { if (tab.active) report(tab); });
-chrome.windows.onFocusChanged.addListener(reportActive);
-// MV3 service workers sleep; this alarm wakes it every 30s to keep reporting.
-chrome.alarms && chrome.alarms.create("nab", { periodInMinutes: 0.5 });
-chrome.alarms && chrome.alarms.onAlarm.addListener(reportActive);
+api.tabs.onActivated.addListener(reportActive);
+api.tabs.onUpdated.addListener((id, info, tab) => { if (tab.active) report(tab); });
+api.windows.onFocusChanged.addListener(reportActive);
+// Chromium service workers and Firefox event pages both sleep; this alarm wakes them to keep reporting.
+try {
+  if (api.alarms) { api.alarms.create("nab", { periodInMinutes: 0.5 }); api.alarms.onAlarm.addListener(reportActive); }
+} catch (e) {}
 setInterval(() => { if (ws && ws.readyState === 1) reportActive(); else { connect(); } }, 3000);  // heartbeat keeps NAB's view fresh and reconnects
 reportActive();

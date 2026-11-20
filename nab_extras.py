@@ -206,18 +206,31 @@ class ExtrasMixin:
         base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
         return os.path.join(base, "NAB", "extension")
 
-    def ext_prepare(self):
-        """Copy the bundled extension to a permanent folder (Chrome needs a stable path). Returns (dir, error)."""
+    def ext_prepare(self, firefox=False):
+        """Copy the bundled extension to a permanent folder (Chromium browsers need a stable path). Firefox gets its own
+        folder whose manifest.json is the Firefox flavour. Returns (dir, error)."""
         import shutil
-        src, dst = self.ext_source_dir(), self.ext_install_dir()
+        src = self.ext_source_dir()
+        dst = self.ext_install_dir() + ("_firefox" if firefox else "")
         if not src:
             return dst, "The extension files are missing from this NAB copy."
         try:
             os.makedirs(dst, exist_ok=True)
             for n in os.listdir(src):
                 p = os.path.join(src, n)
-                if os.path.isfile(p):
-                    shutil.copy2(p, os.path.join(dst, n))
+                if not os.path.isfile(p) or n.endswith((".txt", ".md")):
+                    continue
+                if n == "manifest.json":
+                    if firefox:
+                        continue                                # Firefox gets manifest.firefox.json under the name manifest.json
+                    target = n
+                elif n == "manifest.firefox.json":
+                    if not firefox:
+                        continue
+                    target = "manifest.json"
+                else:
+                    target = n
+                shutil.copy2(p, os.path.join(dst, target))
             return dst, None
         except Exception as e:
             return dst, str(e)
@@ -234,7 +247,15 @@ class ExtrasMixin:
                  ("edge", "Microsoft Edge", "edge://extensions",
                   [os.path.join(b, "Microsoft", "Edge", "Application", "msedge.exe") for b in (pf86, pf, la) if b]),
                  ("brave", "Brave", "brave://extensions",
-                  [os.path.join(b, "BraveSoftware", "Brave-Browser", "Application", "brave.exe") for b in (pf, pf86, la) if b])]
+                  [os.path.join(b, "BraveSoftware", "Brave-Browser", "Application", "brave.exe") for b in (pf, pf86, la) if b]),
+                 ("opera", "Opera", "opera://extensions",
+                  [os.path.join(b, "Opera", "opera.exe") for b in (la, pf, pf86) if b] + [os.path.join(b, "Programs", "Opera", "opera.exe") for b in (la,) if b]),
+                 ("operagx", "Opera GX", "opera://extensions",
+                  [os.path.join(b, "Opera GX", "opera.exe") for b in (la, pf, pf86) if b] + [os.path.join(b, "Programs", "Opera GX", "opera.exe") for b in (la,) if b]),
+                 ("vivaldi", "Vivaldi", "vivaldi://extensions",
+                  [os.path.join(b, "Vivaldi", "Application", "vivaldi.exe") for b in (la, pf, pf86) if b]),
+                 ("firefox", "Mozilla Firefox", "about:debugging#/runtime/this-firefox",
+                  [os.path.join(b, "Mozilla Firefox", "firefox.exe") for b in (pf, pf86, la) if b])]
         for bid, name, url, paths in cands:
             exe = next((p for p in paths if os.path.isfile(p)), "")
             if exe:
@@ -243,7 +264,8 @@ class ExtrasMixin:
 
     def ext_setup_info(self):
         d, err = self.ext_prepare()
-        return {"ok": not err, "error": err, "dir": d, "browsers": [{k: b[k] for k in ("id", "name", "url")} for b in self.ext_browsers()],
+        fx_dir, fx_err = self.ext_prepare(firefox=True)
+        return {"ok": not err, "error": err, "dir": d, "firefox_dir": fx_dir, "browsers": [{k: b[k] for k in ("id", "name", "url")} for b in self.ext_browsers()],
                 "status": self.ext_status(), "version": self._ext_version()}
 
     def _ext_version(self):
@@ -257,11 +279,11 @@ class ExtrasMixin:
     def ext_open_browser(self, bid=None):
         """Open the chosen browser straight on its extensions page."""
         import subprocess
-        d, err = self.ext_prepare()
-        if err:
-            return {"ok": False, "error": err}
         bs = self.ext_browsers()
         b = next((x for x in bs if x["id"] == bid), bs[0] if bs else None)
+        d, err = self.ext_prepare(firefox=bool(b and b["id"] == "firefox"))
+        if err:
+            return {"ok": False, "error": err}
         if not b:
             return {"ok": False, "error": "No Chrome / Edge found. Open your browser, type chrome://extensions in the address bar."}
         try:
@@ -270,8 +292,8 @@ class ExtrasMixin:
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
-    def ext_open_folder(self):
-        d, err = self.ext_prepare()
+    def ext_open_folder(self, firefox=False):
+        d, err = self.ext_prepare(firefox=firefox)
         if err:
             return {"ok": False, "error": err}
         try:
