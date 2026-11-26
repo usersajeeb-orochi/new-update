@@ -29,6 +29,12 @@ def build():
     from nab_web import NabServer
     engine = Engine()
     srv = NabServer(engine).start()
+    try:
+        import nab_mcp
+        engine.mcp = nab_mcp.McpServer(engine)
+        engine.mcp.start()                         # does nothing unless Settings > Claude is switched on
+    except Exception:
+        logging.exception("claude connection")
     return engine, srv
 
 

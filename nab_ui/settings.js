@@ -2,7 +2,7 @@
 (function () {
   const { $, $$, esc, api, toast, on } = C;
   const S = { sec: "general", box: null, cur: null };
-  const SECS = [["general", "general"], ["papers", "papers"], ["detect", "detection"], ["quick", "quicksave"], ["keys", "hotkeys"], ["rules", "mapping"], ["cats", "categories_edit"], ["pdefs", "pdefs"], ["comfort", "comfort"], ["riko", "riko"], ["connections", "connections"], ["ai", "ai_sec"], ["sync", "sync"], ["accounts", "Accounts"], ["whatsapp", "WhatsApp"], ["selfcheck", "Self-check"], ["backups", "backups"], ["about", "about"]];
+  const SECS = [["general", "general"], ["papers", "papers"], ["detect", "detection"], ["quick", "quicksave"], ["keys", "hotkeys"], ["rules", "mapping"], ["cats", "categories_edit"], ["pdefs", "pdefs"], ["comfort", "comfort"], ["riko", "riko"], ["connections", "connections"], ["claude", "Claude"], ["ai", "ai_sec"], ["sync", "sync"], ["accounts", "Accounts"], ["whatsapp", "WhatsApp"], ["selfcheck", "Self-check"], ["backups", "backups"], ["about", "about"]];
   const KEYS = [["paste", "Paste"], ["undo", "Undo"], ["redo", "Redo"], ["delete", "Delete layer"], ["generate", "Save"], ["trim", "Trim"], ["clean", "Clean"], ["pad", "Pad"], ["open", "Open file"], ["move_up", "Layer up"], ["move_down", "Layer down"], ["swap", "Swap last two"], ["tool_crop", "Crop tool"], ["tool_erase", "Erase tool"], ["tool_highlight", "Highlight tool"], ["tool_redact", "Redact tool"], ["discard", "Delete grabbed clip"]];
   const QKEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "Ctrl+1", "Ctrl+2", "Ctrl+3", "Ctrl+4", "Ctrl+5", "Ctrl+6", "Ctrl+7", "Ctrl+8", "Ctrl+9"];
 
@@ -183,6 +183,32 @@
     const done = (x) => toast(x.restart ? "Saved — restart NAB to apply" : "Saved ✓");
     $("#cnS", d).onclick = async () => { const v = {}; $$("input[data-c]", d).forEach(i => v[i.dataset.c] = i.value.trim()); done(await api("connections_set", { values: v })); };
     $("#cnR", d).onclick = async () => { done(await api("connections_set", { reset: true })); render(); };
+  };
+
+  // ───── Claude connection (MCP) ─────
+  S.r_claude = async function (b) {
+    hd(b, "Claude", "Let Claude (Claude Desktop, Claude Code) search your saved clips and read today's numbers. It only works while NAB is open and signed in, only on this PC, and Claude can read, not change or delete clips.");
+    const r = await api("claude_get");
+    const d = card(b, "Connection", `
+      ${chk("clOn", "Allow Claude to connect", r.enabled)} <span class="tag">${r.running ? "on · port " + r.port : (r.enabled ? "not running" : "off")}</span>
+      ${r.error ? `<p class="hint" style="color:var(--bad,#e66)">${esc(r.error)}</p>` : ""}
+      ${chk("clRep", "Also let Claude make report files", r.reports)}
+      <p class="hint">Claude can use: search clips, list papers and categories, today's summary, health check, phone queue, schedules.</p>`);
+    $("#clOn", d).onchange = async (e) => { const x = await api("claude_set", { enabled: e.target.checked }); toast(x.enabled ? "Claude connection on ✓" : "Claude connection off"); render(); };
+    $("#clRep", d).onchange = async (e) => { await api("claude_set", { reports: e.target.checked }); toast("Saved ✓"); };
+    const h = card(b, "Connect Claude", `
+      <h4>Claude Desktop</h4>
+      <p class="hint">One click adds NAB to Claude Desktop's settings. Then fully quit and reopen Claude Desktop; NAB appears under its tools.</p>
+      <button class="btn" id="clDesk" ${r.enabled ? "" : "disabled"}>Add NAB to Claude Desktop</button>
+      <h4 style="margin-top:14px">Claude Code</h4>
+      <p class="hint">Copy this command and run it once in a terminal.</p>
+      <button class="btn" id="clCode" ${r.enabled ? "" : "disabled"}>Copy the command</button>
+      <h4 style="margin-top:14px">Safety</h4>
+      <p class="hint">The connection listens only on this PC (127.0.0.1) and needs a secret key; websites cannot reach it. If you ever shared the key, make a new one: everything set up before stops working.</p>
+      <button class="btn" id="clNew">Make a new secret key</button>`);
+    $("#clDesk", h).onclick = async () => { const x = await api("claude_desktop"); toast(x.text || (x.ok ? "Done" : "Failed")); };
+    $("#clCode", h).onclick = async () => { try { await navigator.clipboard.writeText(r.code_cmd); toast("Command copied ✓"); } catch (e) { toast("Could not copy"); } };
+    $("#clNew", h).onclick = async () => { await api("claude_set", { regen: true }); toast("New key made. Add NAB to Claude again."); render(); };
   };
 
   // ───── WhatsApp ─────

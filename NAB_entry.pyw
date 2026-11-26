@@ -1,6 +1,6 @@
 # NAB_entry.pyw — NAB 3 entry point.
 #   (default)        new web UI (nab_main)       --classic   original Tk window
-#   --pdf-bot / --ocr-finder / --tool X         helper tools, each in its own process
+#   --mcp (Claude connection) / --pdf-bot / --ocr-finder / --tool X         helper tools, each in its own process
 import sys
 import logging
 import traceback
@@ -22,7 +22,10 @@ if __name__ == "__main__":
     multiprocessing.freeze_support()   # required for the OCR finder's process pool in a frozen EXE
     _log_setup()
     argv = sys.argv
-    if "--pdf-bot" in argv:
+    if "--mcp" in argv:                    # Claude Desktop starts this: stdio bridge to the running NAB (see nab_mcp.py)
+        import nab_mcp
+        nab_mcp.bridge_main()
+    elif "--pdf-bot" in argv:
         import nab_pdf
         nab_pdf.main()
     elif "--ocr-finder" in argv:

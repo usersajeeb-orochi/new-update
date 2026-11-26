@@ -732,6 +732,39 @@ class Api:
     def connections_set(self, a):
         return self.e.connections_set(a.get("values"), a.get("reset", False))
 
+    # -- Claude connection (MCP)
+    def _claude_state(self):
+        import nab_mcp
+        c = nab_mcp.load_cfg()
+        m = getattr(self.e, "mcp", None)
+        return {"ok": True, "enabled": c["enabled"], "reports": c["reports"], "port": c["port"], "running": bool(m and m.running()),
+                "error": (m.error if m else "") or "", "code_cmd": nab_mcp.claude_code_command() if c["token"] else "",
+                "desktop_config": nab_mcp.desktop_config_path()}
+
+    def claude_get(self, a):
+        return self._claude_state()
+
+    def claude_set(self, a):
+        import nab_mcp
+        c = nab_mcp.load_cfg()
+        if "enabled" in a:
+            c["enabled"] = bool(a["enabled"])
+        if "reports" in a:
+            c["reports"] = bool(a["reports"])
+        if a.get("regen"):
+            c["token"] = ""                                    # new secret: every client set up before stops working
+        c = nab_mcp.save_cfg(c)
+        m = getattr(self.e, "mcp", None)
+        if m:
+            m.stop() if not c["enabled"] else m.start()
+        return self._claude_state()
+
+    def claude_desktop(self, a):
+        import nab_mcp
+        nab_mcp.save_cfg(nab_mcp.load_cfg())                  # make sure a token exists
+        ok, msg = nab_mcp.install_desktop()
+        return {"ok": ok, "text": msg}
+
     def close_summary(self, a):
         return self.e.close_summary()
 
