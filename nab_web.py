@@ -737,7 +737,14 @@ class Api:
         import nab_mcp
         c = nab_mcp.load_cfg()
         m = getattr(self.e, "mcp", None)
-        return {"ok": True, "enabled": c["enabled"], "reports": c["reports"], "port": c["port"], "running": bool(m and m.running()),
+        w = getattr(self.e, "claude_worker", None)
+        try:
+            import nab_remote
+            cu = (nab_remote.cloud_url() or "") + "/mcp"
+        except Exception:
+            cu = ""
+        return {"ok": True, "cloud": c["cloud"], "cloud_url": cu, "cloud_polling": bool(w and w.polling),
+                "enabled": c["enabled"], "reports": c["reports"], "port": c["port"], "running": bool(m and m.running()),
                 "error": (m.error if m else "") or "", "code_cmd": nab_mcp.claude_code_command() if c["token"] else "",
                 "desktop_config": nab_mcp.desktop_config_path()}
 
@@ -751,6 +758,8 @@ class Api:
             c["enabled"] = bool(a["enabled"])
         if "reports" in a:
             c["reports"] = bool(a["reports"])
+        if "cloud" in a:
+            c["cloud"] = bool(a["cloud"])
         if a.get("regen"):
             c["token"] = ""                                    # new secret: every client set up before stops working
         c = nab_mcp.save_cfg(c)

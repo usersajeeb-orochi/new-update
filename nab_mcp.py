@@ -1,8 +1,8 @@
 # nab_mcp.py — lets Claude use NAB (Model Context Protocol).
 #
 #   * McpServer   a tiny loopback-only HTTP endpoint (http://127.0.0.1:6790/mcp) inside the running NAB.
-#                 It exists only while "Claude connection" is switched on in Settings, needs a secret token, refuses
-#                 browsers (Origin header) and answers tool calls only while NAB is signed in (engine.authorized).
+#                 It exists only while the local switch is on in Settings > Claude, needs a secret token and refuses
+#                 browsers (Origin header). No NAB sign-in is needed.
 #   * bridge_main `NAB.exe --mcp`: stdio <-> that endpoint, for Claude Desktop (which can only start local programs).
 #                 Claude Code and other HTTP-capable clients connect to the endpoint directly.
 #
@@ -64,7 +64,7 @@ def load_cfg():
     except Exception:
         c = {}
     return {"enabled": bool(c.get("enabled")), "reports": bool(c.get("reports")), "token": str(c.get("token") or ""),
-            "port": int(c.get("port") or PORT)}
+            "port": int(c.get("port") or PORT), "cloud": bool(c.get("cloud", True))}
 
 
 def save_cfg(c):
@@ -153,8 +153,6 @@ class McpServer:
         return self.httpd is not None
 
     def _call(self, name, args):
-        if not getattr(self.engine, "authorized", False):
-            raise RuntimeError("NAB is locked. Sign in to NAB first.")
         import nab_agent
         with self._lock:
             if self._agent is None:
@@ -248,6 +246,72 @@ class McpServer:
                 h.server_close()
             except Exception:
                 pass
+
+
+# --------------------------------------------------------------------------------------------------- online connector worker
+class CloudWorker:
+    """Claude (claude.ai) -> cloud bot -> this PC. We long-poll the bot for jobs, run the read-only tool on the local archive
+    and send the answer back. Outbound only: nothing on this PC listens. Switch: Settings > Claude (on by default)."""
+
+    def __init__(self, engine):
+        self.engine = engine
+        self.agent = None
+        self.polling = False
+        self._t = None
+
+    def start(self):
+        if self._t is None:
+            self._t = threading.Thread(target=self._loop, daemon=True, name="NAB-ClaudeWorker")
+            self._t.start()
+
+    def _run(self, job):
+        name = job.get("tool")
+        t = TOOLS.get(name)
+        if not t or t["write"]:
+            return {"error": "tool not allowed: " + str(name)}
+        import nab_agent
+        if self.agent is None:
+            self.agent = nab_agent.Agent(self.engine, None, None)
+        try:
+            r = self.agent.run_tool(name, job.get("args") if isinstance(job.get("args"), dict) else {})
+        except Exception as e:
+            logging.exception("claude job " + str(name))
+            return {"error": str(e)[:160]}
+        if len(json.dumps(r, default=str)) > 250000:
+            return {"error": "answer too large"}
+        return r
+
+    def _loop(self):
+        import time
+        import urllib.request
+        import urllib.parse
+        import nab_remote
+        try:
+            from nab_telegram import PC_NAME
+        except Exception:
+            PC_NAME = os.environ.get("COMPUTERNAME", "PC")
+        while True:
+            try:
+                base = nab_remote.cloud_url()
+                if not load_cfg()["cloud"] or not base:
+                    self.polling = False
+                    time.sleep(20)
+                    continue
+                req = urllib.request.Request(base + "/pc/jobs?pc=" + urllib.parse.quote(PC_NAME),
+                                             headers=dict(nab_remote.sign_headers(PC_NAME), **{"User-Agent": "NAB/3"}))
+                with urllib.request.urlopen(req, timeout=40) as r:
+                    jobs = (json.loads(r.read().decode("utf-8")) or {}).get("jobs") or []
+                self.polling = True
+                for j in jobs:
+                    res = self._run(j)
+                    body = urllib.parse.urlencode({"pc": PC_NAME, "id": j.get("id", ""), "result": json.dumps(res, default=str)}).encode()
+                    post = urllib.request.Request(base + "/pc/job_result", data=body, method="POST",
+                                                  headers=dict(nab_remote.sign_headers(PC_NAME), **{"User-Agent": "NAB/3"}))
+                    urllib.request.urlopen(post, timeout=20).close()
+            except Exception as e:
+                self.polling = False
+                logging.info("claude worker: " + str(e)[:100])
+                time.sleep(20)
 
 
 # --------------------------------------------------------------------------------------------------- stdio bridge (NAB.exe --mcp)

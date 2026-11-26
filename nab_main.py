@@ -32,7 +32,9 @@ def build():
     try:
         import nab_mcp
         engine.mcp = nab_mcp.McpServer(engine)
-        engine.mcp.start()                         # does nothing unless Settings > Claude is switched on
+        engine.mcp.start()                         # local listener: only if switched on in Settings > Claude
+        engine.claude_worker = nab_mcp.CloudWorker(engine)
+        engine.claude_worker.start()               # online connector (claude.ai): on by default, switch in Settings > Claude
     except Exception:
         logging.exception("claude connection")
     return engine, srv

@@ -187,28 +187,28 @@
 
   // ───── Claude connection (MCP) ─────
   S.r_claude = async function (b) {
-    hd(b, "Claude", "Let Claude (Claude Desktop, Claude Code) search your saved clips and read today's numbers. It only works while NAB is open and signed in, only on this PC, and Claude can read, not change or delete clips.");
+    hd(b, "Claude", "Connect Claude (claude.ai, the phone app, Claude Desktop) to NAB once. Claude can then search your saved clips and read today's numbers. It can only read: it cannot change or delete clips. No NAB sign-in is needed.");
     const r = await api("claude_get");
-    const d = card(b, "Connection", `
-      ${chk("clOn", "Allow Claude to connect", r.enabled)} <span class="tag">${r.running ? "on · port " + r.port : (r.enabled ? "not running" : "off")}</span>
+    const o = card(b, "Online connector (recommended)", `
+      ${chk("clCl", "Let Claude read NAB on this PC", r.cloud)} <span class="tag">${!r.cloud ? "off" : (r.cloud_polling ? "ready" : "connecting…")}</span>
+      <p class="hint">NAB must be open on this PC. Claude asks the NAB owner once, in Telegram (Allow / Deny). /claudeoff in Telegram cuts every Claude off.</p>
+      <h4>Connect in 3 steps</h4>
+      <ol class="hint"><li>In Claude open <b>Settings → Connectors → Add custom connector</b>.</li><li>Paste this address: <code>${esc(r.cloud_url || "(cloud address missing)")}</code> <button class="btn" id="clUrl">Copy address</button></li><li>Press <b>Connect</b>. The owner taps <b>Allow</b> in Telegram, and Claude is connected for good.</li></ol>`);
+    $("#clCl", o).onchange = async (e) => { await api("claude_set", { cloud: e.target.checked }); toast(e.target.checked ? "Claude can read NAB ✓" : "Claude connection off"); render(); };
+    $("#clUrl", o).onclick = async () => { try { await navigator.clipboard.writeText(r.cloud_url); toast("Address copied ✓"); } catch (e) { toast("Could not copy"); } };
+    const d = card(b, "This PC only (advanced)", `
+      ${chk("clOn", "Also allow a local connection on this PC", r.enabled)} <span class="tag">${r.running ? "on · port " + r.port : (r.enabled ? "not running" : "off")}</span>
       ${r.error ? `<p class="hint" style="color:var(--bad,#e66)">${esc(r.error)}</p>` : ""}
-      ${chk("clRep", "Also let Claude make report files", r.reports)}
-      <p class="hint">Claude can use: search clips, list papers and categories, today's summary, health check, phone queue, schedules.</p>`);
-    $("#clOn", d).onchange = async (e) => { const x = await api("claude_set", { enabled: e.target.checked }); toast(x.enabled ? "Claude connection on ✓" : "Claude connection off"); render(); };
-    $("#clRep", d).onchange = async (e) => { await api("claude_set", { reports: e.target.checked }); toast("Saved ✓"); };
-    const h = card(b, "Connect Claude", `
-      <h4>Claude Desktop</h4>
-      <p class="hint">One click adds NAB to Claude Desktop's settings. Then fully quit and reopen Claude Desktop; NAB appears under its tools.</p>
+      ${chk("clRep", "Local connection may also make report files", r.reports)}
+      <p class="hint">For Claude Desktop or Claude Code on this same PC. Listens only on 127.0.0.1 with a secret key; websites cannot reach it.</p>
       <button class="btn" id="clDesk" ${r.enabled ? "" : "disabled"}>Add NAB to Claude Desktop</button>
-      <h4 style="margin-top:14px">Claude Code</h4>
-      <p class="hint">Copy this command and run it once in a terminal.</p>
-      <button class="btn" id="clCode" ${r.enabled ? "" : "disabled"}>Copy the command</button>
-      <h4 style="margin-top:14px">Safety</h4>
-      <p class="hint">The connection listens only on this PC (127.0.0.1) and needs a secret key; websites cannot reach it. If you ever shared the key, make a new one: everything set up before stops working.</p>
+      <button class="btn" id="clCode" ${r.enabled ? "" : "disabled"}>Copy Claude Code command</button>
       <button class="btn" id="clNew">Make a new secret key</button>`);
-    $("#clDesk", h).onclick = async () => { const x = await api("claude_desktop"); toast(x.text || (x.ok ? "Done" : "Failed")); };
-    $("#clCode", h).onclick = async () => { try { await navigator.clipboard.writeText(r.code_cmd); toast("Command copied ✓"); } catch (e) { toast("Could not copy"); } };
-    $("#clNew", h).onclick = async () => { await api("claude_set", { regen: true }); toast("New key made. Add NAB to Claude again."); render(); };
+    $("#clOn", d).onchange = async (e) => { const x = await api("claude_set", { enabled: e.target.checked }); toast(x.enabled ? "Local connection on ✓" : "Local connection off"); render(); };
+    $("#clRep", d).onchange = async (e) => { await api("claude_set", { reports: e.target.checked }); toast("Saved ✓"); };
+    $("#clDesk", d).onclick = async () => { const x = await api("claude_desktop"); toast(x.text || (x.ok ? "Done" : "Failed")); };
+    $("#clCode", d).onclick = async () => { try { await navigator.clipboard.writeText(r.code_cmd); toast("Command copied ✓"); } catch (e) { toast("Could not copy"); } };
+    $("#clNew", d).onclick = async () => { await api("claude_set", { regen: true }); toast("New key made. Add NAB to Claude Desktop again."); render(); };
   };
 
   // ───── WhatsApp ─────

@@ -72,13 +72,15 @@ def test_server_needs_token_blocks_browsers_and_locked_nab(tmp_path, monkeypatch
         s.stop()
 
 
-def test_real_call_refused_when_nab_locked(tmp_path, monkeypatch):
-    _cfg(tmp_path, monkeypatch, enabled=True)
-    eng = _Eng()
-    eng.authorized = False
-    s = nab_mcp.McpServer(eng)
-    r = nab_mcp.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "list_filters"}}, s._call)
-    assert r["result"]["isError"] and "locked" in r["result"]["content"][0]["text"]
+def test_worker_runs_only_read_tools_and_needs_no_sign_in(tmp_path, monkeypatch):
+    class Eng:
+        authorized = False                                     # not signed in: still answers
+    w = nab_mcp.CloudWorker(Eng())
+    import nab_agent
+    monkeypatch.setattr(nab_agent.Agent, "run_tool", lambda self, n, a: {"n": n, "a": a})
+    assert w._run({"tool": "list_filters", "args": {"q": 1}}) == {"n": "list_filters", "a": {"q": 1}}
+    assert "not allowed" in w._run({"tool": "make_report", "args": {}})["error"]
+    assert "not allowed" in w._run({"tool": "rm_everything"})["error"]
 
 
 def test_bridge_answers_locally_and_reports_nab_closed(tmp_path, monkeypatch):
